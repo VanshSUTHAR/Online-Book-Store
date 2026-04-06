@@ -262,7 +262,7 @@ export default function Navbar() {
       <div className="nav-inner">
         <Link to="/" className="nav-brand">
           <span className="brand-mark">OB</span>
-          <span className="brand-text">Online Book Store</span>
+          <span className="brand-text">Online Books </span>
         </Link>
         {/* Hamburger icon for mobile */}
         <button
