@@ -8,6 +8,8 @@ import Books from "./pages/Books";
 import Cart from "./pages/Cart";
 import AllBooks from "./pages/AllBooks";
 import Admin from "./pages/Admin";
+import Delivery from "./pages/Delivery";
+import FAQ from "./pages/FAQ";
 import { UserProvider } from "./context/UserContext";
 
 function AppRoutes() {
@@ -24,6 +26,8 @@ function AppRoutes() {
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/delivery" element={<Delivery />} />
+          <Route path="/faq" element={<FAQ />} />
         </Routes>
       </main>
       {!isAdminPage && <Footer />}
