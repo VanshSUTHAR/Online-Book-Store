@@ -1,9 +1,10 @@
 import axios from "axios";
 
-export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "https://online-books-0acj.onrender.com/api",
-  headers: {
-    "Content-Type": "application/json"
-  }
-});
+const API_URL = process.env.REACT_APP_API_URL || "https://online-books-0acj.onrender.com";
 
+export const api = axios.create({
+  baseURL: API_URL + "/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
