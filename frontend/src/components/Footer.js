@@ -1,39 +1,58 @@
+
+import { useNavigate } from "react-router-dom";
+import "../App.css"
+
 export default function Footer() {
+  const navigate = useNavigate();
+
+  const scrollToSection = (sectionId, page = "/") => {
+    if (window.location.pathname !== page) {
+      navigate(page);
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    } else {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <footer className="site-footer">
       <div className="footer-grid">
         <div>
           <h3 className="footer-title">Online Book Store</h3>
           <p className="footer-text">
-            Discover new stories, trusted classics, and curated picks for every
-            reader.
+            Discover new stories, trusted classics, and curated picks for every reader.
           </p>
         </div>
         <div>
           <h3 className="footer-title">Shop</h3>
-          <div className="footer-links">
-            <a className="footer-link" href="/">Trending</a>
-            <a className="footer-link" href="/">Fiction</a>
-            <a className="footer-link" href="/">Non-Fiction</a>
-            <a className="footer-link" href="/">Manga</a>
-          </div>
+          <nav className="footer-links" aria-label="Shop">
+            <button className="footer-link" type="button" onClick={() => scrollToSection("books-section", "/")}>Trending</button>
+            <button className="footer-link" type="button" onClick={() => scrollToSection("Fiction", "/all-books")}>Fiction</button>
+            <button className="footer-link" type="button" onClick={() => scrollToSection("Non-Fiction", "/all-books")}>Non-Fiction</button>
+            <button className="footer-link" type="button" onClick={() => scrollToSection("Children's Books", "/all-books")}>Children's Books</button>
+          </nav>
         </div>
         <div>
           <h3 className="footer-title">Support</h3>
-          <div className="footer-links">
-            <a className="footer-link" href="/">Contact Us</a>
-            <a className="footer-link" href="/">Delivery</a>
-            <a className="footer-link" href="/">Returns</a>
-            <a className="footer-link" href="/">FAQ</a>
-          </div>
+          <nav className="footer-links" aria-label="Support">
+            <button className="footer-link" type="button" onClick={() => scrollToSection("contact-section", "/")}>Contact Us</button>
+            <button className="footer-link" type="button" onClick={() => navigate("/delivery")}>Delivery</button>
+            <button className="footer-link" type="button" onClick={() => navigate("/faq")}>Faq</button>
+          </nav>
         </div>
         <div>
           <h3 className="footer-title">Visit</h3>
-          <p className="footer-text">Open daily 9:00 AM - 9:00 PM</p>
-          <p className="footer-text">123 Book Street, Reading City</p>
-          <p className="footer-text">New Delhi, India 110001</p>
-          <p className="footer-text">hello@onlinebookstore.com</p>
-          <p className="footer-text">+91 98765 43210</p>
+          <address className="footer-text" style={{fontStyle: "normal"}}>
+            Open daily 9:00 AM - 9:00 PM<br />
+            123 Book Street, Reading City<br />
+            New Delhi, India 110001<br />
+            <a href="mailto:hello@onlinebookstore.com" className="footer-link">hello@onlinebookstore.com</a><br />
+            <a href="tel:+919876543210" className="footer-link">+91 98765 43210</a>
+          </address>
         </div>
       </div>
       <div className="footer-bottom">
