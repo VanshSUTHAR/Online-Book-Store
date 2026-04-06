@@ -99,6 +99,7 @@
     max-width: 98vw;
     padding: 18px 4vw 18px 4vw;
     margin: 24px auto 0 auto;
+    margin-bottom: 25px;
   }
   .auth-card h2 {
     font-size: 1.3rem;
