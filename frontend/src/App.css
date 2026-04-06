@@ -1,4 +1,9 @@
 @media (max-width: 700px) {
+  .brand-text {
+    margin-right: 32px !important;
+  }
+}
+@media (max-width: 700px) {
   .site-nav {
     position: fixed;
     top: 0;
