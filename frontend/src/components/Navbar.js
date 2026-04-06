@@ -13,7 +13,7 @@ export default function Navbar() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeLink, setActiveLink] = useState("home");
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
@@ -264,32 +264,59 @@ export default function Navbar() {
           <span className="brand-mark">OB</span>
           <span className="brand-text">Online Book Store</span>
         </Link>
-        <div className="nav-links">
+        {/* Hamburger icon for mobile */}
+        <button
+          className="nav-hamburger"
+          type="button"
+          aria-label={isMobileMenuOpen ? "Close navigation" : "Open navigation"}
+          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+        >
+          <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+          <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+          <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+        </button>
+        <div
+          className={`nav-links ${
+            isMobileMenuOpen ? "nav-links-mobile-open" : "nav-links-mobile-closed"
+          }`}
+        >
           <a
             href="#home"
             className={`nav-link ${activeLink === "home" ? "active" : ""}`}
-            onClick={scrollToHome}
+            onClick={e => {
+              scrollToHome(e);
+              setIsMobileMenuOpen(false);
+            }}
           >
             Home
           </a>
           <a
             href="#trending"
             className={`nav-link ${activeLink === "trending" ? "active" : ""}`}
-            onClick={scrollToTrending}
+            onClick={e => {
+              scrollToTrending(e);
+              setIsMobileMenuOpen(false);
+            }}
           >
             Trending
           </a>
           <a
             href="#about"
             className={`nav-link ${activeLink === "about" ? "active" : ""}`}
-            onClick={scrollToAbout}
+            onClick={e => {
+              scrollToAbout(e);
+              setIsMobileMenuOpen(false);
+            }}
           >
             About Us
           </a>
           <a
             href="#contact"
             className={`nav-link ${activeLink === "contact" ? "active" : ""}`}
-            onClick={scrollToContact}
+            onClick={e => {
+              scrollToContact(e);
+              setIsMobileMenuOpen(false);
+            }}
           >
             Contact Us
           </a>
@@ -297,7 +324,10 @@ export default function Navbar() {
           <Link
             to="/cart"
             className={`nav-link ${activeLink === "cart" ? "active" : ""}`}
-            onClick={() => setActiveLink("cart")}
+            onClick={() => {
+              setActiveLink("cart");
+              setIsMobileMenuOpen(false);
+            }}
           >
             Cart
           </Link>
@@ -307,7 +337,10 @@ export default function Navbar() {
             <Link
               to="/admin"
               className={`nav-link ${activeLink === "admin" ? "active" : ""}`}
-              onClick={() => setActiveLink("admin")}
+              onClick={() => {
+                setActiveLink("admin");
+                setIsMobileMenuOpen(false);
+              }}
             >
               Admin
             </Link>
@@ -315,8 +348,8 @@ export default function Navbar() {
 
           {!user ? (
             <>
-              <Link to="/login" className="nav-link">Login</Link>
-              <Link to="/register" className="nav-link">Register</Link>
+              <Link to="/login" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+              <Link to="/register" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Register</Link>
             </>
           ) : (
             <>
