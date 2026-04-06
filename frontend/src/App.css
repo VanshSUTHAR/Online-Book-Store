@@ -1,3 +1,33 @@
+/* Book Card Grid Responsive for Mobile */
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+}
+
+@media (max-width: 700px) {
+  .books-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .book-card {
+    max-width: 98vw;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 10px 4px;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .books-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .book-card {
+    padding: 6px 2px;
+  }
+}
 /* Delivery & FAQ Page Styles */
 .delivery-page, .faq-page {
   max-width: 700px;
