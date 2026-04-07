@@ -31,11 +31,13 @@ const otpStore = {};
 
 // Nodemailer setup (configure with your SMTP)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.ADMIN_EMAIL,
-    pass: process.env.ADMIN_EMAIL_PASS
-  }
+    pass: process.env.ADMIN_EMAIL_PASS,
+  },
 });
 // ================= SEND OTP FOR PASSWORD RESET =================
 router.post("/send-otp", async (req, res) => {
