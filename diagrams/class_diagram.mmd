@@ -1,0 +1,57 @@
+---
+title: Class Diagram
+---
+
+classDiagram
+  class Book {
+    String title
+    String author
+    Number price
+    Number originalPrice
+    Number discount
+    Number rating
+    String category
+    String description
+    String image
+  }
+  class User {
+    String name
+    String email
+    String password
+    String role
+    String mobile
+  }
+  class Order {
+    ObjectId userId
+    Book[] books
+    String buyerName
+    String buyerAddress
+    Number totalAmount
+    Date createdAt
+  }
+  class Contact {
+    String name
+    String email
+    String message
+    Reply[] replies
+    Date createdAt
+  }
+  class Reply {
+    String message
+    Date date
+    Boolean fromAdmin
+  }
+  class TrendingBooks {
+    Book[] bookIds
+    Date updatedAt
+  }
+  class LoginLog {
+    String email
+    Boolean success
+    Date timestamp
+    String ip
+  }
+  User "1" -- "*" Order : places
+  Order "*" -- "*" Book : contains
+  TrendingBooks "1" -- "*" Book : references
+  Contact "1" -- "*" Reply : has

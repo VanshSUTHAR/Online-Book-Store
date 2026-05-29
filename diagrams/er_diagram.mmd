@@ -1,0 +1,70 @@
+---
+title: ER Diagram
+---
+
+erDiagram
+  USER {
+    string _id PK
+    string name
+    string email
+    string password
+    string role
+    string mobile
+  }
+  BOOK {
+    string _id PK
+    string title
+    string author
+    number price
+    number originalPrice
+    number discount
+    number rating
+    string category
+    string description
+    string image
+  }
+  ORDER {
+    string _id PK
+    string userId FK
+    string buyerName
+    string buyerAddress
+    number totalAmount
+    date createdAt
+  }
+  ORDER_BOOKS {
+    string orderId FK
+    string bookId FK
+    string title
+    number price
+    number quantity
+  }
+  CONTACT {
+    string _id PK
+    string name
+    string email
+    string message
+    date createdAt
+  }
+  REPLY {
+    string contactId FK
+    string message
+    date date
+    boolean fromAdmin
+  }
+  TRENDING_BOOKS {
+    string _id PK
+    string[] bookIds FK
+    date updatedAt
+  }
+  LOGIN_LOG {
+    string _id PK
+    string email
+    boolean success
+    date timestamp
+    string ip
+  }
+  USER ||--o{ ORDER : places
+  ORDER ||--|{ ORDER_BOOKS : contains
+  BOOK ||--|{ ORDER_BOOKS : included_in
+  CONTACT ||--o{ REPLY : has
+  TRENDING_BOOKS ||--|{ BOOK : trending
