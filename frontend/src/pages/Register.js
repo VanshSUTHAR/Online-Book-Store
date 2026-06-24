@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
 import {
@@ -21,8 +21,20 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState("");
 
-  const { login } = useUser();
+  const { user, login } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+    if (loggedInUserId) {
+      if (user?.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate(location.state?.from || "/");
+      }
+    }
+  }, [user, navigate, location]);
 
   const register = async () => {
     if (!name.trim() || !email.trim() || !mobile.trim() || !password.trim()) {
@@ -43,8 +55,16 @@ export default function Register() {
       localStorage.setItem("userId", res.data.user._id);
       showToastMsg("✓ Registration successful!");
 
+      const fromPath = location.state?.from || "/";
+      const extraState = location.state ? { ...location.state } : {};
+      delete extraState.from;
+
       setTimeout(() => {
-        navigate("/");
+        if (res.data.user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate(fromPath, { state: extraState });
+        }
       }, 1200);
     } catch (err) {
       showToastMsg(err.response?.data?.message || "Registration failed.");
@@ -162,7 +182,7 @@ export default function Register() {
 
           <p className="text-center text-xs text-slate-400 font-semibold pt-1">
             Already have an account?{" "}
-            <Link to="/login" className="text-blue-600 hover:underline">
+            <Link to="/login" state={location.state} className="text-blue-600 hover:underline">
               Log In
             </Link>
           </p>

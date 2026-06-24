@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
 import {
@@ -29,7 +29,19 @@ export default function Login() {
   const [toast, setToast] = useState("");
 
   const navigate = useNavigate();
-  const { login } = useUser();
+  const location = useLocation();
+  const { user, login } = useUser();
+
+  useEffect(() => {
+    const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+    if (loggedInUserId) {
+      if (user?.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate(location.state?.from || "/");
+      }
+    }
+  }, [user, navigate, location]);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -54,11 +66,15 @@ export default function Login() {
       login(user);
       showToastMsg("✓ Login successful");
 
+      const fromPath = location.state?.from || "/";
+      const extraState = location.state ? { ...location.state } : {};
+      delete extraState.from;
+
       setTimeout(() => {
         if (user.role === "admin") {
           navigate("/admin");
         } else {
-          navigate("/");
+          navigate(fromPath, { state: extraState });
         }
       }, 1200);
 
@@ -162,7 +178,7 @@ export default function Login() {
             </button>
             <span className="text-slate-400 font-semibold">
               New here?{" "}
-              <Link to="/register" className="text-blue-600 hover:underline">
+              <Link to="/register" state={location.state} className="text-blue-600 hover:underline">
                 Create Account
               </Link>
             </span>
@@ -277,17 +293,21 @@ export default function Login() {
                         }
                         login(res.data.user);
                         showOtpToastMsg("✓ Login successful");
-                        setTimeout(() => {
-                          setShowOtpLogin(false);
-                          setOtpSentLogin(false);
-                          setOtpLoginEmail("");
-                          setOtpLogin("");
-                          if (res.data.user.role === "admin") {
-                            navigate("/admin");
-                          } else {
-                            navigate("/");
-                          }
-                        }, 1200);
+                          const fromPath = location.state?.from || "/";
+                          const extraState = location.state ? { ...location.state } : {};
+                          delete extraState.from;
+
+                          setTimeout(() => {
+                            setShowOtpLogin(false);
+                            setOtpSentLogin(false);
+                            setOtpLoginEmail("");
+                            setOtpLogin("");
+                            if (res.data.user.role === "admin") {
+                              navigate("/admin");
+                            } else {
+                              navigate(fromPath, { state: extraState });
+                            }
+                          }, 1200);
                       } else {
                         showOtpToastMsg(res.data.message || "Invalid OTP code.");
                       }

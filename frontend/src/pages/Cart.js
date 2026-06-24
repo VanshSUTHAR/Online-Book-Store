@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
 import {
@@ -14,6 +14,7 @@ import {
 
 export default function Cart() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useUser();
   const [items, setItems] = useState(() => {
     try {
@@ -55,10 +56,10 @@ export default function Cart() {
   };
 
   const openCheckout = () => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
+    const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+    if (!loggedInUserId) {
       showToastMsg("Please login first to proceed with checkout.");
-      navigate("/login");
+      navigate("/login", { state: { from: "/cart", openCheckout: true } });
       return;
     }
     if (items.length === 0) {
@@ -69,6 +70,18 @@ export default function Cart() {
     setBuyerAddress("");
     setIsCheckoutOpen(true);
   };
+
+  useEffect(() => {
+    if (location.state?.openCheckout) {
+      const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+      if (loggedInUserId) {
+        setBuyerName("");
+        setBuyerAddress("");
+        setIsCheckoutOpen(true);
+      }
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, user, navigate, location.pathname]);
 
   const confirmOrder = async () => {
     if (!buyerName.trim() || !buyerAddress.trim()) {

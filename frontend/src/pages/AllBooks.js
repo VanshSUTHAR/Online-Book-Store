@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
+import { useUser } from "../context/UserContext";
 import {
   Search,
   BookOpen,
@@ -28,6 +29,21 @@ export default function AllBooks() {
   const [wishlist, setWishlist] = useState([]);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (location.state?.buyBook) {
+      const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+      if (loggedInUserId) {
+        setSelectedBook(location.state.buyBook);
+        setBuyerName("");
+        setBuyerAddress("");
+        setIsCheckoutOpen(true);
+      }
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, user, navigate, location.pathname]);
 
   useEffect(() => {
     api.get("/books")
@@ -101,10 +117,10 @@ export default function AllBooks() {
   };
 
   const openCheckout = (book) => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
+    const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+    if (!loggedInUserId) {
       showToastMsg("Please login or register to buy books.");
-      navigate("/login");
+      navigate("/login", { state: { from: "/all-books", buyBook: book } });
       return;
     }
     setSelectedBook(book);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import { sendContactMessage } from "../services/contactService";
 import { useUser } from "../context/UserContext";
@@ -49,7 +49,21 @@ export default function Books() {
   const testimonialsRef = useRef(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useUser();
+
+  useEffect(() => {
+    if (location.state?.buyBook) {
+      const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+      if (loggedInUserId) {
+        setSelectedBook(location.state.buyBook);
+        setBuyerName("");
+        setBuyerAddress("");
+        setIsCheckoutOpen(true);
+      }
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, user, navigate, location.pathname]);
 
   useEffect(() => {
     // Fetch all books
@@ -126,10 +140,10 @@ export default function Books() {
   };
 
   const openCheckout = (book) => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
+    const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+    if (!loggedInUserId) {
       showToastMsg("Please login or register to buy books.");
-      navigate("/login", { state: { fromBuy: book } });
+      navigate("/login", { state: { from: "/", buyBook: book } });
       return;
     }
     setSelectedBook(book);
