@@ -228,7 +228,7 @@ export default function Login() {
                       });
                       if (res.data.success) {
                         setOtpSentLogin(true);
-                        showOtpToastMsg("OTP code sent to email.");
+                        showOtpToastMsg(res.data.message || "OTP code sent to email.");
                       } else {
                         showOtpToastMsg(res.data.message || "Failed to send OTP.");
                       }
