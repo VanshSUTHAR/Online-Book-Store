@@ -562,15 +562,16 @@ export default function Navbar() {
 
               {/* Mobile Hamburger menu */}
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </button>
+  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+  className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+  aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+>
+  {isMobileMenuOpen ? (
+    <X className="h-6 w-6" />
+  ) : (
+    <Menu className="h-6 w-6" />
+  )}
+</button>
             </div>
           </div>
         </div>
