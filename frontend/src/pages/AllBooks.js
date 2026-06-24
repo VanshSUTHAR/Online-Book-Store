@@ -48,6 +48,18 @@ export default function AllBooks() {
     }
   }, []);
 
+  useEffect(() => {
+    if (books.length > 0 && window.location.hash) {
+      const id = decodeURIComponent(window.location.hash.substring(1));
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+    }
+  }, [books]);
+
   const showToastMsg = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);

@@ -236,14 +236,14 @@ export default function Books() {
 
   // Categories
   const categoriesList = [
-    { name: "Fiction", count: "12,000+ Books", icon: "📖", color: "from-blue-500/10 to-indigo-500/10 hover:border-blue-500/30" },
-    { name: "Non-Fiction", count: "9,500+ Books", icon: "📚", color: "from-purple-500/10 to-pink-500/10 hover:border-purple-500/30" },
-    { name: "Business", count: "4,200+ Books", icon: "💼", color: "from-emerald-500/10 to-teal-500/10 hover:border-emerald-500/30" },
-    { name: "Technology", count: "6,800+ Books", icon: "💻", color: "from-cyan-500/10 to-blue-500/10 hover:border-cyan-500/30" },
-    { name: "Self Help", count: "3,500+ Books", icon: "🧠", color: "from-amber-500/10 to-orange-500/10 hover:border-amber-500/30" },
-    { name: "Children", count: "5,000+ Books", icon: "🎈", color: "from-rose-500/10 to-pink-500/10 hover:border-rose-500/30" },
-    { name: "Academic", count: "8,100+ Books", icon: "🎓", color: "from-indigo-500/10 to-violet-500/10 hover:border-indigo-500/30" },
-    { name: "Manga", count: "7,300+ Books", icon: "💥", color: "from-orange-500/10 to-red-500/10 hover:border-orange-500/30" }
+    { name: "Fiction", count: "12,000+ Books", icon: "📖", color: "from-blue-500/10 to-indigo-500/10 hover:border-blue-500/30", linkId: "Fiction" },
+    { name: "Non-Fiction", count: "9,500+ Books", icon: "📚", color: "from-purple-500/10 to-pink-500/10 hover:border-purple-500/30", linkId: "Non-Fiction" },
+    { name: "Business", count: "4,200+ Books", icon: "💼", color: "from-emerald-500/10 to-teal-500/10 hover:border-emerald-500/30", linkId: "Business" },
+    { name: "Technology", count: "6,800+ Books", icon: "💻", color: "from-cyan-500/10 to-blue-500/10 hover:border-cyan-500/30", linkId: "Technology" },
+    { name: "Self Help", count: "3,500+ Books", icon: "🧠", color: "from-amber-500/10 to-orange-500/10 hover:border-amber-500/30", linkId: "Self-Help" },
+    { name: "Children", count: "5,000+ Books", icon: "🎈", color: "from-rose-500/10 to-pink-500/10 hover:border-rose-500/30", linkId: "Children" },
+    { name: "Academic", count: "8,100+ Books", icon: "🎓", color: "from-indigo-500/10 to-violet-500/10 hover:border-indigo-500/30", linkId: "Academic" },
+    { name: "Manga", count: "7,300+ Books", icon: "💥", color: "from-orange-500/10 to-red-500/10 hover:border-orange-500/30", linkId: "Manga" }
   ];
 
   // Testimonials
@@ -424,7 +424,7 @@ export default function Books() {
             {categoriesList.map((cat) => (
               <div
                 key={cat.name}
-                onClick={() => navigate("/all-books")}
+                onClick={() => navigate("/all-books#" + cat.linkId)}
                 className={`group cursor-pointer rounded-2xl border border-slate-150 p-6 bg-gradient-to-br ${cat.color} transition-all duration-300 hover:shadow-lg hover:translate-y-[-3px] flex flex-col items-center text-center`}
               >
                 <span className="text-4xl group-hover:scale-110 transition-transform duration-300 mb-3 block">
