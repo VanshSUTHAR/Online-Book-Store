@@ -1,7 +1,18 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Info,
+  X,
+  ShieldCheck,
+  Send,
+  BookOpen
+} from "lucide-react";
 
 export default function Login() {
   // OTP login states
@@ -10,6 +21,7 @@ export default function Login() {
   const [otpSentLogin, setOtpSentLogin] = useState(false);
   const [otpLogin, setOtpLogin] = useState("");
   const [otpLoginToast, setOtpLoginToast] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,11 +31,9 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useUser();
 
-  // Define handleLogin function before return
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      setToast("Please enter email and password.");
-      setTimeout(() => setToast(""), 2500);
+      showToastMsg("Please enter email and password.");
       return;
     }
 
@@ -35,19 +45,16 @@ export default function Login() {
 
       const user = res.data.user;
 
-      // ✅ Store userId for MongoDB sync
+      // Store credentials
       localStorage.setItem("userId", user._id);
-      // ✅ Store token for authentication
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
       }
-      // ✅ Store user in context
+      
       login(user);
-
-      setToast("✓ Login successful");
+      showToastMsg("✓ Login successful");
 
       setTimeout(() => {
-        setToast("");
         if (user.role === "admin") {
           navigate("/admin");
         } else {
@@ -56,153 +63,220 @@ export default function Login() {
       }, 1200);
 
     } catch (error) {
-      setToast(
+      showToastMsg(
         error.response?.data?.message || "Invalid email or password"
       );
-      setTimeout(() => setToast(""), 2500);
     }
   };
 
-  // Add loading state for OTP sending
-  const [otpSending, setOtpSending] = useState(false);
+  const showToastMsg = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
+  };
+
+  const showOtpToastMsg = (msg) => {
+    setOtpLoginToast(msg);
+    setTimeout(() => setOtpLoginToast(""), 3000);
+  };
 
   return (
-    <div className="auth-card">
-      <h2>Login</h2>
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
+      {/* Background radial effects */}
+      <div className="absolute top-1/4 left-1/4 h-[350px] w-[350px] rounded-full bg-blue-500/5 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 h-[350px] w-[350px] rounded-full bg-violet-500/5 blur-[100px] pointer-events-none" />
 
-      <div className="auth-field">
-        <label>Email</label>
-        <input
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="username"
-        />
+      {/* Main card box */}
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-8 shadow-xl relative z-10 space-y-6">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center text-center space-y-2">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10">
+            <BookOpen className="h-5 w-5 text-white" />
+          </div>
+          <h2 className="font-playfair text-2xl font-black text-slate-900 mt-2">Welcome Back</h2>
+          <p className="text-slate-400 text-xs font-semibold">Enter your account credentials to log in</p>
+        </div>
+
+        {/* Inputs */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Email Address
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <Mail className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-slate-200 pl-10 pr-10 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <Lock className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Buttons and actions */}
+        <div className="space-y-4">
+          <button
+            onClick={handleLogin}
+            className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-sm font-bold text-white transition-all shadow-md shadow-blue-500/10 active:scale-95"
+          >
+            Log In
+          </button>
+
+          <div className="flex items-center justify-between text-xs pt-1">
+            <button
+              onClick={() => setShowOtpLogin(true)}
+              className="font-bold text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              Sign in with OTP
+            </button>
+            <span className="text-slate-400 font-semibold">
+              New here?{" "}
+              <Link to="/register" className="text-blue-600 hover:underline">
+                Create Account
+              </Link>
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="auth-field" style={{ position: "relative" }}>
-        <label>Password</label>
-        <input
-          type={showPassword ? "text" : "password"}
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          style={{ paddingRight: "40px" }}
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword((s) => !s)}
-          style={{
-            position: "absolute",
-            right: 8,
-            top: "50%",
-            transform: "translateY(-50%)",
-            height: "24px",
-            width: "24px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-          aria-label={showPassword ? "Hide password" : "Show password"}
-        >
-          {showPassword ? "🙈" : "👁️"}
-        </button>
-      </div>
+      {/* Floating notifications */}
+      {toast && (
+        <div className="fixed bottom-6 left-6 z-50 rounded-xl bg-slate-900 border border-slate-800 text-white px-5 py-3.5 shadow-2xl text-xs font-bold flex items-center gap-2">
+          <Info className="h-4 w-4 text-blue-400 shrink-0" />
+          <span>{toast}</span>
+        </div>
+      )}
 
-      <button className="auth-button" onClick={handleLogin}>
-        Login
-      </button>
-      <div style={{ marginTop: 12 }}>
-        <button
-          type="button"
-          className="link-btn"
-          style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", textDecoration: "underline" }}
-          onClick={() => setShowOtpLogin(true)}
-        >
-          Login with OTP?
-        </button>
-      </div>
-
-      {toast && <div className="toast toast-success">{toast}</div>}
-
-      {/* OTP Login Modal */}
+      {/* OTP Modal Overlay */}
       {showOtpLogin && (
-        <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, width: "98vw", height: "130vh", background: "rgba(0,0,0,0.2)", zIndex: 1000 }} onClick={() => setShowOtpLogin(false)}>
-          <div className="modal-card" style={{ maxWidth: 400, margin: "80px auto", background: "#fff", borderRadius: 12, padding: 24, position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button style={{ position: "absolute", top: 8, right: 8, background: "none", border: "none", fontSize: 18, cursor: "pointer" }} onClick={() => setShowOtpLogin(false)}>✕</button>
-            <h3>Login with OTP</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in-30 duration-200">
+          <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 animate-in zoom-in-95 duration-205">
+            <button
+              onClick={() => {
+                setShowOtpLogin(false);
+                setOtpSentLogin(false);
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldCheck className="h-5 w-5 text-blue-600" />
+              <h3 className="font-poppins font-bold text-slate-900 text-base">
+                Login with OTP
+              </h3>
+            </div>
+
             {!otpSentLogin ? (
-              <>
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={otpLoginEmail}
-                  onChange={e => setOtpLoginEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  style={{ width: "97%", height: 40, marginBottom: 12, borderRadius: 10, border: "1px solid #ccc", padding: "0 8px", marginTop: 10 }}
-                />
+              /* Requesting email code */
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={otpLoginEmail}
+                    onChange={(e) => setOtpLoginEmail(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
                 <button
-                  className="auth-button"
                   disabled={otpSending}
-                  style={{ width: "100%", marginTop: 8, opacity: otpSending ? 0.6 : 1 }}
                   onClick={async () => {
                     if (!otpLoginEmail.trim()) {
-                      setOtpLoginToast("Enter your email.");
-                      setTimeout(() => setOtpLoginToast(""), 2000);
+                      showOtpToastMsg("Please enter your email.");
                       return;
                     }
                     setOtpSending(true);
                     try {
-                      const res = await api.post("/auth/send-otp", { email: otpLoginEmail.trim() });
+                      const res = await api.post("/auth/send-otp", {
+                        email: otpLoginEmail.trim()
+                      });
                       if (res.data.success) {
                         setOtpSentLogin(true);
-                        setOtpLoginToast("OTP sent to your email.");
+                        showOtpToastMsg("OTP code sent to email.");
                       } else {
-                        setOtpLoginToast(res.data.message || "Failed to send OTP.");
+                        showOtpToastMsg(res.data.message || "Failed to send OTP.");
                       }
-                    } catch (err) {
-                      setOtpLoginToast("Failed to send OTP.");
-                    }
-                    setTimeout(() => {
+                    } catch {
+                      showOtpToastMsg("Failed to send OTP.");
+                    } finally {
                       setOtpSending(false);
-                      setOtpLoginToast("");
-                    }, 2000);
+                    }
                   }}
-                >{otpSending ? "Sending..." : "Send OTP"}</button>
-              </>
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {otpSending ? "Sending code..." : "Send Verification Code"}
+                </button>
+              </div>
             ) : (
-              <>
-                <label>OTP</label>
-                <input
-                  type="text"
-                  value={otpLogin}
-                  onChange={e => setOtpLogin(e.target.value)}
-                  placeholder="Enter OTP"
-                  style={{ width: "97%", height: 40, marginBottom: 12, borderRadius: 10, border: "1px solid #ccc", padding: "0 8px", marginTop: 13 }}
-                />
+              /* Verifying email code */
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    OTP Code
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter 6-digit code"
+                    value={otpLogin}
+                    onChange={(e) => setOtpLogin(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
                 <button
-                  className="auth-button"
                   onClick={async () => {
                     if (!otpLogin.trim()) {
-                      setOtpLoginToast("Enter OTP.");
-                      setTimeout(() => setOtpLoginToast(""), 2000);
+                      showOtpToastMsg("Please enter OTP.");
                       return;
                     }
                     try {
-                      const res = await api.post("/auth/verify-otp", { email: otpLoginEmail.trim(), otp: otpLogin.trim() });
+                      const res = await api.post("/auth/verify-otp", {
+                        email: otpLoginEmail.trim(),
+                        otp: otpLogin.trim()
+                      });
                       if (res.data.success && res.data.user) {
                         localStorage.setItem("userId", res.data.user._id);
                         if (res.data.token) {
                           localStorage.setItem("token", res.data.token);
                         }
                         login(res.data.user);
-                        setOtpLoginToast("Login successful");
+                        showOtpToastMsg("✓ Login successful");
                         setTimeout(() => {
                           setShowOtpLogin(false);
                           setOtpSentLogin(false);
@@ -215,18 +289,25 @@ export default function Login() {
                           }
                         }, 1200);
                       } else {
-                        setOtpLoginToast(res.data.message || "Invalid OTP");
+                        showOtpToastMsg(res.data.message || "Invalid OTP code.");
                       }
-                    } catch (err) {
-                      setOtpLoginToast("Failed to login with OTP.");
+                    } catch {
+                      showOtpToastMsg("Failed to login with OTP.");
                     }
-                    setTimeout(() => setOtpLoginToast(""), 2000);
                   }}
-                  style={{ width: "100%", marginTop: 8 }}
-                >Login with OTP</button>
-              </>
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors"
+                >
+                  Verify and Log In
+                </button>
+              </div>
             )}
-            {otpLoginToast && <div className="toast toast-success" style={{ marginTop: 12 }}>{otpLoginToast}</div>}
+
+            {/* OTP specific status notifications */}
+            {otpLoginToast && (
+              <div className="mt-3.5 rounded-lg bg-slate-900 py-2 text-center text-[11px] text-white font-semibold">
+                {otpLoginToast}
+              </div>
+            )}
           </div>
         </div>
       )}

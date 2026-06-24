@@ -1,34 +1,46 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
-import "../styles/Admin.css";
 import Swal from 'sweetalert2';
+import {
+  UserPlus,
+  PlusCircle,
+  Flame,
+  BookOpen,
+  MessageSquare,
+  Trash2,
+  Edit2,
+  ArrowLeft,
+  X,
+  Info
+} from "lucide-react";
 
 export default function Admin() {
   const { user } = useUser();
   const navigate = useNavigate();
+
   // Redirect if not admin
   useEffect(() => {
     if (!user || user.role !== "admin") {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);
-  // Trending books state
-  const [showTrendingBooks, setShowTrendingBooks] = useState(false);
-  const [trendingBooks, setTrendingBooks] = useState([]);
-  // Fetch trending books from backend
-  const fetchTrendingBooks = async () => {
-    try {
-      const res = await api.get("/trending");
-      setTrendingBooks(Array.isArray(res.data) ? res.data : []);
-      localStorage.setItem('trendingBooks', JSON.stringify(res.data));
-    } catch (error) {
-      setTrendingBooks([]);
-    }
-  };
 
-  // ...existing code...
+  // Sidebar Tabs
+  const [showTrendingBooks, setShowTrendingBooks] = useState(false);
+  const [showAddAdmin, setShowAddAdmin] = useState(true);
+  const [showAddBook, setShowAddBook] = useState(false);
+  const [showBookList, setShowBookList] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
+
+  // Core Lists States
+  const [trendingBooks, setTrendingBooks] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [contactMessages, setContactMessages] = useState([]);
+
+  // Form States
   const [formData, setFormData] = useState({
     title: "",
     author: "",
@@ -40,49 +52,38 @@ export default function Admin() {
     description: "",
     image: ""
   });
+  
   const [adminData, setAdminData] = useState({
     email: "",
     password: "",
     name: ""
   });
+
   const [toast, setToast] = useState("");
-  const [showAddAdmin, setShowAddAdmin] = useState(true);
-  const [showAddBook, setShowAddBook] = useState(false);
-  const [books, setBooks] = useState([]);
-  const [showBookList, setShowBookList] = useState(false);
-  const [admins, setAdmins] = useState([]);
-  const [contactMessages, setContactMessages] = useState([]);
-  const [showMessages, setShowMessages] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [selectedMessageId, setSelectedMessageId] = useState(null);
-  // Fetch admins list
+  const [editingBook, setEditingBook] = useState(null);
+
+  // Drag over states
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  const fetchTrendingBooks = async () => {
+    try {
+      const res = await api.get("/trending");
+      setTrendingBooks(Array.isArray(res.data) ? res.data : []);
+      localStorage.setItem('trendingBooks', JSON.stringify(res.data));
+    } catch {
+      setTrendingBooks([]);
+    }
+  };
+
   const fetchAdmins = async () => {
     try {
       const res = await api.get("/auth/admins");
       setAdmins(Array.isArray(res.data) ? res.data : []);
-    } catch (error) {
-      // Optionally handle error
+    } catch {
+      setAdmins([]);
     }
-  };
-
-  useEffect(() => {
-    // Check admin access using backend API or context (example: fetch user info from backend)
-    // For now, assume backend handles admin authentication and redirects on login.
-    // If you use a global user context, check user role here.
-    // Otherwise, let backend protect admin routes.
-    // Remove localStorage usage.
-  }, [navigate]);
-
-  useEffect(() => {
-    fetchBooks();
-    fetchAdmins();
-    fetchTrendingBooks();
-    
-  }, []);
-
-  // Handler for closing admin panel
-  const handleCloseAdminPanel = () => {
-    navigate("/");
   };
 
   const fetchBooks = async () => {
@@ -94,26 +95,50 @@ export default function Admin() {
     }
   };
 
+  const fetchMessages = async () => {
+    try {
+      const res = await api.get("/admin/messages");
+      setContactMessages(res.data);
+    } catch (error) {
+      console.error("Error fetching messages", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+    fetchAdmins();
+    fetchTrendingBooks();
+  }, []);
+
+  const showToastMsg = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
+  };
+
+  const handleCloseAdminPanel = () => {
+    navigate("/");
+  };
+
   const handleDeleteBook = async (bookId) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: 'You will not be able to recover this book!',
+      text: 'You will not be able to recover this book details!',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#94A3B8'
     });
     if (!result.isConfirmed) {
       return;
     }
     try {
       await api.delete(`/books/${bookId}`);
-      setToast("Book deleted successfully");
-      setTimeout(() => setToast(""), 2500);
+      showToastMsg("✓ Book deleted successfully");
       fetchBooks();
-    } catch (error) {
-      setToast("Error deleting book");
-      setTimeout(() => setToast(""), 2500);
+    } catch {
+      showToastMsg("Error deleting book details.");
     }
   };
 
@@ -129,46 +154,45 @@ export default function Admin() {
 
   const handleAddAdmin = async (e) => {
     e.preventDefault();
-
     if (!adminData.email || !adminData.password || !adminData.name) {
-      setToast("Please fill in all admin fields");
-      setTimeout(() => setToast(""), 2500);
+      showToastMsg("Please fill in all admin fields");
       return;
     }
 
     try {
       await api.post("/auth/add-admin", adminData);
-      setToast("✓ New admin added successfully!");
-      setTimeout(() => setToast(""), 2500);
+      showToastMsg("✓ New admin added successfully!");
       setAdminData({ email: "", password: "", name: "" });
       fetchAdmins();
     } catch (error) {
-      setToast(error.response?.data?.message || "Error adding admin");
-      setTimeout(() => setToast(""), 3000);
+      showToastMsg(error.response?.data?.message || "Error adding admin");
     }
   };
 
-  // Remove admin handler (moved out of handleAddAdmin)
   const handleRemoveAdmin = async (adminId) => {
-    if (!window.confirm("Are you sure you want to remove this admin?")) return;
+    const result = await Swal.fire({
+      title: 'Remove Admin?',
+      text: 'Are you sure you want to remove this admin privileges?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, remove',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#EF4444'
+    });
+    if (!result.isConfirmed) return;
     try {
       await api.delete(`/auth/admins/${adminId}`);
-      setToast("Admin removed successfully");
-      setTimeout(() => setToast(""), 2000);
+      showToastMsg("Admin privileges removed.");
       fetchAdmins();
-    } catch (error) {
-      setToast("Error removing admin");
-      setTimeout(() => setToast(""), 2000);
+    } catch {
+      showToastMsg("Error removing admin.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate required fields
     if (!formData.title || !formData.author || !formData.price || !formData.image) {
-      setToast("Please fill in all required fields");
-      setTimeout(() => setToast(""), 2500);
+      showToastMsg("Please fill in all required fields.");
       return;
     }
 
@@ -186,37 +210,19 @@ export default function Admin() {
       };
 
       await api.post("/books", bookData);
-      setToast("✓ Book added successfully!");
-      setTimeout(() => setToast(""), 2500);
-
-      // Clear form and refresh books list
+      showToastMsg("✓ Book added successfully!");
       setFormData({
-        title: "",
-        author: "",
-        price: "",
-        originalPrice: "",
-        discount: "",
-        rating: "5",
-        category: "",
-        description: "",
-        image: ""
+        title: "", author: "", price: "", originalPrice: "", discount: "",
+        rating: "5", category: "", description: "", image: ""
       });
       fetchBooks();
-    } catch (error) {
-      setToast("Error adding book. Please check if you're logged in as admin.");
-      setTimeout(() => setToast(""), 3000);
+    } catch {
+      showToastMsg("Error adding book details.");
     }
   };
-  const fetchMessages = async () => {
-    try {
-      const res = await api.get("/admin/messages");
-      setContactMessages(res.data);
-    } catch (error) {
-      console.error("Error fetching messages", error);
-    }
-  };
+
   const sendReply = async (contactId) => {
-    if (!replyText) return;
+    if (!replyText.trim()) return;
 
     try {
       await api.post("/admin/reply", {
@@ -224,18 +230,14 @@ export default function Admin() {
         replyMessage: replyText
       });
 
-      setToast("Reply sent successfully!");
+      showToastMsg("✓ Reply sent successfully!");
       setReplyText("");
       setSelectedMessageId(null);
       fetchMessages();
     } catch (error) {
-      setToast("Failed to send reply");
+      showToastMsg("Failed to send reply message.");
     }
-
-    setTimeout(() => setToast(""), 2500);
   };
-  // Add state for editing
-  const [editingBook, setEditingBook] = useState(null);
 
   const handleEditBook = (book) => {
     setEditingBook(book);
@@ -248,11 +250,11 @@ export default function Admin() {
       title: book.title,
       author: book.author,
       price: book.price,
-      originalPrice: book.originalPrice,
-      discount: book.discount,
-      rating: book.rating,
-      category: book.category,
-      description: book.description,
+      originalPrice: book.originalPrice || "",
+      discount: book.discount || "",
+      rating: String(book.rating),
+      category: book.category || "",
+      description: book.description || "",
       image: book.image
     });
   };
@@ -273,697 +275,682 @@ export default function Admin() {
         image: formData.image
       };
       await api.put(`/books/${editingBook._id}`, bookData);
-      setToast("✓ Book updated successfully!");
-      setTimeout(() => setToast(""), 2500);
+      showToastMsg("✓ Book updated successfully!");
       setEditingBook(null);
       setFormData({
-        title: "",
-        author: "",
-        price: "",
-        originalPrice: "",
-        discount: "",
-        rating: "5",
-        category: "",
-        description: "",
-        image: ""
+        title: "", author: "", price: "", originalPrice: "", discount: "",
+        rating: "5", category: "", description: "", image: ""
       });
       fetchBooks();
       setShowBookList(true);
-    } catch (error) {
-      setToast("Error updating book.");
-      setTimeout(() => setToast(""), 3000);
+    } catch {
+      showToastMsg("Error updating book.");
+    }
+  };
+
+  const triggerTab = (tabName) => {
+    setEditingBook(null);
+    setShowAddAdmin(tabName === "addAdmin");
+    setShowAddBook(tabName === "addBook");
+    setShowTrendingBooks(tabName === "trending");
+    setShowBookList(tabName === "bookList");
+    setShowMessages(tabName === "messages");
+    if (tabName === "messages") {
+      fetchMessages();
     }
   };
 
   return (
-    <>
-      <div className="creative-bg-shapes">
-        <span className="shape1"></span>
-        <span className="shape2"></span>
-        <span className="shape3"></span>
-        <span className="shape4"></span>
-        <span className="shape5"></span>
-      </div>
-      <div className="admin-panel-layout">
-        <button className="admin-back-btn" onClick={handleCloseAdminPanel} title="Close Admin Panel">
-          Back to Store
-        </button>
-        <aside className="admin-sidebar">
-          <h2>Online Book Store</h2>
-          <div className="admin-sidebar-btns">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row">
+      {/* Sidebar Control Panel */}
+      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-r border-slate-800">
+        <div>
+          {/* Logo Brand */}
+          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-500" />
+              <span className="font-playfair text-base font-bold text-white tracking-tight">
+                Admin Console
+              </span>
+            </div>
             <button
-              className={`sidebar-btn${showAddAdmin ? ' active' : ''}`}
-              onClick={() => {
-                setShowAddAdmin(true);
-                setShowAddBook(false);
-                setShowBookList(false);
-                setShowTrendingBooks(false);
-                setShowMessages(false);
-              }}
+              onClick={handleCloseAdminPanel}
+              className="text-xs text-slate-400 hover:text-white md:hidden border border-slate-700 px-2 py-1 rounded"
             >
-              <span className="sidebar-emoji" role="img" aria-label="Add Admin">👤</span> Add Admin
-            </button>
-            <button
-              className={`sidebar-btn${showAddBook ? ' active' : ''}`}
-              onClick={() => {
-                setShowAddBook(true);
-                setShowAddAdmin(false);
-                setShowBookList(false);
-                setShowTrendingBooks(false);
-                setShowMessages(false);
-              }}
-            >
-              <span className="sidebar-emoji" role="img" aria-label="Add Book">➕</span> Add Book
-            </button>
-            <button
-              className={`sidebar-btn${showTrendingBooks ? ' active' : ''}`}
-              onClick={() => {
-                setShowTrendingBooks(true);
-                setShowAddAdmin(false);
-                setShowAddBook(false);
-                setShowBookList(false);
-                setShowMessages(false);
-              }}
-            >
-              <span className="sidebar-emoji" role="img" aria-label="Trending Books">🔥</span> Trending Books
-            </button>
-            <button
-              className={`sidebar-btn${showBookList ? ' active' : ''}`}
-              onClick={() => {
-                setShowBookList(true);
-                setShowAddAdmin(false);
-                setShowAddBook(false);
-                setShowTrendingBooks(false);
-                setShowMessages(false);
-              }}
-            >
-              <span className="sidebar-emoji" role="img" aria-label="View Books">📚</span> View Books ({books.length})
-            </button>
-            <button
-              className={`sidebar-btn${showMessages ? ' active' : ''}`}
-              onClick={() => {
-                setShowMessages(true);
-                setShowAddAdmin(false);
-                setShowAddBook(false);
-                setShowBookList(false);
-                setShowTrendingBooks(false);
-                fetchMessages();
-              }}
-
-            >
-              <span className="sidebar-emoji">💬</span> Customer Messages
+              Exit
             </button>
           </div>
-        </aside>
-        <div className="admin-main-content-wrapper">
-          <section className="admin-main-content">
-            {/* Split layout for Trending Books */}
-            {showTrendingBooks ? (
-              <div style={{ display: 'flex', gap: '32px', minHeight: '70vh' }}>
-                {/* Left: All Books */}
-                <div style={{ flex: '0 0 60%', borderRight: '2px solid #f3f3f3', paddingRight: '24px' }}>
-                  <h2 style={{ marginLeft: "52px" }}>All Books</h2>
-                  <div className="books-grid">
-                    {books.map((book) => (
-                      <div
-                        key={book._id}
-                        className="book-item-admin draggable-book"
-                        draggable
-                        onDragStart={e => {
-                          // Always use MongoDB _id for trendingBooks
-                          e.dataTransfer.setData('bookId', book._id);
-                        }}
-                      >
-                        <img src={book.image} alt={book.title} onError={e => e.target.src = 'https://via.placeholder.com/150'} />
-                        <div className="book-info-admin">
-                          <h3>{book.title}</h3>
-                          <p className="author">{book.author}</p>
-                          <p className="price">₹{book.price}</p>
-                          <p className="category">{book.category}</p>
-                        </div>
-                        <button className="delete-btn" onClick={() => handleDeleteBook(book._id)}>
-                          🗑️ Delete
-                        </button>
-                        <button className="edit-btn" style={{ marginTop: '10px' }} onClick={() => handleEditBook(book)}>
-                          <span role="img" aria-label="Edit">✏️</span> Edit
-                        </button>
+
+          {/* Nav Buttons */}
+          <nav className="p-4 space-y-1">
+            <button
+              onClick={() => triggerTab("addAdmin")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-colors ${
+                showAddAdmin ? "bg-blue-600 text-white" : "hover:bg-slate-800 text-slate-400"
+              }`}
+            >
+              <UserPlus className="h-4.5 w-4.5" />
+              Add Admin
+            </button>
+            <button
+              onClick={() => triggerTab("addBook")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-colors ${
+                showAddBook ? "bg-blue-600 text-white" : "hover:bg-slate-800 text-slate-400"
+              }`}
+            >
+              <PlusCircle className="h-4.5 w-4.5" />
+              Add Book
+            </button>
+            <button
+              onClick={() => triggerTab("trending")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-colors ${
+                showTrendingBooks ? "bg-blue-600 text-white" : "hover:bg-slate-800 text-slate-400"
+              }`}
+            >
+              <Flame className="h-4.5 w-4.5" />
+              Trending Books
+            </button>
+            <button
+              onClick={() => triggerTab("bookList")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-colors ${
+                showBookList ? "bg-blue-600 text-white" : "hover:bg-slate-800 text-slate-400"
+              }`}
+            >
+              <BookOpen className="h-4.5 w-4.5" />
+              View Books ({books.length})
+            </button>
+            <button
+              onClick={() => triggerTab("messages")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-colors ${
+                showMessages ? "bg-blue-600 text-white" : "hover:bg-slate-800 text-slate-400"
+              }`}
+            >
+              <MessageSquare className="h-4.5 w-4.5" />
+              Customer Messages
+            </button>
+          </nav>
+        </div>
+
+        {/* Exit link bottom */}
+        <div className="p-4 border-t border-slate-800 hidden md:block">
+          <button
+            onClick={handleCloseAdminPanel}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white py-2.5 text-xs font-bold transition-all"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Bookstore
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        {/* Floating toast notification */}
+        {toast && (
+          <div className="fixed bottom-6 left-6 z-50 rounded-xl bg-slate-900 border border-slate-800 text-white px-5 py-3.5 shadow-2xl text-xs font-bold flex items-center gap-2 animate-in slide-in-from-bottom-5 duration-200">
+            <Info className="h-4 w-4 text-blue-400 shrink-0" />
+            <span>{toast}</span>
+          </div>
+        )}
+
+        {/* 1. Add Admin Tab */}
+        {showAddAdmin && !editingBook && (
+          <div className="max-w-2xl space-y-6">
+            <div className="border-b border-slate-200 pb-4">
+              <h2 className="font-playfair text-2xl font-black text-slate-950">Add New Admin</h2>
+              <p className="text-slate-400 text-xs mt-1">Assign admin roles to new operators</p>
+            </div>
+            
+            <form onSubmit={handleAddAdmin} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <input
+                type="text"
+                name="name"
+                required
+                placeholder="Admin name"
+                value={adminData.name}
+                onChange={handleAdminChange}
+                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="Admin email"
+                value={adminData.email}
+                onChange={handleAdminChange}
+                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <input
+                type="password"
+                name="password"
+                required
+                placeholder="Create password"
+                value={adminData.password}
+                onChange={handleAdminChange}
+                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="sm:col-span-3 rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-xs font-bold text-white transition-colors"
+              >
+                Add Admin
+              </button>
+            </form>
+
+            <div className="space-y-4">
+              <h3 className="font-poppins font-bold text-slate-900 text-sm">Current Operators list</h3>
+              <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <ul className="divide-y divide-slate-100">
+                  {admins.map((adm) => (
+                    <li key={adm._id || adm.id} className="flex items-center justify-between p-4 text-xs">
+                      <div>
+                        <p className="font-bold text-slate-800">{adm.name}</p>
+                        <p className="text-slate-400 mt-0.5">{adm.email}</p>
                       </div>
-                    ))}
-                  </div>
+                      <button
+                        onClick={() => handleRemoveAdmin(adm._id || adm.id)}
+                        className="text-red-500 hover:text-red-700 font-bold border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                  {admins.length === 0 && (
+                    <li className="p-4 text-center text-slate-400">No admin accounts found.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. Add Book / Edit Book Tab */}
+        {(showAddBook || editingBook) && (
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 max-w-5xl">
+            {/* Form */}
+            <div className="lg:col-span-8 space-y-6">
+              <div className="border-b border-slate-200 pb-4">
+                <h2 className="font-playfair text-2xl font-black text-slate-950">
+                  {editingBook ? "Edit Book details" : "Add New Book"}
+                </h2>
+                <p className="text-slate-400 text-xs mt-1">Specify catalog listings pricing and categories</p>
+              </div>
+
+              <form onSubmit={editingBook ? handleUpdateBook : handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Book Title *
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    placeholder="Learn Javascript"
+                    value={formData.title}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
+                  />
                 </div>
-                {/* Right: Trending Books Drop Zone */}
-                <div style={{ flex: '0 0 40%', paddingLeft: '24px', position: 'relative', display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
-                  <h2>Trending Books</h2>
-                  <div
-                    className="books-grid trending-drop-zone"
-                    style={{ minHeight: '300px', background: '#fffbe9', border: '2px dashed #f59e0b', borderRadius: '12px', padding: '16px', transition: 'background 0.2s' }}
-                    onDragOver={e => {
-                      e.preventDefault();
-                      e.currentTarget.style.background = '#fff3c4';
-                    }}
-                    onDragLeave={e => {
-                      e.currentTarget.style.background = '#fffbe9';
-                    }}
-                    onDrop={async e => {
-                      e.preventDefault();
-                      e.currentTarget.style.background = '#fffbe9';
-                      const bookId = e.dataTransfer.getData('bookId');
-                      if (!bookId) return;
-                      // Only allow valid MongoDB _id
-                      if (!books.some(b => b._id === bookId)) {
-                        setToast('Invalid book selected');
-                        setTimeout(() => setToast(''), 2000);
-                        return;
-                      }
-                      if (trendingBooks.includes(bookId)) {
-                        setToast('Book already added to Trending');
-                        setTimeout(() => setToast(''), 2000);
-                        return;
-                      }
-                      // Filter out any undefined/invalid values (MongoDB ObjectId: 24 hex chars)
-                      const newTrending = [...trendingBooks, bookId]
-                        .map(id => (id ? String(id) : ''))
-                        .filter(id => typeof id === 'string' && /^[a-fA-F0-9]{24}$/.test(id));
-                      if (newTrending.length === 0) {
-                        setToast('No valid book IDs to add');
-                        setTimeout(() => setToast(''), 2000);
-                        return;
-                      }
-                      await api.post('/trending', { bookIds: newTrending });
-                      fetchTrendingBooks();
-                    }}
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Author *
+                  </label>
+                  <input
+                    type="text"
+                    name="author"
+                    required
+                    placeholder="Author name"
+                    value={formData.author}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Price (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    required
+                    placeholder="499"
+                    value={formData.price}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Original Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="originalPrice"
+                    placeholder="699"
+                    value={formData.originalPrice}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Discount (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="discount"
+                    min="0"
+                    max="100"
+                    placeholder="25"
+                    value={formData.discount}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Rating
+                  </label>
+                  <select
+                    name="rating"
+                    value={formData.rating}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none bg-white"
                   >
-                    {trendingBooks.length === 0 && <div style={{ color: '#f59e0b', textAlign: 'center', marginTop: '40px' }}>Drag books here to make them trending!</div>}
-                    {trendingBooks.map((id) => {
-                      const book = books.find(b => b._id === id);
-                      if (!book) return null;
-                      return (
-                        <div key={id} className="book-item-admin trending-selected" style={{ position: 'relative' }}>
-                          <img src={book.image} alt={book.title} onError={e => e.target.src = 'https://via.placeholder.com/150'} />
-                          <div className="book-info-admin">
-                            <h3>{book.title}</h3>
-                            <p className="author">{book.author}</p>
-                            <p className="price">₹{book.price}</p>
-                            <p className="category">{book.category}</p>
-                          </div>
-                          <button
-                            className="remove-trending-btn"
-                            style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', color: '#e11d48', fontSize: '1.2rem', cursor: 'pointer' }}
-                            onClick={async () => {
-                              // Only allow valid MongoDB _id
-                              if (!books.some(b => b._id === id)) {
-                                setToast('Invalid book selected');
-                                setTimeout(() => setToast(''), 2000);
-                                return;
-                              }
-                              const updated = trendingBooks
-                                .map(tid => (tid ? String(tid) : ''))
-                                .filter(tid => tid !== id && /^[a-fA-F0-9]{24}$/.test(tid));
-                              await api.post('/trending', { bookIds: updated });
-                              fetchTrendingBooks();
-                            }}
-                          >❌</button>
-                        </div>
-                      );
-                    })}
-                  </div>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="2">2 Stars</option>
+                    <option value="1">1 Star</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Category *
+                  </label>
+                  <select
+                    name="category"
+                    required
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none bg-white"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Fiction">Fiction</option>
+                    <option value="Non-Fiction">Non-Fiction</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Business">Business</option>
+                    <option value="Self-Help">Self-Help</option>
+                    <option value="Children">Children</option>
+                    <option value="Academic">Academic</option>
+                    <option value="Manga">Manga</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Image Cover URL *
+                  </label>
+                  <input
+                    type="url"
+                    name="image"
+                    required
+                    placeholder="https://images.unsplash.com/photo-..."
+                    value={formData.image}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                    Book Description
+                  </label>
+                  <textarea
+                    name="description"
+                    rows={4}
+                    placeholder="Write detailed book contents information..."
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 flex gap-3 pt-3 border-t border-slate-100 mt-2">
                   <button
-                    className="more-books-btn"
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      right: 0,
-                      margin: '16px',
-                      background: 'var(--primary)',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '10px 22px',
-                      fontWeight: 600,
-                      fontSize: '1rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(79,70,229,0.13)',
-                      zIndex: 2
-                    }}
-                    onClick={() => navigate('/allbooks')}
+                    type="submit"
+                    className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-xs font-bold text-white transition-colors"
                   >
-                    More Books
+                    {editingBook ? "Update Book" : "Add Book"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingBook) {
+                        setEditingBook(null);
+                        setShowBookList(true);
+                      }
+                      setFormData({
+                        title: "", author: "", price: "", originalPrice: "", discount: "",
+                        rating: "5", category: "", description: "", image: ""
+                      });
+                    }}
+                    className="flex-1 rounded-xl border border-slate-200 hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-colors"
+                  >
+                    Cancel
                   </button>
                 </div>
+              </form>
+            </div>
+
+            {/* Preview Column */}
+            <div className="lg:col-span-4 space-y-4">
+              <h3 className="font-poppins font-bold text-slate-900 text-sm">Card Preview</h3>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm relative max-w-xs mx-auto">
+                <div className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center mb-4">
+                  {formData.image ? (
+                    <img src={formData.image} alt="Preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <BookOpen className="h-8 w-8 text-slate-300" />
+                  )}
+                </div>
+                <h4 className="font-poppins font-bold text-slate-900 text-sm truncate">
+                  {formData.title || "Book Title"}
+                </h4>
+                <p className="text-slate-400 text-xs">by {formData.author || "Author"}</p>
+                <div className="flex items-baseline gap-1.5 mt-3 text-xs font-bold text-slate-900">
+                  <span>₹{formData.price || "0"}</span>
+                  {formData.originalPrice && (
+                    <span className="text-slate-400 line-through font-semibold text-[10px]">
+                      ₹{formData.originalPrice}
+                    </span>
+                  )}
+                </div>
               </div>
-            ) : (
-              // ...existing admin content (forms, lists, etc.) goes here...
-              <>
-                {showAddAdmin && (
-                  <div className="add-admin-section">
-                    <h2>Add New Admin</h2>
-                    <form className="admin-form-inline" onSubmit={handleAddAdmin}>
-                      <input
-                        type="email"
-                        name="email"
-                        placeholder="Admin Email"
-                        value={adminData.email}
-                        onChange={handleAdminChange}
-                        required
-                      />
-                      <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={adminData.password}
-                        onChange={handleAdminChange}
-                        required
-                      />
-                      <input
-                        type="text"
-                        name="name"
-                        placeholder="Admin Name"
-                        value={adminData.name}
-                        onChange={handleAdminChange}
-                        required
-                      />
-                      <button type="submit" className="submit-admin-btn">Add Admin</button>
-                    </form>
-                    <div className="admin-list-section">
-                      <h3>Current Admins</h3>
-                      <ul className="admin-list">
-                        {admins.map((admin) => (
-                          <li key={admin._id || admin.id} className="admin-list-item">
-                            <span>{admin.name} ({admin.email})</span>
-                            <button className="remove-admin-btn" onClick={() => handleRemoveAdmin(admin._id || admin.id)}>Remove</button>
-                          </li>
-                        ))}
-                        {admins.length === 0 && <li>No admins found.</li>}
-                      </ul>
+            </div>
+          </div>
+        )}
+
+        {/* 3. Drag and Drop Trending Zone Tab */}
+        {showTrendingBooks && !editingBook && (
+          <div className="space-y-6">
+            <div className="border-b border-slate-200 pb-4">
+              <h2 className="font-playfair text-2xl font-black text-slate-950">Manage Trending Listings</h2>
+              <p className="text-slate-400 text-xs mt-1">
+                Drag books from the catalog list and drop them inside the yellow zone to assign them to Trending.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+              {/* Left Catalog list (Draggable) */}
+              <div className="lg:col-span-7 space-y-4">
+                <h3 className="font-poppins font-bold text-slate-900 text-sm">Available Bookstore Catalog</h3>
+                <div className="max-h-[70vh] overflow-y-auto border border-slate-200 bg-white rounded-2xl p-4 space-y-3 shadow-inner">
+                  {books.map((bk) => (
+                    <div
+                      key={bk._id}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData("bookId", bk._id)}
+                      className="flex items-center gap-3 border border-slate-100 rounded-xl p-3 bg-slate-50 cursor-grab hover:bg-slate-100 active:cursor-grabbing hover:border-slate-200 transition-all select-none"
+                    >
+                      <img src={bk.image} alt={bk.title} className="w-12 h-16 rounded object-cover shadow-sm shrink-0 bg-slate-100" />
+                      <div className="flex-1 min-w-0 text-xs">
+                        <h4 className="font-bold text-slate-900 truncate">{bk.title}</h4>
+                        <p className="text-slate-400 truncate">by {bk.author}</p>
+                      </div>
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">
+                        {bk.category}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Zone (Drop Target) */}
+              <div className="lg:col-span-5 space-y-4">
+                <h3 className="font-poppins font-bold text-slate-900 text-sm">Trending Collection Dropzone</h3>
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingOver(true);
+                  }}
+                  onDragLeave={() => setIsDraggingOver(false)}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setIsDraggingOver(false);
+                    const id = e.dataTransfer.getData("bookId");
+                    if (!id) return;
+
+                    if (trendingBooks.includes(id)) {
+                      showToastMsg("This book is already flagged trending.");
+                      return;
+                    }
+
+                    // Strict verification of ObjectId
+                    const cleanedList = [...trendingBooks, id]
+                      .map(tid => String(tid))
+                      .filter(tid => /^[a-fA-F0-9]{24}$/.test(tid));
+
+                    try {
+                      await api.post('/trending', { bookIds: cleanedList });
+                      showToastMsg("✓ Added to trending list successfully!");
+                      fetchTrendingBooks();
+                    } catch {
+                      showToastMsg("Error saving trending collection.");
+                    }
+                  }}
+                  className={`min-h-[350px] rounded-3xl border-2 border-dashed flex flex-col items-center justify-center p-6 transition-all ${
+                    isDraggingOver
+                      ? "border-blue-500 bg-blue-50/50"
+                      : "border-amber-400 bg-amber-50/40"
+                  }`}
+                >
+                  {trendingBooks.length === 0 ? (
+                    <div className="text-center text-amber-500 text-xs max-w-xs space-y-2">
+                      <Flame className="h-10 w-10 text-amber-400 mx-auto animate-pulse" />
+                      <p className="font-bold">Drag and drop books here</p>
+                      <p className="text-[10px] text-slate-400 leading-normal">
+                        Select a book from the left panel and drop it inside this window.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="w-full space-y-3">
+                      {trendingBooks.map((tid) => {
+                        const book = books.find(b => b._id === tid);
+                        if (!book) return null;
+                        return (
+                          <div
+                            key={tid}
+                            className="flex items-center justify-between gap-3 border border-amber-100 rounded-2xl p-3 bg-white shadow-sm relative"
+                          >
+                            <img src={book.image} alt={book.title} className="w-10 h-14 rounded object-cover shadow-sm bg-slate-100 shrink-0" />
+                            <div className="flex-1 min-w-0 text-[11px] text-left">
+                              <h4 className="font-bold text-slate-800 truncate">{book.title}</h4>
+                              <p className="text-slate-400 truncate">by {book.author}</p>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                const cleanedList = trendingBooks
+                                  .map(item => String(item))
+                                  .filter(item => item !== tid && /^[a-fA-F0-9]{24}$/.test(item));
+
+                                try {
+                                  await api.post('/trending', { bookIds: cleanedList });
+                                  showToastMsg("Removed from trending.");
+                                  fetchTrendingBooks();
+                                } catch {
+                                  showToastMsg("Error saving trending collection.");
+                                }
+                              }}
+                              className="p-1 rounded text-red-500 hover:bg-red-50"
+                              aria-label="Remove trending item"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. View Books Catalog List Tab */}
+        {showBookList && !editingBook && (
+          <div className="space-y-6">
+            <div className="border-b border-slate-200 pb-4">
+              <h2 className="font-playfair text-2xl font-black text-slate-950">Book Library Catalog</h2>
+              <p className="text-slate-400 text-xs mt-1">Manage database records of books</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {books.map((bk) => (
+                <div
+                  key={bk._id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow relative flex gap-3.5"
+                >
+                  <img src={bk.image} alt={bk.title} className="w-16 h-24 rounded-lg object-cover shadow-sm shrink-0 bg-slate-100" />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between text-xs">
+                    <div>
+                      <h4 className="font-bold text-slate-900 truncate">{bk.title}</h4>
+                      <p className="text-slate-400 truncate">by {bk.author}</p>
+                      <span className="inline-block text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded mt-1.5 uppercase tracking-wide">
+                        {bk.category}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-4 border-t border-slate-50 pt-2.5">
+                      <button
+                        onClick={() => handleEditBook(bk)}
+                        className="flex-1 inline-flex items-center justify-center gap-1 border border-slate-200 hover:bg-slate-50 py-1.5 rounded-lg font-bold text-slate-700 transition-colors"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBook(bk._id)}
+                        className="flex-1 inline-flex items-center justify-center gap-1 border border-red-150 hover:bg-red-50 py-1.5 rounded-lg font-bold text-red-500 transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </button>
                     </div>
                   </div>
-                )}
+                </div>
+              ))}
+              {books.length === 0 && (
+                <div className="col-span-full py-16 text-center text-slate-400">
+                  No books stored in catalog. Click "Add Book" to create entries.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-                {showAddBook && (
-                  <div className="admin-content">
-                    <form className="admin-form" onSubmit={handleSubmit}>
-                      <div className="form-grid">
-                        <div className="form-group">
-                          <label htmlFor="title">Book Title *</label>
-                          <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            placeholder="Enter book title"
-                            required
-                          />
-                        </div>
+        {/* 5. Customer Messages / Contact Inbox Tab */}
+        {showMessages && !showAddAdmin && !editingBook && (
+          <div className="max-w-3xl space-y-6">
+            <div className="border-b border-slate-200 pb-4">
+              <h2 className="font-playfair text-2xl font-black text-slate-950">Customer Messages Inbox</h2>
+              <p className="text-slate-400 text-xs mt-1">Review contact inquiries and send replies</p>
+            </div>
 
-                        <div className="form-group">
-                          <label htmlFor="author">Author *</label>
-                          <input
-                            type="text"
-                            id="author"
-                            name="author"
-                            value={formData.author}
-                            onChange={handleChange}
-                            placeholder="Enter author name"
-                            required
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="price">Price (₹) *</label>
-                          <input
-                            type="number"
-                            id="price"
-                            name="price"
-                            value={formData.price}
-                            onChange={handleChange}
-                            placeholder="500"
-                            required
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="originalPrice">Original Price (₹)</label>
-                          <input
-                            type="number"
-                            id="originalPrice"
-                            name="originalPrice"
-                            value={formData.originalPrice}
-                            onChange={handleChange}
-                            placeholder="700"
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="discount">Discount (%)</label>
-                          <input
-                            type="number"
-                            id="discount"
-                            name="discount"
-                            value={formData.discount}
-                            onChange={handleChange}
-                            placeholder="29"
-                            min="0"
-                            max="100"
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="rating">Rating *</label>
-                          <select
-                            id="rating"
-                            name="rating"
-                            value={formData.rating}
-                            onChange={handleChange}
-                            required
-                          >
-                            <option value="5">5 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="2">2 Stars</option>
-                            <option value="1">1 Star</option>
-                          </select>
-                        </div>
-
-                        <div className="form-group full-width">
-                          <label htmlFor="category">Category</label>
-                          <select
-                            id="category"
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            required
-                          >
-                            <option value="">Select Category</option>
-                            <option value="Fiction">Fiction</option>
-                            <option value="Non-Fiction">Non-Fiction</option>
-                            <option value="Programming">Programming</option>
-                            <option value="Business">Business</option>
-                            <option value="Self-Help">Self-Help</option>
-                            <option value="Competitive Exams">Competitive Exams</option>
-                            <option value="Kids">Kids</option>
-                            <option value="Spiritual">Spiritual</option>
-                          </select>
-                        </div>
-
-                        <div className="form-group full-width">
-                          <label htmlFor="image">Image URL *</label>
-                          <input
-                            type="url"
-                            id="image"
-                            name="image"
-                            value={formData.image}
-                            onChange={handleChange}
-                            placeholder="https://example.com/book-cover.jpg"
-                            required
-                          />
-                        </div>
-
-                        <div className="form-group full-width">
-                          <label htmlFor="description">Description</label>
-                          <textarea
-                            id="description"
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            placeholder="Enter book description..."
-                            rows="4"
-                          ></textarea>
-                        </div>
-                      </div>
-
-                      <div className="form-actions">
-                        <button type="submit" className="submit-btn">Add Book</button>
-                        <button type="button" className="reset-btn" onClick={() => setFormData({
-                          title: "", author: "", price: "", originalPrice: "", discount: "",
-                          rating: "5", category: "", description: "", image: ""
-                        })}>Clear Form</button>
-                      </div>
-                    </form>
-
-                    {formData.image && (
-                      <div className="preview-section">
-                        <h3>Preview</h3>
-                        <div className="book-preview">
-                          <img src={formData.image} alt="Preview" onError={e => e.target.src = ''} />
-                          <h4>{formData.title || "Book Title"}</h4>
-                          <p>{formData.author || "Author Name"}</p>
-                          <div className="preview-price">
-                            <span>₹{formData.price || "0"}</span>
-                            {formData.originalPrice && <span className="old-price">₹{formData.originalPrice}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+            <div className="space-y-4">
+              {contactMessages.map((msg) => (
+                <div
+                  key={msg._id}
+                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4"
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div>
+                      <h4 className="font-poppins font-bold text-slate-900 text-sm">{msg.name}</h4>
+                      <p className="text-xs text-slate-400 font-semibold">{msg.email}</p>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-semibold">
+                      ID: {msg._id.slice(-6)}
+                    </span>
                   </div>
-                )}
 
-                {/* Edit Book Form */}
-                {editingBook && (
-                  <div className="admin-content">
-                    <h2>Edit Book</h2>
-                    <form className="admin-form" onSubmit={handleUpdateBook}>
-                      <div className="form-grid">
-                        <div className="form-group">
-                          <label htmlFor="title">Book Title *</label>
-                          <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            placeholder="Enter book title"
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="author">Author *</label>
-                          <input
-                            type="text"
-                            id="author"
-                            name="author"
-                            value={formData.author}
-                            onChange={handleChange}
-                            placeholder="Enter author name"
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="price">Price (₹) *</label>
-                          <input
-                            type="number"
-                            id="price"
-                            name="price"
-                            value={formData.price}
-                            onChange={handleChange}
-                            placeholder="500"
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="originalPrice">Original Price (₹)</label>
-                          <input
-                            type="number"
-                            id="originalPrice"
-                            name="originalPrice"
-                            value={formData.originalPrice}
-                            onChange={handleChange}
-                            placeholder="700"
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="discount">Discount (%)</label>
-                          <input
-                            type="number"
-                            id="discount"
-                            name="discount"
-                            value={formData.discount}
-                            onChange={handleChange}
-                            placeholder="29"
-                            min="0"
-                            max="100"
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="rating">Rating *</label>
-                          <select
-                            id="rating"
-                            name="rating"
-                            value={formData.rating}
-                            onChange={handleChange}
-                            required
-                          >
-                            <option value="5">5 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="2">2 Stars</option>
-                            <option value="1">1 Star</option>
-                          </select>
-                        </div>
-                        <div className="form-group full-width">
-                          <label htmlFor="category">Category</label>
-                          <select
-                            id="category"
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            required
-                          >
-                            <option value="">Select Category</option>
-                            <option value="Fiction">Fiction</option>
-                            <option value="Non-Fiction">Non-Fiction</option>
-                            <option value="Programming">Programming</option>
-                            <option value="Business">Business</option>
-                            <option value="Self-Help">Self-Help</option>
-                            <option value="Competitive Exams">Competitive Exams</option>
-                            <option value="Kids">Kids</option>
-                            <option value="Spiritual">Spiritual</option>
-                          </select>
-                        </div>
-                        <div className="form-group full-width">
-                          <label htmlFor="image">Image URL *</label>
-                          <input
-                            type="url"
-                            id="image"
-                            name="image"
-                            value={formData.image}
-                            onChange={handleChange}
-                            placeholder="https://example.com/book-cover.jpg"
-                            required
-                          />
-                        </div>
-                        <div className="form-group full-width">
-                          <label htmlFor="description">Description</label>
-                          <textarea
-                            id="description"
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            placeholder="Enter book description..."
-                            rows="4"
-                          ></textarea>
-                        </div>
-                      </div>
-                      <div className="form-actions">
-                        <button type="submit" className="submit-btn">Update</button>
-                        <button type="button" className="reset-btn" onClick={() => {
-                          setEditingBook(null);
-                          setFormData({
-                            title: "",
-                            author: "",
-                            price: "",
-                            originalPrice: "",
-                            discount: "",
-                            rating: "5",
-                            category: "",
-                            description: "",
-                            image: ""
-                          });
-                          setShowBookList(true);
-                        }}>Cancel</button>
-                      </div>
-                    </form>
-                    {formData.image && (
-                      <div className="preview-section">
-                        <h3>Preview</h3>
-                        <div className="book-preview">
-                          <img src={formData.image} alt="Preview" onError={e => e.target.src = ''} />
-                          <h4>{formData.title || "Book Title"}</h4>
-                          <p>{formData.author || "Author Name"}</p>
-                          <div className="preview-price">
-                            <span>₹{formData.price || "0"}</span>
-                            {formData.originalPrice && <span className="old-price">₹{formData.originalPrice}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  <p className="text-xs text-slate-600 bg-slate-50 rounded-xl p-4 leading-relaxed border border-slate-100">
+                    {msg.message}
+                  </p>
 
-                {showBookList && (
-                  <div className="books-list-section">
-                    <h2 style={{ marginLeft: "52px" }}>All Books ({books.length})</h2>
-                    <div className="books-grid">
-                      {books.map((book) => (
-                        <div key={book._id} className="book-item-admin">
-                          <img src={book.image} alt={book.title} onError={e => e.target.src = 'https://via.placeholder.com/150'} />
-                          <div className="book-info-admin">
-                            <h3>{book.title}</h3>
-                            <p className="author">{book.author}</p>
-                            <p className="price">₹{book.price}</p>
-                            <p className="category">{book.category}</p>
-                          </div>
-                          <button className="delete-btn" onClick={() => handleDeleteBook(book._id)}>
-                            🗑️ Delete
-                          </button>
-                          <button className="edit-btn" style={{ marginTop: '10px', width: '100%', padding: '9px', }} onClick={() => handleEditBook(book)}>
-                            <span role="img" aria-label="Edit">✏️</span> Edit
-                          </button>
+                  {/* Replies list logs */}
+                  {msg.replies && msg.replies.length > 0 && (
+                    <div className="space-y-2.5 pl-4 border-l-2 border-blue-500/35">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                        Response Logs
+                      </span>
+                      {msg.replies.map((rep, idx) => (
+                        <div key={rep._id || `${msg._id}-${idx}`} className="text-xs">
+                          <p className="font-bold text-blue-600">
+                            {rep.fromAdmin ? "Online Books Store" : msg.name}
+                          </p>
+                          <p className="text-slate-600 mt-0.5">{rep.message}</p>
+                          <span className="text-[9px] text-slate-400 mt-1 block">
+                            {new Date(rep.date).toLocaleString()}
+                          </span>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-                    {showMessages && !showAddAdmin && (
-              <div className="admin-content">
-                <h2>Customer Messages</h2>
+                  )}
 
-                {contactMessages.length === 0 && <p>No messages yet.</p>}
-
-                {contactMessages.map((msg) => (
-                  <div key={msg._id} style={{
-                    border: "1px solid #ddd",
-                    padding: "15px",
-                    marginBottom: "15px",
-                    borderRadius: "8px"
-                  }}>
-                    <p><strong>Name:</strong> {msg.name}</p>
-                    <p><strong>Email:</strong> {msg.email}</p>
-                    <p><strong>Message:</strong> {msg.message}</p>
-                    {/* Show all replies */}
-                    {msg.replies && msg.replies.length > 0 && (
-                      <div style={{marginTop: '8px', marginBottom: '8px'}}>
-                        <strong>Replies:</strong>
-                        <ul style={{paddingLeft: '18px'}}>
-                          {msg.replies.map((rep, idx) => (
-                            <li key={rep._id || `${msg._id}-${idx}`} style={{marginBottom: '4px', color: '#2563eb'}}>
-                              <strong>{rep.fromAdmin ? 'Online Book Store' : msg.name}:</strong> {rep.message} <span style={{fontSize: '0.85em', color: '#888'}}>({new Date(rep.date).toLocaleString()})</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {/* Always allow reply */}
-                    {selectedMessageId === msg._id ? (
-                      <>
-                        <textarea
-                          placeholder="Write your reply..."
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          rows={4}
-                          style={{ width: "100%", marginBottom: "10px" }}
-                        />
-                        <button onClick={() => sendReply(msg._id)}>
-                          Send Reply
+                  {/* Message Action Reply triggers */}
+                  {selectedMessageId === msg._id ? (
+                    <div className="space-y-3 pt-2">
+                      <textarea
+                        rows={3}
+                        placeholder="Write message reply here..."
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:outline-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => sendReply(msg._id)}
+                          className="rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-xs font-bold text-white transition-colors"
+                        >
+                          Send Response
                         </button>
-                      </>
-                    ) : (
-                      <button onClick={() => setSelectedMessageId(msg._id)}>
-                        Reply
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-              </>
-            )}
-        
-
-            {toast && <div className="toast toast-success">{toast}</div>}
-          </section>
-        </div>
-      </div>
-    </>
+                        <button
+                          onClick={() => {
+                            setSelectedMessageId(null);
+                            setReplyText("");
+                          }}
+                          className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setSelectedMessageId(msg._id)}
+                      className="rounded-lg border border-blue-200 text-blue-600 font-bold hover:bg-blue-50 px-4 py-2 text-xs transition-colors"
+                    >
+                      Reply to Inquiry
+                    </button>
+                  )}
+                </div>
+              ))}
+              {contactMessages.length === 0 && (
+                <div className="text-center py-16 text-slate-400 border border-dashed border-slate-200 rounded-3xl bg-white">
+                  Message inbox is empty.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
