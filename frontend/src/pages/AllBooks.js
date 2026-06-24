@@ -101,8 +101,8 @@ export default function AllBooks() {
   };
 
   const openCheckout = (book) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
       showToastMsg("Please login or register to buy books.");
       navigate("/login");
       return;

@@ -8,7 +8,8 @@ import {
   ArrowRight,
   ShieldCheck,
   X,
-  Info
+  Info,
+  Plus
 } from "lucide-react";
 
 export default function Cart() {
@@ -54,8 +55,8 @@ export default function Cart() {
   };
 
   const openCheckout = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
       showToastMsg("Please login first to proceed with checkout.");
       navigate("/login");
       return;
@@ -202,6 +203,15 @@ export default function Cart() {
                   </button>
                 </div>
               ))}
+
+              {/* Add More Books Button */}
+              <button
+                onClick={() => navigate("/all-books")}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-100/70 hover:border-blue-400 py-4 text-sm font-bold text-blue-600 transition-all active:scale-[0.98] group"
+              >
+                <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
+                Add More Books
+              </button>
             </div>
 
             {/* Right Summary Column */}
