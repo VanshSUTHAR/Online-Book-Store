@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
+import BookCard from "../components/BookCard";
 import {
   Search,
   BookOpen,
   Star,
   ShoppingCart,
-  Heart,
-  Eye,
   X,
   Clock,
   ChevronRight,
@@ -231,49 +230,52 @@ export default function AllBooks() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-12">
+    <div className="min-h-screen bg-[#FAF9F6] py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-8 mb-10 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200/80 pb-8 mb-12 gap-6">
           <div>
-            <h1 className="font-playfair text-4xl font-black text-slate-900 md:text-5xl">
-              All Books Catalog
+            <span className="text-xs font-sans font-semibold text-terracotta bg-red-50 px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">
+              Literary Repository
+            </span>
+            <h1 className="font-serif text-4xl font-bold text-slate-rich md:text-5xl">
+              Complete Catalog
             </h1>
-            <p className="text-slate-500 text-sm mt-2">
-              Browse through our complete library grouped by specific genre categories.
+            <p className="text-slate-500 font-sans text-sm mt-2 max-w-lg">
+              Explore our curated library organized by specialized genres, historical periods, and literary movements.
             </p>
           </div>
 
           {/* Search bar input */}
-          <div className="relative flex items-center w-full md:w-80 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-            <Search className="h-4.5 w-4.5 text-slate-400" />
+          <div className="relative flex items-center w-full md:w-80 rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 shadow-sm focus-within:border-terracotta focus-within:ring-2 focus-within:ring-red-500/10 transition-all">
+            <Search className="h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search title, author, publisher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border-none bg-transparent pl-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
+              className="w-full border-none bg-transparent pl-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-sans"
             />
           </div>
         </div>
 
         {/* Categories sidebar navigation map */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           {/* Quick Categories Navigation Anchor Sidebar (Desktop only) */}
-          <aside className="hidden lg:block lg:col-span-3 space-y-4 sticky top-24 self-start">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <h3 className="font-poppins font-bold text-slate-900 text-xs uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">
-                Quick Navigation
+          <aside className="hidden lg:block lg:col-span-3 space-y-4 sticky top-28 self-start">
+            <div className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-editorial">
+              <h3 className="font-serif font-bold text-slate-rich text-sm tracking-wide border-b border-slate-100 pb-2.5 mb-3">
+                Genres & Collections
               </h3>
               <nav className="space-y-1">
                 {Object.keys(booksByCategory).map((cat) => (
                   <a
                     key={cat}
                     href={`#${cat}`}
-                    className="flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-blue-600 hover:bg-slate-50 px-2 py-1.5 rounded-lg transition-colors"
+                    className="flex items-center justify-between text-xs font-sans font-medium text-slate-600 hover:text-terracotta hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
                   >
                     <span>{cat}</span>
-                    <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full font-sans">
                       {booksByCategory[cat].length}
                     </span>
                   </a>
@@ -283,122 +285,38 @@ export default function AllBooks() {
           </aside>
 
           {/* Main Grid content list */}
-          <main className="lg:col-span-9 space-y-12">
+          <main className="lg:col-span-9 space-y-16">
             {Object.keys(booksByCategory).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-200 rounded-3xl bg-white">
-                <BookOpen className="h-12 w-12 text-slate-300 mb-2" />
-                <p className="text-slate-500 font-medium">No books match your criteria.</p>
+              <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-300 rounded-xl bg-white p-8">
+                <BookOpen className="h-12 w-12 text-slate-300 mb-3 stroke-[1.5]" />
+                <p className="text-slate-600 font-serif text-lg font-semibold">No editions found matching your search.</p>
+                <p className="text-slate-400 font-sans text-xs mt-1">Try adjusting your search terms or clearing filters.</p>
               </div>
             ) : (
               Object.entries(booksByCategory).map(([category, categoryBooks]) => (
                 <section
                   key={category}
                   id={category}
-                  className="scroll-mt-24 space-y-5"
+                  className="scroll-mt-28 space-y-6"
                 >
-                  <div className="flex items-center gap-2 border-b border-slate-200 pb-2.5">
-                    <span className="text-2xl" role="img" aria-label="Category icon">
-                      📚
-                    </span>
-                    <h2 className="font-poppins font-bold text-slate-900 text-lg md:text-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-200/80 pb-3">
+                    <h2 className="font-serif font-bold text-slate-rich text-xl md:text-2xl">
                       {category}
                     </h2>
-                    <span className="text-xs text-slate-400 font-semibold">
-                      ({categoryBooks.length} items)
+                    <span className="text-xs text-slate-400 font-sans font-medium">
+                      ({categoryBooks.length} {categoryBooks.length === 1 ? 'edition' : 'editions'})
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-                    {categoryBooks.map((book) => {
-                      const isFavorite = wishlist.some(
-                        (item) => (item._id || item.id) === (book._id || book.id)
-                      );
-                      return (
-                        <div
-                          key={book._id || book.id}
-                          onClick={() => openDetail(book)}
-                          className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col relative"
-                        >
-                          {book.discount > 0 ? (
-                            <span className="absolute top-4 left-4 z-10 rounded-lg bg-green-500 text-[10px] font-bold text-white px-2 py-1 shadow-sm uppercase tracking-wide">
-                              {book.discount}% OFF
-                            </span>
-                          ) : null}
-
-                          <button
-                            onClick={(e) => toggleWishlist(book, e)}
-                            className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm border border-slate-100 text-slate-400 hover:text-red-500 transition-colors"
-                            aria-label="Wishlist toggle"
-                          >
-                            <Heart
-                              className={`h-4.5 w-4.5 ${
-                                isFavorite ? "fill-red-500 text-red-500" : ""
-                              }`}
-                            />
-                          </button>
-
-                          <div className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center mb-4 relative">
-                            <img
-                              src={book.image}
-                              alt={book.title}
-                              className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md text-slate-700 hover:text-blue-600 transition-colors">
-                                <Eye className="h-4.5 w-4.5" />
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex-1 flex flex-col justify-between">
-                            <div>
-                              <h3 className="font-poppins font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-blue-600 transition-colors">
-                                {book.title}
-                              </h3>
-                              <p className="text-slate-400 text-xs mt-0.5 line-clamp-1">
-                                by {book.author}
-                              </p>
-                              <div className="mt-2">{renderStars(book.rating)}</div>
-                            </div>
-
-                            <div className="mt-4">
-                              <div className="flex items-baseline gap-1.5 mb-3">
-                                <span className="text-base font-extrabold text-slate-900">
-                                  ₹{book.price}
-                                </span>
-                                {book.originalPrice && (
-                                  <span className="text-xs text-slate-400 line-through">
-                                    ₹{book.originalPrice}
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    addToCart(book);
-                                  }}
-                                  className="flex items-center justify-center gap-1 rounded-lg border border-slate-200 hover:bg-slate-50 py-1.5 text-xs font-bold text-slate-700 transition-colors"
-                                >
-                                  <ShoppingCart className="h-3.5 w-3.5" />
-                                  Cart
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openCheckout(book);
-                                  }}
-                                  className="rounded-lg bg-blue-600 hover:bg-blue-700 py-1.5 text-xs font-bold text-white transition-colors"
-                                >
-                                  Buy
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {categoryBooks.map((book) => (
+                      <BookCard
+                        key={book._id || book.id}
+                        book={book}
+                        onQuickAdd={(item) => addToCart(item)}
+                        onQuickView={(item) => openDetail(item)}
+                      />
+                    ))}
                   </div>
                 </section>
               ))

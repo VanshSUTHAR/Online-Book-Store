@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { api } from "../services/api";
+import CartDrawer from "./CartDrawer";
 import {
   BookOpen,
   ShoppingCart,
@@ -28,6 +29,7 @@ export default function Navbar() {
   const [activeLink, setActiveLink] = useState("home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
@@ -287,21 +289,21 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md transition-all duration-300">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-[#FAF9F6]/90 backdrop-blur-md transition-all duration-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-20 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
               <Link
                 to="/"
                 onClick={() => setActiveLink("home")}
-                className="flex items-center gap-2.5 group"
+                className="flex items-center gap-3 group"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10 group-hover:scale-105 transition-transform duration-300">
-                  <BookOpen className="h-5 w-5 text-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-terracotta text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <BookOpen className="h-5 w-5 stroke-[2.2]" />
                 </div>
-                <span className="font-playfair text-xl font-extrabold tracking-tight text-slate-900 md:text-2xl">
-                  Online<span className="text-blue-600">Books</span>
+                <span className="font-serif text-2xl font-bold tracking-tight text-slate-rich">
+                  Athenaeum<span className="text-terracotta">.</span>
                 </span>
               </Link>
             </div>
@@ -311,9 +313,9 @@ export default function Navbar() {
               <a
                 href="#home"
                 onClick={scrollToHome}
-                className={`text-sm font-semibold transition-colors py-1 ${
+                className={`text-sm font-sans font-medium tracking-wide transition-colors py-1 ${
                   activeLink === "home"
-                    ? "text-blue-600 border-b-2 border-blue-600"
+                    ? "text-terracotta border-b-2 border-terracotta"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -322,79 +324,68 @@ export default function Navbar() {
               <Link
                 to="/all-books"
                 onClick={() => setActiveLink("all-books")}
-                className={`text-sm font-semibold transition-colors py-1 ${
+                className={`text-sm font-sans font-medium tracking-wide transition-colors py-1 ${
                   activeLink === "all-books"
-                    ? "text-blue-600 border-b-2 border-blue-600"
+                    ? "text-terracotta border-b-2 border-terracotta"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                Categories
+                Catalog & Editions
               </Link>
               <a
                 href="#trending"
                 onClick={scrollToTrending}
-                className={`text-sm font-semibold transition-colors py-1 ${
+                className={`text-sm font-sans font-medium tracking-wide transition-colors py-1 ${
                   activeLink === "trending"
-                    ? "text-blue-600 border-b-2 border-blue-600"
+                    ? "text-terracotta border-b-2 border-terracotta"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                Best Sellers
+                Bestsellers
               </a>
               <a
                 href="#about"
                 onClick={scrollToAbout}
-                className={`text-sm font-semibold transition-colors py-1 ${
+                className={`text-sm font-sans font-medium tracking-wide transition-colors py-1 ${
                   activeLink === "about"
-                    ? "text-blue-600 border-b-2 border-blue-600"
+                    ? "text-terracotta border-b-2 border-terracotta"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                About Us
-              </a>
-              <a
-                href="#contact"
-                onClick={scrollToContact}
-                className={`text-sm font-semibold transition-colors py-1 ${
-                  activeLink === "contact"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Contact
+                Curators
               </a>
               {user?.role === "admin" && (
                 <Link
                   to="/admin"
                   onClick={() => setActiveLink("admin")}
-                  className={`text-sm font-semibold transition-colors py-1 ${
+                  className={`text-sm font-sans font-medium tracking-wide transition-colors py-1 ${
                     activeLink === "admin"
-                      ? "text-blue-600 border-b-2 border-blue-600"
+                      ? "text-terracotta border-b-2 border-terracotta"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  Admin Panel
+                  Admin Portal
                 </Link>
               )}
             </nav>
 
             {/* Right Buttons / Actions */}
             <div className="flex items-center space-x-4">
-              {/* Shopping Cart Icon */}
-              <Link
-                to="/cart"
-                onClick={() => setActiveLink("cart")}
-                className={`relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${
-                  activeLink === "cart" ? "text-blue-600 bg-blue-50" : ""
+              {/* Shopping Cart Icon (Triggers Slide-out Drawer) */}
+              <button
+                onClick={() => setIsCartDrawerOpen(true)}
+                aria-label={`View reading cart, ${cartCount} editions selected`}
+                className={`relative p-2.5 rounded-full text-slate-700 hover:bg-red-50 hover:text-terracotta transition-colors ${
+                  activeLink === "cart" ? "text-terracotta bg-red-50" : ""
                 }`}
               >
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white animate-pulse">
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-terracotta text-[10px] font-bold text-white ring-2 ring-white">
                     {cartCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {user ? (
                 <>
@@ -856,6 +847,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
+      <CartDrawer isOpen={isCartDrawerOpen} onClose={() => setIsCartDrawerOpen(false)} />
     </>
   );
 }
