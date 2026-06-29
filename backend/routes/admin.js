@@ -110,4 +110,52 @@ router.post("/reply", async (req, res) => {
   }
 });
 
+// ================= ADMIN ORDER MANAGEMENT =================
+const Order = require("../models/Order");
+const User = require("../models/User");
+
+// GET /api/admin/orders - Fetch all orders with user and product details
+router.get("/orders", async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("userId", "name email mobile")
+      .populate("products.productId")
+      .populate("books.bookId")
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    console.error("Admin fetch orders error:", err);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
+
+// PUT /api/admin/orders/:orderId - Update orderStatus and estimatedDelivery
+router.put("/orders/:orderId", async (req, res) => {
+  try {
+    const { orderStatus, estimatedDelivery, paymentStatus } = req.body;
+    const updateData = {};
+    if (orderStatus !== undefined) updateData.orderStatus = orderStatus;
+    if (estimatedDelivery !== undefined) updateData.estimatedDelivery = estimatedDelivery;
+    if (paymentStatus !== undefined) updateData.paymentStatus = paymentStatus;
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.orderId,
+      { $set: updateData },
+      { new: true }
+    )
+      .populate("userId", "name email mobile")
+      .populate("products.productId")
+      .populate("books.bookId");
+
+    if (!updatedOrder) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json({ message: "Order updated successfully", order: updatedOrder });
+  } catch (err) {
+    console.error("Admin update order error:", err);
+    res.status(500).json({ error: "Failed to update order" });
+  }
+});
+
 module.exports = router;

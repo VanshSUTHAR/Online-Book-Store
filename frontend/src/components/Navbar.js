@@ -14,7 +14,8 @@ import {
   ChevronDown,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  Package
 } from "lucide-react";
 
 export default function Navbar() {
@@ -398,6 +399,18 @@ export default function Navbar() {
 
               {user ? (
                 <>
+                  {/* My Orders Icon */}
+                  <Link
+                    to="/my-orders"
+                    onClick={() => setActiveLink("my-orders")}
+                    className={`relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${
+                      activeLink === "my-orders" ? "text-blue-600 bg-blue-50" : ""
+                    }`}
+                    title="My Orders"
+                  >
+                    <Package className="h-5 w-5" />
+                  </Link>
+
                   {/* Notifications Icon & Dropdown */}
                   <div className="relative" ref={notificationRef}>
                     <button

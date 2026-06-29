@@ -138,25 +138,21 @@ export default function Cart() {
     try {
       const userId = user?._id || localStorage.getItem("userId");
 
-      const orderPayload = {
-        userId,
-        books: items.map((book) => ({
-          bookId:   book._id,
-          title:    book.title,
-          price:    Number(book.price),
-          quantity: 1,
-        })),
-        buyerName,
-        buyerAddress,
-        totalAmount: subtotal,
-      };
+      const productsPayload = items.map((book) => ({
+        productId: book._id || book.id,
+        title:     book.title,
+        price:     Number(book.price),
+        image:     book.image,
+        quantity:  book.quantity || 1,
+      }));
 
       const payment = await api.post("/payment/create-payment-intent", {
         amount: subtotal,
       });
 
       if (!payment?.data?.clientSecret) {
-        throw new Error("Missing clientSecret from payment intent response.");
+        showToastMsg("Payment failed. Your order has not been placed.");
+        return;
       }
 
       const result = await stripe.confirmCardPayment(payment.data.clientSecret, {
@@ -169,24 +165,66 @@ export default function Cart() {
         },
       });
 
-      if (result.error) {
-        showToastMsg(result.error.message || "Payment failed.");
+      if (result.error || result.paymentIntent?.status !== "succeeded") {
+        showToastMsg("Payment failed. Your order has not been placed.");
         return;
       }
 
-      if (result.paymentIntent?.status === "succeeded") {
-        await api.post("/orders", orderPayload, {
-          headers: { Authorization: localStorage.getItem("token") },
-        });
+      // Order created ONLY after verified successful Stripe payment
+      const orderPayload = {
+        userId,
+        products: productsPayload,
+        books: items.map((book) => ({
+          bookId:   book._id || book.id,
+          title:    book.title,
+          price:    Number(book.price),
+          quantity: book.quantity || 1,
+          image:    book.image,
+          author:   book.author,
+          category: book.category,
+        })),
+        buyerName,
+        buyerAddress,
+        totalAmount: subtotal,
+        paymentIntentId: result.paymentIntent.id,
+        paymentStatus: "Paid"
+      };
+
+      const res = await api.post("/orders/create", orderPayload, {
+        headers: { Authorization: localStorage.getItem("token") },
+      });
+
+      if (res.status === 201 || res.data) {
+        // Add notification for navbar
+        const notification = {
+          title: "Order Placed Successfully!",
+          message: `Your order of ${items.length} book(s) has been placed. Total: ₹${subtotal}`,
+          time: new Date().toLocaleString(),
+          read: false,
+          orderDetails: {
+            books: items,
+            totalAmount: subtotal,
+            buyerName,
+            buyerAddress
+          }
+        };
+        const existingNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+        existingNotifications.push(notification);
+        localStorage.setItem("notifications", JSON.stringify(existingNotifications));
+        window.dispatchEvent(new Event("notificationAdded"));
+
         clearCart();
         setIsCheckoutOpen(false);
-        showToastMsg("Payment Successful!");
+        showToastMsg("Payment successful. Your order has been placed.");
+        setTimeout(() => {
+          navigate("/");
+        }, 1200);
       } else {
-        showToastMsg("Payment could not be completed. Please try again.");
+        showToastMsg("Payment failed. Your order has not been placed.");
       }
     } catch (err) {
       console.error("Stripe payment error:", err);
-      showToastMsg(err?.message || "Payment Failed");
+      showToastMsg("Payment failed. Your order has not been placed.");
     } finally {
       setIsProcessing(false);
     }
