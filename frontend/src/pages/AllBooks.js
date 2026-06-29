@@ -342,6 +342,9 @@ export default function AllBooks() {
                               src={book.image}
                               alt={book.title}
                               className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400";
+                              }}
                             />
                             <div className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md text-slate-700 hover:text-blue-600 transition-colors">
@@ -417,67 +420,71 @@ export default function AllBooks() {
 
       {/* Detailed book modal overlay */}
       {isDetailOpen && detailBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in-30 duration-200">
-          <div className="relative w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col md:flex-row gap-6 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in-30 duration-200 overflow-y-auto">
+          <div className="relative w-full max-w-3xl max-h-[90vh] sm:max-h-[85vh] rounded-3xl bg-white p-5 sm:p-6 shadow-2xl ring-1 ring-slate-200 overflow-y-auto flex flex-col md:flex-row gap-5 md:gap-8 animate-in zoom-in-95 duration-200 my-auto">
             <button
               onClick={closeDetail}
-              className="absolute top-4 right-4 p-1.5 rounded-full border border-slate-100 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all z-10 bg-white"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all z-20 shadow-sm backdrop-blur-sm"
+              aria-label="Close modal"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* Book Image */}
-            <div className="md:w-1/3 aspect-[3/4] md:aspect-auto md:h-72 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center shrink-0">
+            <div className="w-40 h-56 sm:w-48 sm:h-64 md:w-60 md:h-80 mx-auto md:mx-0 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-lg border border-slate-100 relative">
               <img
                 src={detailBook.image}
                 alt={detailBook.title}
                 className="h-full w-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400";
+                }}
               />
             </div>
 
             {/* Book Info */}
             <div className="flex-1 flex flex-col justify-between">
               <div>
-                <span className="inline-block text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-wider mb-2">
+                <span className="inline-block text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-wider mb-2">
                   {detailBook.category}
                 </span>
-                <h2 className="font-playfair text-xl md:text-2xl font-black text-slate-900">
+                <h2 className="font-playfair text-xl sm:text-2xl md:text-3xl font-black text-slate-900 leading-tight">
                   {detailBook.title}
                 </h2>
-                <p className="text-slate-400 text-sm mt-0.5">by {detailBook.author}</p>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1">by {detailBook.author}</p>
 
                 <div className="mt-3 flex items-center gap-2">
                   {renderStars(detailBook.rating)}
                   <span className="text-xs text-slate-400 font-semibold">({detailBook.rating})</span>
                 </div>
 
-                <div className="flex items-baseline gap-2 mt-4">
-                  <span className="text-xl font-extrabold text-slate-900">₹{detailBook.price}</span>
+                <div className="flex items-baseline flex-wrap gap-2.5 mt-4">
+                  <span className="text-2xl font-extrabold text-slate-900">₹{detailBook.price}</span>
                   {detailBook.originalPrice && (
                     <span className="text-sm text-slate-400 line-through">₹{detailBook.originalPrice}</span>
                   )}
                   {detailBook.discount && (
-                    <span className="text-xs font-bold text-green-600 bg-green-50 rounded px-1.5 py-0.5">
+                    <span className="text-xs font-bold text-green-600 bg-green-50 rounded-full px-2.5 py-0.5 border border-green-200/50">
                       Save {detailBook.discount}%
                     </span>
                   )}
                 </div>
 
-                <p className="text-slate-400 text-[11px] font-semibold mt-2.5 flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-blue-500" />
+                <p className="text-slate-400 text-xs font-medium mt-3 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                   Ships within 1-2 business days
                 </p>
 
-                <div className="mt-5 border-t border-slate-100 pt-4">
+                <div className="mt-4 sm:mt-5 border-t border-slate-100 pt-3 sm:pt-4">
                   <button
                     onClick={() => setShowDescription(!showDescription)}
-                    className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-wider"
+                    className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-blue-600 transition-colors uppercase tracking-wider"
                   >
                     {showDescription ? "Hide Description" : "View Description"}
                     <ChevronRight className={`h-4 w-4 transform transition-transform ${showDescription ? "rotate-90" : ""}`} />
                   </button>
                   {showDescription && (
-                    <p className="text-xs text-slate-500 leading-relaxed mt-2 max-h-32 overflow-y-auto pr-2">
+                    <p className="text-xs text-slate-600 leading-relaxed mt-2.5 max-h-36 overflow-y-auto pr-2 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
                       {detailBook.description || "Detailed book description is currently unavailable. Contact store team for custom summaries."}
                     </p>
                   )}
@@ -485,10 +492,10 @@ export default function AllBooks() {
               </div>
 
               {/* Action buttons */}
-              <div className="grid grid-cols-2 gap-3 pt-5 border-t border-slate-100 mt-5">
+              <div className="grid grid-cols-2 gap-3 pt-4 sm:pt-5 border-t border-slate-100 mt-5">
                 <button
                   onClick={() => addToCart(detailBook)}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 hover:bg-slate-50 py-3 text-sm font-bold text-slate-700 transition-colors"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 py-3 text-xs sm:text-sm font-bold text-slate-700 transition-colors shadow-sm"
                 >
                   <ShoppingCart className="h-4 w-4" />
                   Add to Cart
@@ -498,7 +505,7 @@ export default function AllBooks() {
                     closeDetail();
                     openCheckout(detailBook);
                   }}
-                  className="rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-sm font-bold text-white transition-colors"
+                  className="rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-xs sm:text-sm font-bold text-white transition-colors shadow-md shadow-blue-500/20"
                 >
                   Buy Now
                 </button>
@@ -510,24 +517,25 @@ export default function AllBooks() {
 
       {/* QR checkout Modal */}
       {isCheckoutOpen && selectedBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in-30 duration-200">
-          <div className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col md:flex-row gap-6 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in-30 duration-200 overflow-y-auto">
+          <div className="relative w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] rounded-3xl bg-white p-5 sm:p-6 shadow-2xl ring-1 ring-slate-200 overflow-y-auto flex flex-col md:flex-row gap-6 animate-in zoom-in-95 duration-200 my-auto">
             <button
               onClick={closeCheckout}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all z-20 shadow-sm backdrop-blur-sm"
+              aria-label="Close modal"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* QR column */}
-            <div className="md:w-1/2 flex flex-col items-center justify-center p-4 border-r border-slate-100">
+            <div className="md:w-1/2 flex flex-col items-center justify-center p-3 sm:p-4 border-b md:border-b-0 md:border-r border-slate-100">
               <h3 className="font-poppins font-bold text-slate-900 text-sm mb-1 text-center">Scan to Pay</h3>
               <span className="text-[10px] text-slate-400 font-semibold mb-3">Pay exactly ₹{selectedBook.price}</span>
               <div className="rounded-2xl border border-slate-200 p-2.5 bg-white shadow-sm">
                 <img
                   src="/phone-pe.jpg"
                   alt="PhonePe QR"
-                  className="w-48 h-48 object-contain rounded-xl"
+                  className="w-44 h-44 sm:w-48 sm:h-48 object-contain rounded-xl"
                   onError={(e) => {
                     e.target.src = "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&q=80&w=260";
                   }}

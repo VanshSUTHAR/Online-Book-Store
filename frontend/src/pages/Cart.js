@@ -191,6 +191,9 @@ export default function Cart() {
                     src={item.image}
                     alt={item.title}
                     className="h-24 w-18 rounded-lg object-cover shadow-sm bg-slate-100 shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400";
+                    }}
                   />
                   <div className="flex-1 flex flex-col justify-between min-w-0 pr-8">
                     <div>
