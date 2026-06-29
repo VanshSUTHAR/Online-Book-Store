@@ -4,13 +4,6 @@ import { api } from "../services/api";
 import { sendContactMessage } from "../services/contactService";
 import { useUser } from "../context/UserContext";
 import {
-  CardNumberElement,
-  CardExpiryElement,
-  CardCvcElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
-import {
   Search,
   BookOpen,
   Star,
@@ -34,30 +27,6 @@ import {
   Info
 } from "lucide-react";
 
-// Stripe element shared style
-const STRIPE_STYLE = {
-  style: {
-    base: {
-      fontSize: "15px",
-      color: "#0f172a",
-      fontFamily: "Inter, system-ui, sans-serif",
-      letterSpacing: "0.04em",
-      "::placeholder": { color: "#94a3b8" },
-    },
-    invalid: { color: "#ef4444" },
-  },
-};
-
-// Input-box wrapper style shared by all Stripe elements
-const inputBoxStyle = {
-  border: "1.5px solid #e2e8f0",
-  borderRadius: "10px",
-  background: "#fff",
-  padding: "11px 14px",
-  boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)",
-  transition: "border-color 0.2s",
-};
-
 export default function Books() {
   const [books, setBooks] = useState([]);
   const [trendingIds, setTrendingIds] = useState([]);
@@ -74,11 +43,6 @@ export default function Books() {
   const [detailBook, setDetailBook] = useState(null);
   const [showDescription, setShowDescription] = useState(false);
   const [wishlist, setWishlist] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [cardError, setCardError] = useState("");
-
-  const stripe = useStripe();
-  const elements = useElements();
 
   // Carousel refs & state
   const arrivalsRef = useRef(null);
@@ -185,7 +149,6 @@ export default function Books() {
     setSelectedBook(book);
     setBuyerName("");
     setBuyerAddress("");
-    setCardError("");
     setIsCheckoutOpen(true);
   };
 
@@ -199,85 +162,30 @@ export default function Books() {
       showToastMsg("Please enter your name and address.");
       return;
     }
-    if (!stripe || !elements) {
-      showToastMsg("Stripe is still loading. Please wait a moment.");
-      return;
-    }
-    const cardElement = elements.getElement(CardNumberElement);
-    if (!cardElement) {
-      showToastMsg("Please enter your card details.");
-      return;
-    }
-
-    setIsProcessing(true);
-    setCardError("");
 
     try {
       const userId = user && user._id ? user._id : localStorage.getItem("userId");
-
-      const payment = await api.post("/payment/create-payment-intent", {
-        amount: Number(selectedBook.price),
-      });
-
-      if (!payment?.data?.clientSecret) {
-        showToastMsg("Payment failed. Your order has not been placed.");
-        setIsProcessing(false);
-        return;
-      }
-
-      const result = await stripe.confirmCardPayment(payment.data.clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardNumberElement),
-          billing_details: {
-            name: buyerName,
-            address: { line1: buyerAddress },
-          },
-        },
-      });
-
-      if (result.error || result.paymentIntent?.status !== "succeeded") {
-        showToastMsg("Payment failed. Your order has not been placed.");
-        setIsProcessing(false);
-        return;
-      }
-
       const orderPayload = {
         userId,
-        products: [
-          {
-            productId: selectedBook._id || selectedBook.id,
-            title: selectedBook.title,
-            image: selectedBook.image,
-            price: Number(selectedBook.price),
-            quantity: 1
-          }
-        ],
         books: [
           {
             bookId: selectedBook._id || selectedBook.id,
             title: selectedBook.title,
-            price: Number(selectedBook.price),
-            quantity: 1,
-            image: selectedBook.image,
-            author: selectedBook.author,
-            category: selectedBook.category
+            price: selectedBook.price,
+            quantity: 1
           }
         ],
         buyerName,
         buyerAddress,
-        totalAmount: Number(selectedBook.price),
-        paymentStatus: "Paid",
-        paymentIntentId: result.paymentIntent.id,
-        paymentId: result.paymentIntent.id
+        totalAmount: selectedBook.price
       };
-      await api.post("/orders/create", orderPayload, {
+      await api.post("/orders", orderPayload, {
         headers: {
           Authorization: localStorage.getItem("token")
         }
       });
     } catch (err) {
-      showToastMsg("Payment failed. Your order has not been placed.");
-      setIsProcessing(false);
+      showToastMsg("Order placement failed. Please try again.");
       return;
     }
 
@@ -293,7 +201,7 @@ export default function Books() {
     // Create notification
     const notification = {
       title: "Order Completed!",
-      message: `Your order for "${selectedBook.title}" has been placed. Total: ₹${selectedBook.price}`,
+      message: `Your order for "${selectedBook.title}" has been placed successfully. Total: ₹${selectedBook.price}`,
       time: new Date().toLocaleString(),
       read: false,
       orderDetails: {
@@ -311,11 +219,8 @@ export default function Books() {
     // Trigger navbar update
     window.dispatchEvent(new Event("notificationAdded"));
 
-    showToastMsg("Payment successful. Your order has been placed.");
+    showToastMsg("✓ Order placed successfully!");
     closeCheckout();
-    setTimeout(() => {
-      navigate("/");
-    }, 1200);
   };
 
   const submitContact = async () => {
@@ -1196,63 +1101,23 @@ export default function Books() {
               <X className="h-5 w-5" />
             </button>
 
-            {/* Left — Card payment */}
-            <div className="md:w-1/2 flex flex-col items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-100">
-              <h3 className="font-poppins font-bold text-slate-900 text-sm mb-2 text-center">
-                Payment Details
-              </h3>
-              <span className="text-[10px] text-slate-400 font-semibold mb-4">
-                Securely pay ₹{selectedBook.price} with your card
-              </span>
-
-              <div className="w-full space-y-3">
-                {/* Card Number */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                    Card Number
-                  </label>
-                  <div style={inputBoxStyle}>
-                    <CardNumberElement
-                      options={{ ...STRIPE_STYLE, showIcon: true }}
-                      onChange={(e) => setCardError(e.error?.message || "")}
-                    />
-                  </div>
-                </div>
-
-                {/* Expiry + CVC */}
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                      Expiry Date
-                    </label>
-                    <div style={inputBoxStyle}>
-                      <CardExpiryElement
-                        options={STRIPE_STYLE}
-                        onChange={(e) => setCardError(e.error?.message || "")}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                      CVC
-                    </label>
-                    <div style={inputBoxStyle}>
-                      <CardCvcElement
-                        options={STRIPE_STYLE}
-                        onChange={(e) => setCardError(e.error?.message || "")}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {cardError && (
-                  <p className="text-[10px] font-semibold text-red-500">{cardError}</p>
-                )}
-
-                <p className="text-[10px] text-slate-400 text-center leading-normal pt-1">
-                  Your payment is processed securely through Stripe. No card data is stored on this site.
-                </p>
+            {/* QR Scanner column */}
+            <div className="md:w-1/2 flex flex-col items-center justify-center p-3 sm:p-4 border-b md:border-b-0 md:border-r border-slate-100">
+              <h3 className="font-poppins font-bold text-slate-900 text-sm mb-1 text-center">Scan to Pay</h3>
+              <span className="text-[10px] text-slate-400 font-semibold mb-3">Pay exactly ₹{selectedBook.price}</span>
+              <div className="rounded-2xl border border-slate-200 p-2.5 bg-white shadow-sm">
+                <img
+                  src="/phone-pe.jpg"
+                  alt="PhonePe Payment UPI QR"
+                  className="w-44 h-44 sm:w-48 sm:h-48 object-contain rounded-xl"
+                  onError={(e) => {
+                    e.target.src = "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&q=80&w=260";
+                  }}
+                />
               </div>
+              <p className="text-[10px] text-slate-400 text-center leading-normal mt-3 max-w-xs">
+                Scan PhonePe QR to send money directly to Vansh Ashokbhai Suthar using any UPI client.
+              </p>
             </div>
 
             {/* Billing fields column */}
@@ -1298,10 +1163,9 @@ export default function Books() {
                 </button>
                 <button
                   onClick={confirmOrder}
-                  disabled={!stripe || isProcessing}
-                  className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors shadow-md shadow-blue-500/10 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors shadow-md shadow-blue-500/10"
                 >
-                  {isProcessing ? "Processing..." : `Pay ₹${selectedBook.price}`}
+                  Confirm Purchase
                 </button>
               </div>
             </div>

@@ -15,7 +15,7 @@ module.exports = async function (req, res, next) {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-      req.user = decoded.id || decoded._id || decoded.userId || decoded;
+      req.user = decoded.id || decoded._id || decoded;
       return next();
     } catch (err) {
       // Invalid token, fallback to userId in body

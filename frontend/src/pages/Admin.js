@@ -17,16 +17,7 @@ import {
   Package,
   Star,
   Users,
-  TrendingUp,
-  ShoppingBag,
-  Search,
-  Filter,
-  CreditCard,
-  Clock,
-  Truck,
-  Tag,
-  RefreshCw,
-  ClipboardList
+  TrendingUp
 } from "lucide-react";
 
 export default function Admin() {
@@ -46,17 +37,12 @@ export default function Admin() {
   const [showTrendingBooks, setShowTrendingBooks] = useState(false);
   const [showBookList, setShowBookList] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
-  const [showOrders, setShowOrders] = useState(false);
 
   // Core Lists States
   const [trendingBooks, setTrendingBooks] = useState([]);
   const [books, setBooks] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [contactMessages, setContactMessages] = useState([]);
-  const [adminOrders, setAdminOrders] = useState([]);
-  const [orderSearchTerm, setOrderSearchTerm] = useState("");
-  const [orderStatusFilter, setOrderStatusFilter] = useState("All");
-  const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
   // Form States
   const [formData, setFormData] = useState({
@@ -122,50 +108,10 @@ export default function Admin() {
     }
   };
 
-  const fetchAdminOrders = async () => {
-    try {
-      const res = await api.get("/admin/orders");
-      setAdminOrders(Array.isArray(res.data) ? res.data : []);
-    } catch (error) {
-      console.error("Error fetching admin orders", error);
-    }
-  };
-
-  const handleUpdateOrderStatus = async (orderId, newStatus) => {
-    setUpdatingOrderId(orderId);
-    try {
-      await api.put(`/admin/orders/${orderId}`, { orderStatus: newStatus });
-      setToast(`✓ Order status updated to "${newStatus}"`);
-      setTimeout(() => setToast(""), 3000);
-      fetchAdminOrders();
-    } catch (err) {
-      setToast("Error updating order status.");
-      setTimeout(() => setToast(""), 3000);
-    } finally {
-      setUpdatingOrderId(null);
-    }
-  };
-
-  const handleUpdateEstimatedDelivery = async (orderId, newDelivery) => {
-    setUpdatingOrderId(orderId);
-    try {
-      await api.put(`/admin/orders/${orderId}`, { estimatedDelivery: newDelivery });
-      setToast(`✓ Delivery time updated to "${newDelivery}"`);
-      setTimeout(() => setToast(""), 3000);
-      fetchAdminOrders();
-    } catch (err) {
-      setToast("Error updating delivery time.");
-      setTimeout(() => setToast(""), 3000);
-    } finally {
-      setUpdatingOrderId(null);
-    }
-  };
-
   useEffect(() => {
     fetchBooks();
     fetchAdmins();
     fetchTrendingBooks();
-    fetchAdminOrders();
   }, []);
 
   const showToastMsg = (msg) => {
@@ -353,12 +299,8 @@ export default function Admin() {
     setShowTrendingBooks(tabName === "trending");
     setShowBookList(tabName === "bookList");
     setShowMessages(tabName === "messages");
-    setShowOrders(tabName === "orders");
     if (tabName === "messages") {
       fetchMessages();
-    }
-    if (tabName === "orders") {
-      fetchAdminOrders();
     }
   };
 
@@ -433,15 +375,6 @@ export default function Admin() {
             >
               <MessageSquare className="h-4 w-4 shrink-0" />
               <span>Messages ({contactMessages.length})</span>
-            </button>
-            <button
-              onClick={() => triggerTab("orders")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showOrders ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
-            >
-              <ClipboardList className="h-4 w-4 shrink-0" />
-              <span>Orders ({adminOrders.length})</span>
             </button>
           </nav>
         </div>
@@ -1178,181 +1111,6 @@ export default function Admin() {
                 {contactMessages.length === 0 && (
                   <div className="text-center py-16 text-slate-400 border border-dashed border-slate-200 rounded-3xl bg-white">
                     Messages inbox is empty.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 6: ORDERS MANAGEMENT */}
-          {showOrders && (
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                  <h2 className="font-playfair text-2xl font-black text-slate-900">Order Management</h2>
-                  <p className="text-slate-500 text-xs mt-1">View customer orders, update order fulfillment status, and set estimated delivery times</p>
-                </div>
-                <button
-                  onClick={fetchAdminOrders}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors self-start md:self-auto"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" /> Refresh Orders
-                </button>
-              </div>
-
-              {/* Filters Strip */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60">
-                {/* Search Box */}
-                <div className="relative w-full sm:w-80">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by user name or order ID..."
-                    value={orderSearchTerm}
-                    onChange={(e) => setOrderSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Filter className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Status:</span>
-                  <select
-                    value={orderStatusFilter}
-                    onChange={(e) => setOrderStatusFilter(e.target.value)}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-full sm:w-auto"
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Confirmed">Confirmed</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Orders Table */}
-              <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm bg-white">
-                <table className="min-w-full divide-y divide-slate-100 text-left">
-                  <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    <tr>
-                      <th className="px-5 py-3.5">Order ID & Date</th>
-                      <th className="px-5 py-3.5">Customer</th>
-                      <th className="px-5 py-3.5">Items & Qty</th>
-                      <th className="px-5 py-3.5">Total Amount</th>
-                      <th className="px-5 py-3.5">Payment</th>
-                      <th className="px-5 py-3.5">Order Status</th>
-                      <th className="px-5 py-3.5">Est. Delivery</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                    {adminOrders
-                      .filter((ord) => {
-                        const userObj = ord.userId && typeof ord.userId === "object" ? ord.userId : {};
-                        const userName = (userObj.name || ord.buyerName || "").toLowerCase();
-                        const orderIdStr = (ord._id || "").toLowerCase();
-                        const q = orderSearchTerm.toLowerCase();
-                        const matchesSearch = userName.includes(q) || orderIdStr.includes(q);
-
-                        const matchesStatus = orderStatusFilter === "All" || ord.orderStatus === orderStatusFilter;
-                        return matchesSearch && matchesStatus;
-                      })
-                      .map((ord) => {
-                        const userObj = ord.userId && typeof ord.userId === "object" ? ord.userId : {};
-                        const userName = userObj.name || ord.buyerName || "User";
-                        const userEmail = userObj.email || "N/A";
-                        const orderIdFormatted = `#${(ord._id || "").slice(-6).toUpperCase()}`;
-                        const itemsList = (ord.products && ord.products.length > 0) ? ord.products : (ord.books || []);
-
-                        return (
-                          <tr key={ord._id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-5 py-4 font-mono font-bold text-slate-900 whitespace-nowrap">
-                              <div>{orderIdFormatted}</div>
-                              <span className="text-[10px] font-sans text-slate-400 block font-normal mt-0.5">
-                                {new Date(ord.createdAt || Date.now()).toLocaleDateString()}
-                              </span>
-                            </td>
-
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <div className="font-bold text-slate-900">{userName}</div>
-                              <span className="text-[10px] text-slate-500 block">{userEmail}</span>
-                            </td>
-
-                            <td className="px-5 py-4 max-w-xs">
-                              <div className="space-y-1">
-                                {itemsList.map((it, idx) => (
-                                  <div key={idx} className="flex items-center gap-2 text-xs truncate">
-                                    <img
-                                      src={it.image || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=100&q=80"}
-                                      alt=""
-                                      className="h-6 w-5 object-cover rounded shadow-sm bg-slate-100 shrink-0"
-                                    />
-                                    <span className="font-semibold text-slate-800 truncate">{it.title}</span>
-                                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                                      x{it.quantity || 1}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </td>
-
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <span className="font-extrabold text-slate-900 font-poppins text-sm">
-                                ₹{ord.totalAmount}
-                              </span>
-                            </td>
-
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
-                                {ord.paymentStatus || "Paid"}
-                              </span>
-                              <span className="text-[9px] font-mono text-slate-400 block mt-1 truncate max-w-[100px]" title={ord.paymentIntentId || ord.paymentId}>
-                                ID: {ord.paymentIntentId || ord.paymentId || "Verified"}
-                              </span>
-                            </td>
-
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <select
-                                value={ord.orderStatus || "Pending"}
-                                disabled={updatingOrderId === ord._id}
-                                onChange={(e) => handleUpdateOrderStatus(ord._id, e.target.value)}
-                                className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
-                              >
-                                <option value="Pending">Pending</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Processing">Processing</option>
-                                <option value="Shipped">Shipped</option>
-                                <option value="Delivered">Delivered</option>
-                                <option value="Cancelled">Cancelled</option>
-                              </select>
-                            </td>
-
-                            <td className="px-5 py-4 whitespace-nowrap">
-                              <select
-                                value={ord.estimatedDelivery || "1 Day"}
-                                disabled={updatingOrderId === ord._id}
-                                onChange={(e) => handleUpdateEstimatedDelivery(ord._id, e.target.value)}
-                                className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
-                              >
-                                <option value="30 Minutes">30 Minutes</option>
-                                <option value="1 Hour">1 Hour</option>
-                                <option value="3 Hours">3 Hours</option>
-                                <option value="1 Day">1 Day</option>
-                                <option value="2 Days">2 Days</option>
-                              </select>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-
-                {adminOrders.length === 0 && (
-                  <div className="text-center py-16 text-slate-400 font-medium">
-                    No customer orders found in system.
                   </div>
                 )}
               </div>

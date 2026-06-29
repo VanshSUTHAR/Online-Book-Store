@@ -143,9 +143,6 @@ router.post("/register", async (req, res) => {
 
     await user.save();
 
-    const jwt = require("jsonwebtoken");
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: "7d" });
-
     return res.json({
       message: "Registered successfully",
       user: {
@@ -154,8 +151,7 @@ router.post("/register", async (req, res) => {
         email: user.email,
         mobile: user.mobile,
         role: user.role
-      },
-      token
+      }
     });
 
   } catch (err) {
@@ -189,9 +185,6 @@ router.post("/login", async (req, res) => {
 
     await LoginLog.create({ email, success: true, ip });
 
-    const jwt = require("jsonwebtoken");
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: "7d" });
-
     return res.json({
       message: "Login successful",
       user: {
@@ -200,8 +193,7 @@ router.post("/login", async (req, res) => {
         email: user.email,
         mobile: user.mobile,
         role: user.role
-      },
-      token
+      }
     });
 
   } catch (err) {

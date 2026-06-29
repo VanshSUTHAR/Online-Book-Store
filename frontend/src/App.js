@@ -11,7 +11,6 @@ import AllBooks from "./pages/AllBooks";
 import Admin from "./pages/Admin";
 import Delivery from "./pages/Delivery";
 import FAQ from "./pages/FAQ";
-import MyOrders from "./pages/MyOrders";
 import { UserProvider } from "./context/UserContext";
 
 function ScrollToTop() {
@@ -41,7 +40,6 @@ function AppRoutes() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/delivery" element={<Delivery />} />
           <Route path="/faq" element={<FAQ />} />
-          <Route path="/my-orders" element={<MyOrders />} />
         </Routes>
       </main>
       {!isAdminPage && <Footer />}
