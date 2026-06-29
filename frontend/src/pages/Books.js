@@ -3,12 +3,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import { sendContactMessage } from "../services/contactService";
 import { useUser } from "../context/UserContext";
-import BookCard from "../components/BookCard";
 import {
   Search,
   BookOpen,
   Star,
   ShoppingCart,
+  Heart,
+  Eye,
   Truck,
   ShieldCheck,
   RefreshCw,
@@ -454,46 +455,126 @@ export default function Books() {
       </section>
 
       {/* 4. Best Seller Books Section */}
-      <section id="books-section" className="py-24 lg:py-32 bg-[#FAF9F6] border-t border-slate-200/60">
+      <section id="books-section" className="py-20 bg-slate-50/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-16 gap-6">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-sans font-semibold text-terracotta bg-red-50 px-3 py-1 rounded-full uppercase tracking-wider mb-3">
-                <TrendingUp className="h-3.5 w-3.5" />
-                <span>Curated Highlights</span>
+              <div className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-wider mb-2">
+                <TrendingUp className="h-3 w-3" />
+                <span>Trending Books</span>
               </div>
-              <h2 className="font-serif text-3xl font-bold text-slate-rich sm:text-4xl lg:text-5xl">
-                Bestseller Editions
+              <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+                Best Seller Books
               </h2>
-              <p className="text-slate-500 font-sans text-sm mt-3 max-w-lg leading-relaxed">
-                Explore the most sought-after titles acclaimed by literary critics and cherished by discerning readers worldwide.
-              </p>
             </div>
             <button
               onClick={() => navigate("/all-books")}
-              className="group inline-flex items-center gap-2 text-sm font-sans font-semibold text-terracotta hover:text-terracotta-hover transition-colors"
+              className="group inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
             >
-              <span>View Entire Catalog</span>
-              <ChevronRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+              See All Collection
+              <ChevronRight className="h-4 w-4 transform group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
 
           {filteredTrendingBooks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-300 rounded-2xl bg-white p-8">
-              <BookOpen className="h-12 w-12 text-slate-300 mb-3 stroke-[1.5]" />
-              <p className="text-slate-600 font-serif text-lg font-semibold">No curated editions match your search.</p>
-              <p className="text-slate-400 font-sans text-xs mt-1">Try searching by author or alternative title keywords.</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-slate-200 rounded-3xl bg-white">
+              <BookOpen className="h-12 w-12 text-slate-300 mb-2" />
+              <p className="text-slate-500 font-medium">No trending books available right now.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {filteredTrendingBooks.map((book) => (
-                <BookCard
-                  key={book._id || book.id}
-                  book={book}
-                  onQuickAdd={(item) => addToCart(item)}
-                  onQuickView={(item) => openDetail(item)}
-                />
-              ))}
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+              {filteredTrendingBooks.map((book) => {
+                const isFavorite = wishlist.some(item => (item._id || item.id) === (book._id || book.id));
+                return (
+                  <div
+                    key={book._id || book.id}
+                    onClick={() => openDetail(book)}
+                    className="group cursor-pointer rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300 flex flex-col relative"
+                  >
+                    {/* Discount Tag */}
+                    {book.discount > 0 ? (
+                      <span className="absolute top-4 left-4 z-10 rounded-lg bg-green-500 text-[10px] font-bold text-white px-2 py-1 shadow-sm uppercase tracking-wide">
+                        {book.discount}% OFF
+                      </span>
+                    ) : null}
+
+                    {/* Heart wishlist button */}
+                    <button
+                      onClick={(e) => toggleWishlist(book, e)}
+                      className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm border border-slate-100 text-slate-400 hover:text-red-500 transition-colors"
+                      aria-label="Add to wishlist"
+                    >
+                      <Heart className={`h-4.5 w-4.5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+                    </button>
+
+                    {/* Book image */}
+                    <div className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center mb-4 relative">
+                      <img
+                        src={book.image}
+                        alt={book.title}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md text-slate-700 hover:text-blue-600 transition-colors">
+                          <Eye className="h-5 w-5" />
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Book Details */}
+                    <div className="flex-1 flex flex-col">
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 rounded px-1.5 py-0.5 self-start uppercase tracking-wider mb-2">
+                        {book.category}
+                      </span>
+                      <h3 className="font-poppins font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-blue-600 transition-colors">
+                        {book.title}
+                      </h3>
+                      <p className="text-slate-400 text-xs mt-0.5 line-clamp-1">
+                        by {book.author}
+                      </p>
+
+                      <div className="mt-2.5">
+                        {renderStars(book.rating)}
+                      </div>
+
+                      {/* Pricing */}
+                      <div className="flex items-baseline gap-1.5 mt-3">
+                        <span className="text-base font-extrabold text-slate-900">
+                          ₹{book.price}
+                        </span>
+                        {book.originalPrice && (
+                          <span className="text-xs text-slate-400 line-through">
+                            ₹{book.originalPrice}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Card actions */}
+                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(book);
+                          }}
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 py-2 text-xs font-bold text-slate-700 transition-colors"
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5" />
+                          Cart
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openCheckout(book);
+                          }}
+                          className="rounded-lg bg-blue-600 hover:bg-blue-700 py-2 text-xs font-bold text-white transition-colors"
+                        >
+                          Buy Now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
