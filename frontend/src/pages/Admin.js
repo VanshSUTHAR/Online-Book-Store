@@ -850,7 +850,9 @@ export default function Admin() {
                         showToastMsg("Error saving trending collection.");
                       }
                     }}
-                    className={`min-h-[350px] rounded-3xl border-2 border-dashed flex flex-col items-center justify-center p-6 transition-all duration-300 ${
+                    className={`min-h-[350px] max-h-[60vh] overflow-y-auto rounded-3xl border-2 border-dashed flex flex-col items-center ${
+                      trendingBooks.length === 0 ? "justify-center" : "justify-start"
+                    } p-4 sm:p-6 transition-all duration-300 ${
                       isDraggingOver
                         ? "border-blue-500 bg-blue-50/50 shadow-lg scale-102"
                         : "border-amber-400 bg-amber-50/20"

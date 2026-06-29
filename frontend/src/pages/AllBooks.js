@@ -265,15 +265,18 @@ export default function AllBooks() {
               <h3 className="font-poppins font-bold text-slate-900 text-xs uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">
                 Quick Navigation
               </h3>
-              <nav className="space-y-1">
+              <nav className="space-y-1.5">
                 {Object.keys(booksByCategory).map((cat) => (
                   <a
                     key={cat}
                     href={`#${cat}`}
-                    className="flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-blue-600 hover:bg-slate-50 px-2 py-1.5 rounded-lg transition-colors"
+                    className="group flex items-center justify-between text-xs font-bold text-slate-600 hover:text-blue-600 bg-slate-50/50 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/50 px-3 py-2.5 rounded-xl transition-all duration-200 border border-slate-100/80 hover:border-blue-200/60 hover:shadow-sm transform hover:translate-x-1"
                   >
-                    <span>{cat}</span>
-                    <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full">
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300 group-hover:bg-blue-500 group-hover:scale-125 transition-all duration-200"></span>
+                      <span className="font-poppins">{cat}</span>
+                    </div>
+                    <span className="text-[10px] bg-slate-100 text-slate-500 group-hover:bg-blue-600 group-hover:text-white font-extrabold px-2.5 py-0.5 rounded-full transition-all duration-200 shadow-sm group-hover:shadow-blue-500/20 transform group-hover:scale-105">
                       {booksByCategory[cat].length}
                     </span>
                   </a>
