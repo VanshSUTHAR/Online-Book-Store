@@ -12,6 +12,8 @@ const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const oauthRoutes = require("./routes/oauthRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+
 
 const app = express();
 
@@ -55,6 +57,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/trending", trendingRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/oauth", oauthRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Debug test POST route (should be after all middleware/routes)
 app.post("/api/test", (req, res) => {

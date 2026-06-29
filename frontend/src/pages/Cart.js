@@ -1,6 +1,13 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api } from "../services/api";
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { useUser } from "../context/UserContext";
 import {
   Trash2,
@@ -9,13 +16,38 @@ import {
   ShieldCheck,
   X,
   Info,
-  Plus
+  Plus,
 } from "lucide-react";
+
+// Stripe element shared style
+const STRIPE_STYLE = {
+  style: {
+    base: {
+      fontSize: "15px",
+      color: "#0f172a",
+      fontFamily: "Inter, system-ui, sans-serif",
+      letterSpacing: "0.04em",
+      "::placeholder": { color: "#94a3b8" },
+    },
+    invalid: { color: "#ef4444" },
+  },
+};
+
+// Input-box wrapper style shared by all Stripe elements
+const inputBoxStyle = {
+  border: "1.5px solid #e2e8f0",
+  borderRadius: "10px",
+  background: "#fff",
+  padding: "11px 14px",
+  boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)",
+  transition: "border-color 0.2s",
+};
 
 export default function Cart() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
+
   const [items, setItems] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("cart") || "[]");
@@ -23,10 +55,16 @@ export default function Cart() {
       return [];
     }
   });
+
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerAddress, setBuyerAddress] = useState("");
-  const [toast, setToast] = useState("");
+  const [buyerName, setBuyerName]           = useState("");
+  const [buyerAddress, setBuyerAddress]     = useState("");
+  const [toast, setToast]                   = useState("");
+  const [isProcessing, setIsProcessing]     = useState(false);
+  const [cardError, setCardError]           = useState("");
+
+  const stripe   = useStripe();
+  const elements = useElements();
 
   const subtotal = useMemo(
     () => items.reduce((sum, item) => sum + Number(item.price || 0), 0),
@@ -35,19 +73,13 @@ export default function Cart() {
 
   const showToastMsg = (msg) => {
     setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+    setTimeout(() => setToast(""), 3500);
   };
 
   const saveItems = (nextItems) => {
     setItems(nextItems);
     localStorage.setItem("cart", JSON.stringify(nextItems));
     window.dispatchEvent(new Event("cartUpdated"));
-  };
-
-  const removeItem = (index) => {
-    const nextItems = items.filter((_, itemIndex) => itemIndex !== index);
-    saveItems(nextItems);
-    showToastMsg("Item removed from cart.");
   };
 
   const clearCart = () => {
@@ -68,6 +100,7 @@ export default function Cart() {
     }
     setBuyerName("");
     setBuyerAddress("");
+    setCardError("");
     setIsCheckoutOpen(true);
   };
 
@@ -89,15 +122,28 @@ export default function Cart() {
       showToastMsg("Please enter your name and address.");
       return;
     }
+    if (!stripe || !elements) {
+      showToastMsg("Stripe is still loading. Please wait a moment.");
+      return;
+    }
+    const cardElement = elements.getElement(CardNumberElement);
+    if (!cardElement) {
+      showToastMsg("Please enter your card details.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setCardError("");
 
     try {
-      const userId = user && user._id ? user._id : localStorage.getItem("userId");
+      const userId = user?._id || localStorage.getItem("userId");
+
       const orderPayload = {
         userId,
         books: items.map((book) => ({
-          bookId: book._id || book.id,
-          title: book.title,
-          price: Number(book.price || 0),
+          bookId:   book._id,
+          title:    book.title,
+          price:    Number(book.price),
           quantity: 1,
         })),
         buyerName,
@@ -105,41 +151,51 @@ export default function Cart() {
         totalAmount: subtotal,
       };
 
-      await api.post("/orders", orderPayload, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
+      const payment = await api.post("/payment/create-payment-intent", {
+        amount: subtotal,
+      });
+
+      if (!payment?.data?.clientSecret) {
+        throw new Error("Missing clientSecret from payment intent response.");
+      }
+
+      const result = await stripe.confirmCardPayment(payment.data.clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardNumberElement),
+          billing_details: {
+            name:    buyerName,
+            address: { line1: buyerAddress },
+          },
         },
       });
 
-      const notification = {
-        title: "Order Completed!",
-        message: `Your order has been placed successfully. Total: ₹${subtotal}`,
-        time: new Date().toLocaleString(),
-        read: false,
-        orderDetails: {
-          books: items,
-          totalAmount: subtotal,
-          buyerName,
-          buyerAddress,
-        },
-      };
+      if (result.error) {
+        showToastMsg(result.error.message || "Payment failed.");
+        return;
+      }
 
-      const existingNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
-      existingNotifications.push(notification);
-      localStorage.setItem("notifications", JSON.stringify(existingNotifications));
-      window.dispatchEvent(new Event("notificationAdded"));
-
-      clearCart();
-      setIsCheckoutOpen(false);
-      showToastMsg("✓ Order placed successfully!");
-    } catch (error) {
-      showToastMsg("Order failed. Please try again.");
+      if (result.paymentIntent?.status === "succeeded") {
+        await api.post("/orders", orderPayload, {
+          headers: { Authorization: localStorage.getItem("token") },
+        });
+        clearCart();
+        setIsCheckoutOpen(false);
+        showToastMsg("Payment Successful!");
+      } else {
+        showToastMsg("Payment could not be completed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Stripe payment error:", err);
+      showToastMsg(err?.message || "Payment Failed");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
         {/* Cart Title Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-6 mb-8">
           <div>
@@ -161,7 +217,7 @@ export default function Cart() {
         </div>
 
         {items.length === 0 ? (
-          /* Empty state block */
+          /* Empty state */
           <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-200 rounded-3xl bg-white max-w-xl mx-auto shadow-sm">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600 mb-4 animate-bounce">
               <ShoppingCart className="h-6 w-6" />
@@ -181,7 +237,8 @@ export default function Cart() {
         ) : (
           /* Two-column layout */
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-            {/* Left Items Column */}
+
+            {/* Left — Item list */}
             <div className="lg:col-span-8 space-y-4">
               {items.map((item, index) => (
                 <div
@@ -193,7 +250,8 @@ export default function Cart() {
                     alt={item.title}
                     className="h-24 w-18 rounded-lg object-cover shadow-sm bg-slate-100 shrink-0"
                     onError={(e) => {
-                      e.currentTarget.src = "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400";
+                      e.currentTarget.src =
+                        "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400";
                     }}
                   />
                   <div className="flex-1 flex flex-col justify-between min-w-0 pr-8">
@@ -210,18 +268,20 @@ export default function Cart() {
                       ₹{item.price}
                     </div>
                   </div>
-                  {/* Remove Button */}
                   <button
-                    onClick={() => removeItem(index)}
+                    onClick={() => {
+                      saveItems(items.filter((_, i) => i !== index));
+                      showToastMsg("Item removed from cart.");
+                    }}
                     className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     aria-label="Remove item"
                   >
-                    <Trash2 className="h-4.5 w-4.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))}
 
-              {/* Add More Books Button */}
+              {/* Add more books */}
               <button
                 onClick={() => navigate("/all-books")}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-100/70 hover:border-blue-400 py-4 text-sm font-bold text-blue-600 transition-all active:scale-[0.98] group"
@@ -231,13 +291,12 @@ export default function Cart() {
               </button>
             </div>
 
-            {/* Right Summary Column */}
+            {/* Right — Order Summary */}
             <div className="lg:col-span-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sticky top-24 space-y-6">
                 <h3 className="font-poppins font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-2.5">
                   Order Summary
                 </h3>
-
                 <div className="space-y-3.5 text-xs text-slate-600">
                   <div className="flex justify-between">
                     <span>Items Count</span>
@@ -254,7 +313,6 @@ export default function Cart() {
                     <span className="text-blue-600">₹{subtotal}</span>
                   </div>
                 </div>
-
                 <button
                   onClick={openCheckout}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-sm font-bold text-white transition-all shadow-md shadow-blue-500/10 active:scale-95"
@@ -262,7 +320,6 @@ export default function Cart() {
                   Proceed to Checkout
                   <ArrowRight className="h-4 w-4" />
                 </button>
-
                 <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider pt-2 border-t border-slate-100">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
                   Secure Transaction
@@ -273,7 +330,7 @@ export default function Cart() {
         )}
       </div>
 
-      {/* Floating toast notification */}
+      {/* Toast notification */}
       {toast && (
         <div className="fixed bottom-6 left-6 z-50 rounded-xl bg-slate-900 border border-slate-800 text-white px-5 py-3.5 shadow-2xl text-xs font-bold flex items-center gap-2">
           <Info className="h-4 w-4 text-blue-400 shrink-0" />
@@ -281,40 +338,83 @@ export default function Cart() {
         </div>
       )}
 
-      {/* UPI Scanner Checkout Modal */}
+      {/* Checkout Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in-30 duration-200">
-          <div className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col md:flex-row gap-6 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col md:flex-row gap-6">
             <button
               onClick={() => setIsCheckoutOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
 
-            {/* QR column */}
+            {/* Left — Card payment */}
             <div className="md:w-1/2 flex flex-col items-center justify-center p-4 border-r border-slate-100">
-              <h3 className="font-poppins font-bold text-slate-900 text-sm mb-1 text-center">Scan to Pay</h3>
-              <span className="text-[10px] text-slate-400 font-semibold mb-3">Pay exactly ₹{subtotal}</span>
-              <div className="rounded-2xl border border-slate-200 p-2.5 bg-white shadow-sm">
-                <img
-                  src="/phone-pe.jpg"
-                  alt="UPI QR Scanner"
-                  className="w-48 h-48 object-contain rounded-xl"
-                  onError={(e) => {
-                    e.target.src = "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&q=80&w=260";
-                  }}
-                />
+              <h3 className="font-poppins font-bold text-slate-900 text-sm mb-2 text-center">
+                Payment Details
+              </h3>
+              <span className="text-[10px] text-slate-400 font-semibold mb-4">
+                Securely pay ₹{subtotal} with your card
+              </span>
+
+              <div className="w-full space-y-3">
+
+                {/* Card Number */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                    Card Number
+                  </label>
+                  <div style={inputBoxStyle}>
+                    <CardNumberElement
+                      options={{ ...STRIPE_STYLE, showIcon: true }}
+                      onChange={(e) => setCardError(e.error?.message || "")}
+                    />
+                  </div>
+                </div>
+
+                {/* Expiry + CVC */}
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Expiry Date
+                    </label>
+                    <div style={inputBoxStyle}>
+                      <CardExpiryElement
+                        options={STRIPE_STYLE}
+                        onChange={(e) => setCardError(e.error?.message || "")}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                      CVC
+                    </label>
+                    <div style={inputBoxStyle}>
+                      <CardCvcElement
+                        options={STRIPE_STYLE}
+                        onChange={(e) => setCardError(e.error?.message || "")}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {cardError && (
+                  <p className="text-[10px] font-semibold text-red-500">{cardError}</p>
+                )}
+
+                <p className="text-[10px] text-slate-400 text-center leading-normal pt-1">
+                  Your payment is processed securely through Stripe. No card data is stored on this site.
+                </p>
               </div>
-              <p className="text-[10px] text-slate-400 text-center leading-normal mt-3 max-w-xs">
-                Scan PhonePe QR to pay directly to Vansh Ashokbhai Suthar using any banking or UPI application.
-              </p>
             </div>
 
-            {/* Billing fields column */}
+            {/* Right — Billing information */}
             <div className="flex-1 flex flex-col justify-between space-y-4">
               <div>
-                <h3 className="font-poppins font-bold text-slate-900 text-sm mb-4">Billing Information</h3>
+                <h3 className="font-poppins font-bold text-slate-900 text-sm mb-4">
+                  Billing Information
+                </h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
@@ -351,10 +451,12 @@ export default function Cart() {
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={confirmOrder}
-                  className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors shadow-md shadow-blue-500/10"
+                  disabled={!stripe || isProcessing}
+                  className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors shadow-md shadow-blue-500/10 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Confirm Purchase
+                  {isProcessing ? "Processing..." : "Confirm Purchase"}
                 </button>
               </div>
             </div>
