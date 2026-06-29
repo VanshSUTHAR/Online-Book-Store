@@ -72,6 +72,7 @@ export default function Cart() {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (location.state?.openCheckout) {
       const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
       if (loggedInUserId) {

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -12,11 +13,22 @@ import Delivery from "./pages/Delivery";
 import FAQ from "./pages/FAQ";
 import { UserProvider } from "./context/UserContext";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function AppRoutes() {
   const location = useLocation();
   const isAdminPage = location.pathname === "/admin";
   return (
     <div className="app-shell">
+      <ScrollToTop />
       {!isAdminPage && <Navbar />}
       <main className="app-content">
         <Routes>
@@ -44,3 +56,4 @@ export default function App() {
     </UserProvider>
   );
 }
+

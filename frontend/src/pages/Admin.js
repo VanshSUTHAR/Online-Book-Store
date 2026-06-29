@@ -307,11 +307,11 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row font-sans">
       
-      {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-r border-slate-800">
+      {/* Sidebar / Top Navigation Header */}
+      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-b md:border-b-0 md:border-r border-slate-800 sticky top-0 z-40 md:relative">
         <div>
           {/* Logo brand */}
-          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-4 md:p-6 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 shadow-md">
                 <BookOpen className="h-4.5 w-4.5 text-white" />
@@ -322,58 +322,59 @@ export default function Admin() {
             </div>
             <button
               onClick={handleCloseAdminPanel}
-              className="text-xs text-slate-400 hover:text-white md:hidden border border-slate-700 px-2 py-1 rounded"
+              className="text-xs text-slate-300 hover:text-white md:hidden bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold transition-colors"
             >
+              <ArrowLeft className="h-3.5 w-3.5" />
               Exit
             </button>
           </div>
 
-          {/* Navigation link pills */}
-          <nav className="p-4 space-y-1">
+          {/* Navigation link pills (Horizontal scroll on mobile, Vertical stack on desktop) */}
+          <nav className="p-3 md:p-4 flex md:flex-col overflow-x-auto md:overflow-x-visible gap-2 md:space-y-1 scrollbar-none">
             <button
               onClick={() => triggerTab("addAdmin")}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${
-                showAddAdmin ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
+                showAddAdmin ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
               }`}
             >
-              <UserPlus className="h-4 w-4" />
-              Add Admin
+              <UserPlus className="h-4 w-4 shrink-0" />
+              <span>Add Admin</span>
             </button>
             <button
               onClick={() => triggerTab("addBook")}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${
-                showAddBook ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
+                showAddBook ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
               }`}
             >
-              <PlusCircle className="h-4 w-4" />
-              Add Book
+              <PlusCircle className="h-4 w-4 shrink-0" />
+              <span>Add Book</span>
             </button>
             <button
               onClick={() => triggerTab("trending")}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${
-                showTrendingBooks ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
+                showTrendingBooks ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
               }`}
             >
-              <Flame className="h-4 w-4" />
-              Trending Books
+              <Flame className="h-4 w-4 shrink-0" />
+              <span>Trending Books</span>
             </button>
             <button
               onClick={() => triggerTab("bookList")}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${
-                showBookList ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
+                showBookList ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
               }`}
             >
-              <BookOpen className="h-4 w-4" />
-              View Books ({books.length})
+              <BookOpen className="h-4 w-4 shrink-0" />
+              <span>View Books ({books.length})</span>
             </button>
             <button
               onClick={() => triggerTab("messages")}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${
-                showMessages ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
+                showMessages ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
               }`}
             >
-              <MessageSquare className="h-4 w-4" />
-              Customer Messages
+              <MessageSquare className="h-4 w-4 shrink-0" />
+              <span>Messages ({contactMessages.length})</span>
             </button>
           </nav>
         </div>
@@ -391,47 +392,47 @@ export default function Admin() {
       </aside>
 
       {/* Main Panel Content */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto space-y-6 md:space-y-8">
         
         {/* TOP METRICS SUMMARY STRIP (KPIs) */}
-        <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <Package className="h-6 w-6" />
+        <section className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shrink-0">
+              <Package className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Books</span>
-              <span className="text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{books.length}</span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Operators</span>
-              <span className="text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{admins.length}</span>
+            <div className="min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Total Books</span>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{books.length}</span>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <MessageSquare className="h-6 w-6" />
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 shrink-0">
+              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Inquiries</span>
-              <span className="text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{contactMessages.length}</span>
+            <div className="min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Operators</span>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{admins.length}</span>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
-              <TrendingUp className="h-6 w-6" />
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 shrink-0">
+              <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Trending</span>
-              <span className="text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{trendingBooks.length}</span>
+            <div className="min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Inquiries</span>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{contactMessages.length}</span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-green-50 text-green-600 shrink-0">
+              <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Trending</span>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-poppins mt-0.5 block">{trendingBooks.length}</span>
             </div>
           </div>
         </section>
@@ -445,7 +446,7 @@ export default function Admin() {
         )}
 
         {/* Tab content renderer */}
-        <section className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm min-h-[500px]">
+        <section className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm min-h-[400px]">
           
           {/* TAB 1: ADD ADMIN */}
           {showAddAdmin && !editingBook && (
@@ -503,7 +504,7 @@ export default function Admin() {
               {/* Admins listing */}
               <div className="space-y-3.5 max-w-4xl pt-4">
                 <h3 className="font-poppins font-bold text-slate-900 text-sm">Active Administrator Accounts</h3>
-                <div className="overflow-hidden border border-slate-200 rounded-2xl shadow-sm bg-white">
+                <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm bg-white">
                   <table className="min-w-full divide-y divide-slate-100 text-left">
                     <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       <tr>
@@ -748,25 +749,71 @@ export default function Admin() {
                 <div className="lg:col-span-7 space-y-4">
                   <h3 className="font-poppins font-bold text-slate-900 text-sm">Catalog Directory</h3>
                   <div className="max-h-[60vh] overflow-y-auto border border-slate-200 bg-slate-50/50 rounded-2xl p-4 space-y-2.5 shadow-inner">
-                    {books.map((bk) => (
-                      <div
-                        key={bk._id}
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData("bookId", bk._id)}
-                        className="flex items-center justify-between gap-3 border border-slate-200 bg-white rounded-xl p-3 cursor-grab hover:bg-slate-50 hover:border-slate-300 transition-all select-none group shadow-sm active:cursor-grabbing"
-                      >
-                        <div className="flex items-center gap-3">
-                          <img src={bk.image} alt={bk.title} className="w-10 h-14 rounded object-cover shadow-sm bg-slate-100 shrink-0" />
-                          <div className="text-xs">
-                            <h4 className="font-bold text-slate-900 truncate max-w-[200px] md:max-w-xs">{bk.title}</h4>
-                            <p className="text-slate-400">by {bk.author}</p>
+                    {books.map((bk) => {
+                      const isTrending = trendingBooks.includes(bk._id);
+                      return (
+                        <div
+                          key={bk._id}
+                          draggable
+                          onDragStart={(e) => e.dataTransfer.setData("bookId", bk._id)}
+                          className="flex items-center justify-between gap-3 border border-slate-200 bg-white rounded-xl p-3 cursor-grab hover:bg-slate-50 hover:border-slate-300 transition-all select-none group shadow-sm active:cursor-grabbing"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={bk.image}
+                              alt={bk.title}
+                              className="w-10 h-14 rounded object-cover shadow-sm bg-slate-100 shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400";
+                              }}
+                            />
+                            <div className="text-xs min-w-0">
+                              <h4 className="font-bold text-slate-900 truncate max-w-[140px] xs:max-w-[200px] md:max-w-xs">{bk.title}</h4>
+                              <p className="text-slate-400 truncate">by {bk.author}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase hidden sm:inline-block">
+                              {bk.category}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (isTrending) {
+                                  const cleaned = trendingBooks.filter(id => id !== bk._id);
+                                  try {
+                                    await api.post('/trending', { bookIds: cleaned });
+                                    showToastMsg("Removed from trending.");
+                                    fetchTrendingBooks();
+                                  } catch {
+                                    showToastMsg("Error updating trending collection.");
+                                  }
+                                } else {
+                                  const cleaned = [...trendingBooks, bk._id]
+                                    .map(item => String(item))
+                                    .filter(item => /^[a-fA-F0-9]{24}$/.test(item));
+                                  try {
+                                    await api.post('/trending', { bookIds: cleaned });
+                                    showToastMsg("✓ Added to trending");
+                                    fetchTrendingBooks();
+                                  } catch {
+                                    showToastMsg("Error updating trending collection.");
+                                  }
+                                }
+                              }}
+                              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 ${
+                                isTrending
+                                  ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                  : "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white"
+                              }`}
+                            >
+                              <Flame className={`h-3.5 w-3.5 ${isTrending ? "fill-amber-500 text-amber-500" : ""}`} />
+                              <span>{isTrending ? "Trending" : "Add"}</span>
+                            </button>
                           </div>
                         </div>
-                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">
-                          {bk.category}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -872,7 +919,7 @@ export default function Admin() {
                 <p className="text-slate-500 text-xs mt-1">Review active books, selling prices, categories, and ratings database logs</p>
               </div>
 
-              <div className="overflow-hidden border border-slate-200 rounded-3xl shadow-sm bg-white">
+              <div className="overflow-x-auto border border-slate-200 rounded-2xl sm:rounded-3xl shadow-sm bg-white">
                 <table className="min-w-full divide-y divide-slate-100 text-left">
                   <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     <tr>
