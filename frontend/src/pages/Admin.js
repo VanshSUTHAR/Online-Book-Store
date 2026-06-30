@@ -18,13 +18,8 @@ import {
   Star,
   Users,
   TrendingUp,
-  ShoppingBag,
   Search,
   Filter,
-  CreditCard,
-  Clock,
-  Truck,
-  Tag,
   RefreshCw,
   ClipboardList
 } from "lucide-react";
