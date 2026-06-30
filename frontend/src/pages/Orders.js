@@ -9,14 +9,10 @@ import {
   User,
   ShoppingBag,
   ArrowRight,
-  Clock,
-  CheckCircle2,
   BookOpen,
   RefreshCw,
   AlertCircle,
   CreditCard,
-  Truck,
-  Tag
 } from "lucide-react";
 
 export default function Orders() {
@@ -34,7 +30,7 @@ export default function Orders() {
         setLoading(false);
         return;
       }
-      
+
       const res = await api.get("/orders/my-orders", {
         headers: { Authorization: token || "" }
       });
@@ -95,7 +91,7 @@ export default function Orders() {
   return (
     <div className="min-h-screen bg-slate-50/60 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        
+
         {/* Header Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
           <div>
@@ -109,7 +105,7 @@ export default function Orders() {
               Track your purchased books, payment receipts, and real-time delivery status
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={fetchOrders}
@@ -185,8 +181,8 @@ export default function Orders() {
               });
 
               // Combine products or books array for display
-              const itemsList = (order.products && order.products.length > 0) 
-                ? order.products 
+              const itemsList = (order.products && order.products.length > 0)
+                ? order.products
                 : (order.books || []);
 
               return (
