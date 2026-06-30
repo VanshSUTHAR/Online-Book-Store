@@ -21,12 +21,21 @@ export default function MyOrders() {
     const fetchOrders = async () => {
       try {
         setIsLoading(true);
+        const token = localStorage.getItem("token");
         const res = await api.get("/orders/my-orders", {
-          headers: { Authorization: localStorage.getItem("token") }
+          headers: { 
+            Authorization: token?.startsWith("Bearer") ? token : `Bearer ${token}`
+          }
         });
         setOrders(res.data);
       } catch (err) {
         console.error("Error fetching orders:", err);
+        if (err.response && err.response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
+          navigate("/login", { state: { from: "/my-orders" } });
+          return;
+        }
         setError("Failed to load your orders. Please try again later.");
       } finally {
         setIsLoading(false);

@@ -13,6 +13,8 @@ import {
   RefreshCw,
   AlertCircle,
   CreditCard,
+  Tag,
+  Truck,
 } from "lucide-react";
 
 export default function Orders() {
@@ -32,11 +34,20 @@ export default function Orders() {
       }
 
       const res = await api.get("/orders/my-orders", {
-        headers: { Authorization: token || "" }
+        headers: { 
+          Authorization: token?.startsWith("Bearer") ? token : `Bearer ${token}` 
+        }
       });
       setOrders(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching my orders:", err);
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
+        // Reload page to redirect to login
+        window.location.reload();
+        return;
+      }
       setError("Unable to load your orders. Please check your network connection.");
     } finally {
       setLoading(false);
