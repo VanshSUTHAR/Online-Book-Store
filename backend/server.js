@@ -17,8 +17,42 @@ const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 
-const corsOrigin = process.env.CORS_ORIGIN || "*";
-app.use(cors({ origin: corsOrigin === "*" ? true : corsOrigin }));
+const defaultAllowedOrigins = [
+  "https://online-books-frontend.vercel.app",
+  "https://online-book-store-backend-psi.vercel.app",
+];
+
+const configuredAllowedOrigins = [
+  process.env.CORS_ORIGIN,
+  process.env.FRONTEND_URL,
+]
+  .filter(Boolean)
+  .flatMap((value) => value.split(","))
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([
+  ...configuredAllowedOrigins,
+  ...defaultAllowedOrigins,
+]));
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes("*")) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+}));
 app.use(express.json());
 
 

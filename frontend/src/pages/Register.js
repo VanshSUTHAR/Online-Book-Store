@@ -53,6 +53,9 @@ export default function Register() {
       // Synchronize credentials
       login(res.data.user);
       localStorage.setItem("userId", res.data.user._id);
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      }
       showToastMsg("✓ Registration successful!");
 
       const fromPath = location.state?.from || "/";

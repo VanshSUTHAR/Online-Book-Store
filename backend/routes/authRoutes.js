@@ -1,5 +1,22 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const User = require("../models/User");
+const LoginLog = require("../models/LoginLog");
+
+function requireDatabase(req, res, next) {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database is not connected. Check the deployed MONGO_URI environment variable.",
+    });
+  }
+
+  next();
+}
+
+router.use(requireDatabase);
 
 // ================= CHANGE PASSWORD =================
 router.post("/change-password", async (req, res) => {
@@ -21,10 +38,6 @@ router.post("/change-password", async (req, res) => {
   await user.save();
   return res.json({ success: true, message: "Password changed successfully" });
 });
-
-const User = require("../models/User");
-const LoginLog = require("../models/LoginLog");
-const nodemailer = require("nodemailer");
 
 // In-memory OTP store (for demo; use Redis or DB in production)
 const otpStore = {};
@@ -79,7 +92,6 @@ router.post("/send-otp", async (req, res) => {
 });
 
 // ================= VERIFY OTP AND LOGIN =================
-const jwt = require("jsonwebtoken");
 router.post("/verify-otp", async (req, res) => {
   const email = (req.body.email || "").toLowerCase().trim();
   const otp = (req.body.otp || "").trim();
