@@ -37,8 +37,8 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand & Mission Column */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
+          <div className="space-y-4 text-center">
+            <div className="flex items-center gap-2 justify-center">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600">
                 <BookOpen className="h-4.5 w-4.5 text-white" />
               </div>
@@ -50,7 +50,7 @@ export default function Footer() {
               Discover stories that inspire, classics that endure, and educational materials that expand your horizons. We curate the best titles for every curious mind.
             </p>
             {/* Social Media SVG Icons */}
-            <div className="flex space-x-3 pt-2">
+            <div className="flex space-x-3 pt-2 justify-center">
               <a
                 href="/"
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-400 transition-colors"
@@ -91,7 +91,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Categories Column */}
-          <div>
+          <div className="text-center">
             <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-4">
               Explore Shop
             </h3>
@@ -132,7 +132,7 @@ export default function Footer() {
           </div>
 
           {/* Customer Support Column */}
-          <div>
+          <div className="text-center">
             <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-4">
               Customer Support
             </h3>
@@ -165,7 +165,7 @@ export default function Footer() {
           </div>
 
           {/* Newsletter / Map Details Column */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center">
             <h3 className="text-sm font-bold uppercase tracking-wider text-white">
               Newsletter
             </h3>
@@ -196,7 +196,7 @@ export default function Footer() {
             )}
 
             {/* Address */}
-            <div className="border-t border-slate-800 pt-3 space-y-1.5 text-xs text-slate-400">
+            <div className="border-t border-slate-800 pt-3 space-y-1.5 text-xs text-slate-400 flex flex-col items-center">
               <div className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-slate-500 shrink-0" />
                 <span>123 Book St, New Delhi, India 110001</span>
@@ -206,7 +206,9 @@ export default function Footer() {
                 <a href="tel:+919876543210" className="hover:text-blue-400">
                   +91 98765 43210
                 </a>
+              
               </div>
+                 <span>Make by </span>   
             </div>
           </div>
         </div>

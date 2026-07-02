@@ -18,7 +18,6 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const app = express();
 
 const defaultAllowedOrigins = [
-  "https://online-books-frontend.vercel.app",
   "https://online-book-store-backend-psi.vercel.app",
 ];
 
@@ -51,9 +50,18 @@ app.use(cors({
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
   optionsSuccessStatus: 204,
 }));
 app.use(express.json());
+
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({ message: "Invalid JSON request body" });
+  }
+
+  next(err);
+});
 
 
 // MongoDB connection

@@ -278,17 +278,17 @@ export default function Admin() {
     if (!replyText.trim()) return;
 
     try {
-      await api.post("/admin/reply", {
+      const res = await api.post("/admin/reply", {
         contactId,
         replyMessage: replyText
       });
 
-      showToastMsg("✓ Reply sent successfully!");
+      showToastMsg(res.data?.message || "Reply saved successfully.");
       setReplyText("");
       setSelectedMessageId(null);
       fetchMessages();
     } catch (error) {
-      showToastMsg("Failed to send reply.");
+      showToastMsg(error.response?.data?.message || "Failed to save reply.");
     }
   };
 

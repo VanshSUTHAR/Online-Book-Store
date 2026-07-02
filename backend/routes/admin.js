@@ -59,7 +59,8 @@ router.get("/messages", async (req, res) => {
 
 // Reply to customer
 router.post("/reply", async (req, res) => {
-  const { contactId, replyMessage } = req.body;
+  const contactId = (req.body.contactId || "").trim();
+  const replyMessage = (req.body.replyMessage || "").trim();
 
   if (!contactId || !replyMessage) {
     return res.status(400).json({ message: "All fields required" });
@@ -72,41 +73,55 @@ router.post("/reply", async (req, res) => {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.ADMIN_EMAIL,
-        pass: process.env.ADMIN_EMAIL_PASS,
-      },
-    });
-
-    await transporter.sendMail({
-      from: 'Online Book Store <no-reply@onlinebookstore.com>',
-      to: contact.email,
-      subject: "Reply from Online Book Store Support",
-      html: `
-        <div style="font-family: Arial; padding: 20px;">
-          <p>Hello ${contact.name},</p>
-          <p>${replyMessage}</p>
-          <br/>
-          <p>Best Regards,</p>
-          <p><strong>Online Book Store Team</strong></p>
-        </div>
-      `,
-    });
-
-    // Add reply to replies array
     contact.replies = contact.replies || [];
     contact.replies.push({ message: replyMessage, fromAdmin: true });
     await contact.save();
 
-    res.json({ message: "Reply sent successfully!" });
+    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
+      return res.json({
+        message: "Reply saved. Email was not sent because admin email credentials are not configured.",
+        emailSent: false,
+      });
+    }
+
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.ADMIN_EMAIL,
+          pass: process.env.ADMIN_EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `Online Book Store <${process.env.ADMIN_EMAIL}>`,
+        to: contact.email,
+        subject: "Reply from Online Book Store Support",
+        html: `
+          <div style="font-family: Arial; padding: 20px;">
+            <p>Hello ${contact.name || "Reader"},</p>
+            <p>${replyMessage}</p>
+            <br/>
+            <p>Best Regards,</p>
+            <p><strong>Online Book Store Team</strong></p>
+          </div>
+        `,
+      });
+
+      return res.json({ message: "Reply sent successfully!", emailSent: true });
+    } catch (emailError) {
+      console.error("Admin reply email error:", emailError.message || emailError);
+      return res.json({
+        message: "Reply saved, but email delivery failed. Check ADMIN_EMAIL and ADMIN_EMAIL_PASS on Render.",
+        emailSent: false,
+      });
+    }
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to send reply" });
+    res.status(500).json({ message: "Failed to save reply" });
   }
 });
 
