@@ -206,9 +206,25 @@ export default function Footer() {
                 <a href="tel:+919876543210" className="hover:text-blue-400">
                   +91 98765 43210
                 </a>
-              
+
               </div>
-                 <span>Make by </span>   
+              <div>
+
+                <span>Made by </span>
+                <a
+                  href="https://devstudiooffical.netlify.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#eff0f3ff",
+                    textDecoration: "none",
+                    fontWeight: "600",
+                    marginLeft: "4px",
+                  }}
+                >
+                  Orbit Dev Studio
+                </a>
+              </div>
             </div>
           </div>
         </div>
