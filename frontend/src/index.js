@@ -8,10 +8,13 @@ import { stripePromise } from "./stripe";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <Elements stripe={stripePromise}>
+  stripePromise ? (
+    <Elements stripe={stripePromise}>
+      <App />
+    </Elements>
+  ) : (
     <App />
-</Elements>
-
+  )
 );
 
 // If you want to start measuring performance in your app, pass a function
