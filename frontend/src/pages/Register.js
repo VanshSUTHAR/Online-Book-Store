@@ -26,7 +26,7 @@ export default function Register() {
   const location = useLocation();
 
   useEffect(() => {
-    const loggedInUserId = user?._id || user?.id || localStorage.getItem("userId");
+    const loggedInUserId = user?._id || user?.id;
     if (loggedInUserId) {
       if (user?.role === "admin") {
         navigate("/admin");
