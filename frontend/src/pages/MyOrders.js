@@ -23,7 +23,7 @@ export default function MyOrders() {
         setIsLoading(true);
         const token = localStorage.getItem("token");
         const res = await api.get("/orders/my-orders", {
-          headers: { 
+          headers: {
             Authorization: token?.startsWith("Bearer") ? token : `Bearer ${token}`
           }
         });
@@ -57,11 +57,11 @@ export default function MyOrders() {
   return (
     <div className="min-h-screen bg-slate-50 py-12 pt-28">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <button 
+            <button
               onClick={() => navigate("/")}
               className="flex items-center text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors mb-3"
             >
@@ -76,12 +76,12 @@ export default function MyOrders() {
               View and track all your past purchases.
             </p>
           </div>
-          
+
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1 flex items-center max-w-sm w-full">
             <Search className="h-5 w-5 text-slate-400 ml-2" />
-            <input 
-              type="text" 
-              placeholder="Search orders..." 
+            <input
+              type="text"
+              placeholder="Search orders..."
               className="w-full bg-transparent border-none focus:ring-0 text-sm py-2 px-3 text-slate-700 outline-none"
             />
           </div>
@@ -114,8 +114,8 @@ export default function MyOrders() {
         ) : (
           <div className="space-y-6">
             {orders.map((order, idx) => (
-              <div 
-                key={order._id || idx} 
+              <div
+                key={order._id || idx}
                 className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-300 animate-in fade-in-50 slide-in-from-bottom-4 duration-500"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
@@ -163,8 +163,8 @@ export default function MyOrders() {
                       <div key={index} className="flex gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors">
                         <div className="h-24 w-16 sm:h-32 sm:w-24 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm flex items-center justify-center relative">
                           {item.image || (item.bookId && item.bookId.image) ? (
-                            <img 
-                              src={item.image || (item.bookId && item.bookId.image)} 
+                            <img
+                              src={item.image || (item.bookId && item.bookId.image)}
                               alt={item.title || "Book"}
                               className="h-full w-full object-cover"
                               onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=No+Cover" }}
@@ -185,20 +185,13 @@ export default function MyOrders() {
                               {item.author || (item.bookId && item.bookId.author) || "Unknown Author"}
                             </p>
                           </div>
-                          
+
                           <div className="flex items-center justify-between mt-4">
                             <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
                               Qty: {item.quantity || 1}
                             </span>
-                            
-                            {item.bookId && (
-                              <button 
-                                onClick={() => navigate(`/book/${item.bookId._id || item.bookId}`)}
-                                className="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                              >
-                                View Book <ExternalLink className="h-3 w-3" />
-                              </button>
-                            )}
+
+
                           </div>
                         </div>
                       </div>
