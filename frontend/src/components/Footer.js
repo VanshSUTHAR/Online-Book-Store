@@ -222,7 +222,7 @@ export default function Footer() {
                     marginLeft: "4px",
                   }}
                 >
-                  Orbit Dev Studio
+                  Vansh SUTHAR
                 </a>
               </div>
             </div>
