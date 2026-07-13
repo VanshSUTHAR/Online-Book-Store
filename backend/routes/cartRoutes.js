@@ -38,6 +38,7 @@ async function findOrCreateCart(userId) {
 
 router.get("/", auth, async (req, res) => {
   try {
+    res.set("Cache-Control", "no-store");
     const cart = await findOrCreateCart(getUserId(req));
     res.json({ items: cart.items });
   } catch (err) {

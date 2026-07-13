@@ -37,7 +37,16 @@ export async function fetchCartItems() {
 
   try {
     const res = await api.get("/cart", { headers: getAuthHeaders() });
-    const items = normalizeItems(res.data);
+    let items = normalizeItems(res.data);
+    const localItems = getLocalCart();
+
+    if (items.length === 0 && localItems.length > 0) {
+      for (const item of localItems) {
+        const addRes = await api.post("/cart/items", { item }, { headers: getAuthHeaders() });
+        items = normalizeItems(addRes.data);
+      }
+    }
+
     setLocalCart(items, false);
     return items;
   } catch (err) {
