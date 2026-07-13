@@ -55,7 +55,7 @@ export default function MyOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 pt-28">
+    <div className="min-h-screen bg-slate-50 py-6 md:py-12 pt-20 md:pt-28">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header Section */}
@@ -132,7 +132,7 @@ export default function MyOrders() {
                     </div>
                     <div>
                       <p className="text-slate-500 font-medium mb-1 uppercase tracking-wider text-[10px]">Total</p>
-                      <p className="font-semibold text-slate-800">${Number(order.totalAmount || 0).toFixed(2)}</p>
+                      <p className="font-semibold text-slate-800">₹{Number(order.totalAmount || 0).toFixed(2)}</p>
                     </div>
                     <div className="col-span-2 sm:col-span-1">
                       <p className="text-slate-500 font-medium mb-1 uppercase tracking-wider text-[10px]">Ship To</p>
@@ -140,7 +140,7 @@ export default function MyOrders() {
                     </div>
                     <div className="col-span-2 sm:col-span-1 sm:text-right">
                       <p className="text-slate-500 font-medium mb-1 uppercase tracking-wider text-[10px]">Order ID</p>
-                      <p className="font-mono text-xs text-slate-600 break-all">{order._id}</p>
+                      <p className="font-mono text-[10px] sm:text-xs text-slate-600 break-all">{order._id}</p>
                     </div>
                   </div>
                 </div>
@@ -176,12 +176,12 @@ export default function MyOrders() {
                         <div className="flex flex-1 flex-col justify-between">
                           <div>
                             <div className="flex justify-between items-start">
-                              <h4 className="text-base sm:text-lg font-bold text-slate-900 line-clamp-2">
+                              <h4 className="text-sm sm:text-lg font-bold text-slate-900 line-clamp-2">
                                 {item.title || (item.bookId && item.bookId.title) || "Unknown Book"}
                               </h4>
-                              <p className="font-bold text-blue-600 ml-4">${Number(item.price || 0).toFixed(2)}</p>
+                              <p className="font-bold text-blue-600 ml-4 shrink-0 text-sm sm:text-base">₹{Number(item.price || 0).toFixed(2)}</p>
                             </div>
-                            <p className="mt-1 text-sm text-slate-500 line-clamp-1">
+                            <p className="mt-1 text-xs sm:text-sm text-slate-500 line-clamp-1">
                               {item.author || (item.bookId && item.bookId.author) || "Unknown Author"}
                             </p>
                           </div>

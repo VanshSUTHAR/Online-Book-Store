@@ -349,12 +349,12 @@ export default function AllBooks() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-12">
+    <div className="min-h-screen bg-[#F8FAFC] py-6 md:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-8 mb-10 gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-6 md:pb-8 mb-6 md:mb-10 gap-6">
           <div>
-            <h1 className="font-playfair text-4xl font-black text-slate-900 md:text-5xl">
+            <h1 className="font-playfair text-3xl font-black text-slate-900 md:text-5xl">
               All Books Catalog
             </h1>
             <p className="text-slate-500 text-sm mt-2">
@@ -374,6 +374,37 @@ export default function AllBooks() {
             />
           </div>
         </div>
+
+        {/* Mobile Categories Pill Bar */}
+        {Object.keys(booksByCategory).length > 0 && (
+          <div 
+            className="lg:hidden -mx-4 px-4 overflow-x-auto pb-3 mb-6 scrollbar-hide flex gap-2 snap-x snap-mandatory sticky top-16 bg-[#F8FAFC]/95 backdrop-blur-md z-30 border-b border-slate-100 shadow-sm py-2" 
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {Object.keys(booksByCategory).map((cat) => {
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setActiveCategory(cat);
+                    const el = document.getElementById(cat);
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }}
+                  className={`shrink-0 snap-start text-xs font-bold px-3.5 py-2 rounded-full border transition-all duration-200 ${
+                    isActive
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/10"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {cat} ({booksByCategory[cat].length})
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Categories sidebar navigation map */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -456,7 +487,7 @@ export default function AllBooks() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-3.5 sm:gap-6 sm:grid-cols-3">
                     {categoryBooks.map((book) => {
                       const isFavorite = wishlist.some(
                         (item) => (item._id || item.id) === (book._id || book.id)
@@ -524,15 +555,15 @@ export default function AllBooks() {
                                 )}
                               </div>
 
-                              <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
+                              <div className="grid grid-cols-2 gap-1.5 border-t border-slate-100 pt-3">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     addToCart(book);
                                   }}
-                                  className="flex items-center justify-center gap-1 rounded-lg border border-slate-200 hover:bg-slate-50 py-1.5 text-xs font-bold text-slate-700 transition-colors"
+                                  className="flex items-center justify-center gap-1 rounded-lg border border-slate-200 hover:bg-slate-50 py-1.5 text-[10px] sm:text-xs font-bold text-slate-700 transition-colors"
                                 >
-                                  <ShoppingCart className="h-3.5 w-3.5" />
+                                  <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                   Cart
                                 </button>
                                 <button
@@ -540,7 +571,7 @@ export default function AllBooks() {
                                     e.stopPropagation();
                                     openCheckout(book);
                                   }}
-                                  className="rounded-lg bg-blue-600 hover:bg-blue-700 py-1.5 text-xs font-bold text-white transition-colors"
+                                  className="rounded-lg bg-blue-600 hover:bg-blue-700 py-1.5 text-[10px] sm:text-xs font-bold text-white transition-colors"
                                 >
                                   Buy
                                 </button>

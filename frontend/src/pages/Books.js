@@ -400,7 +400,7 @@ export default function Books() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* 2. Hero Section */}
-      <section id="home" className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-white to-[#F8FAFC] py-20 lg:py-24">
+      <section id="home" className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-white to-[#F8FAFC] py-12 md:py-20 lg:py-24">
         {/* Modern Background Effects */}
         <div className="absolute top-0 right-1/4 h-[400px] w-[400px] rounded-full bg-blue-400/10 blur-[100px]" />
         <div className="absolute bottom-10 left-10 h-[300px] w-[300px] rounded-full bg-violet-400/10 blur-[80px]" />
@@ -468,21 +468,21 @@ export default function Books() {
               </div>
 
               {/* Statistical numbers metrics */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-200/60 max-w-md mx-auto lg:mx-0">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-6 border-t border-slate-200/60 max-w-md mx-auto lg:mx-0">
                 <div>
-                  <div className="text-2xl font-black text-slate-900 font-poppins">50,000+</div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Books</div>
+                  <div className="text-lg sm:text-2xl font-black text-slate-900 font-poppins">50,000+</div>
+                  <div className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Books</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-slate-900 font-poppins">100,000+</div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Customers</div>
+                  <div className="text-lg sm:text-2xl font-black text-slate-900 font-poppins">100,000+</div>
+                  <div className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Customers</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-slate-900 font-poppins flex items-center justify-center lg:justify-start gap-1">
+                  <div className="text-lg sm:text-2xl font-black text-slate-900 font-poppins flex items-center justify-center lg:justify-start gap-0.5 sm:gap-1">
                     4.9
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400 shrink-0" />
+                    <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-400 text-amber-400 shrink-0" />
                   </div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Avg Rating</div>
+                  <div className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Avg Rating</div>
                 </div>
               </div>
             </div>
@@ -512,10 +512,10 @@ export default function Books() {
       </section>
 
       {/* 3. Featured Categories */}
-      <section id="categories-section" className="py-20 bg-white">
+      <section id="categories-section" className="py-12 md:py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-xl mx-auto mb-12">
-            <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+          <div className="text-center max-w-xl mx-auto mb-8 md:mb-12">
+            <h2 className="font-playfair text-2.5xl font-black text-slate-900 sm:text-4xl">
               Featured Categories
             </h2>
             <p className="text-slate-500 text-sm mt-3 leading-relaxed">
@@ -523,12 +523,12 @@ export default function Books() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4 lg:grid-cols-4">
             {categoriesList.map((cat) => (
               <div
                 key={cat.name}
                 onClick={() => navigate("/all-books#" + cat.linkId)}
-                className={`group cursor-pointer rounded-2xl border border-slate-150 p-6 bg-gradient-to-br ${cat.color} transition-all duration-300 hover:shadow-lg hover:translate-y-[-3px] flex flex-col items-center text-center`}
+                className={`group cursor-pointer rounded-2xl border border-slate-150 p-4 sm:p-6 bg-gradient-to-br ${cat.color} transition-all duration-300 hover:shadow-lg hover:translate-y-[-3px] flex flex-col items-center text-center`}
               >
                 <span className="text-4xl group-hover:scale-110 transition-transform duration-300 mb-3 block">
                   {cat.icon}
@@ -544,15 +544,15 @@ export default function Books() {
       </section>
 
       {/* 4. Best Seller Books Section */}
-      <section id="books-section" className="py-20 bg-slate-50/50">
+      <section id="books-section" className="py-12 md:py-20 bg-slate-50/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-8 md:mb-12 gap-4">
             <div>
               <div className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-wider mb-2">
                 <TrendingUp className="h-3 w-3" />
                 <span>Trending Books</span>
               </div>
-              <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+              <h2 className="font-playfair text-2.5xl font-black text-slate-900 sm:text-4xl">
                 Best Seller Books
               </h2>
             </div>
@@ -571,7 +571,7 @@ export default function Books() {
               <p className="text-slate-500 font-medium">No trending books available right now.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3.5 sm:gap-6 sm:grid-cols-3 lg:grid-cols-4">
               {filteredTrendingBooks.map((book) => {
                 const isFavorite = wishlist.some(item => (item._id || item.id) === (book._id || book.id));
                 return (
@@ -642,15 +642,15 @@ export default function Books() {
                       </div>
 
                       {/* Card actions */}
-                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">
+                      <div className="grid grid-cols-2 gap-1.5 mt-4 pt-3 border-t border-slate-100">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             addToCart(book);
                           }}
-                          className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 py-2 text-xs font-bold text-slate-700 transition-colors"
+                          className="flex items-center justify-center gap-1 rounded-lg border border-slate-200 hover:bg-slate-50 py-2 text-[10px] sm:text-xs font-bold text-slate-700 transition-colors"
                         >
-                          <ShoppingCart className="h-3.5 w-3.5" />
+                          <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           Cart
                         </button>
                         <button
@@ -658,7 +658,7 @@ export default function Books() {
                             e.stopPropagation();
                             openCheckout(book);
                           }}
-                          className="rounded-lg bg-blue-600 hover:bg-blue-700 py-2 text-xs font-bold text-white transition-colors"
+                          className="rounded-lg bg-blue-600 hover:bg-blue-700 py-2 text-[10px] sm:text-xs font-bold text-white transition-colors"
                         >
                           Buy Now
                         </button>
@@ -673,11 +673,11 @@ export default function Books() {
       </section>
 
       {/* 5. New Arrivals Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 md:py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-8 md:mb-10">
             <div>
-              <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+              <h2 className="font-playfair text-2.5xl font-black text-slate-900 sm:text-4xl">
                 New Arrivals
               </h2>
               <p className="text-slate-500 text-sm mt-2">
@@ -742,10 +742,10 @@ export default function Books() {
       </section>
 
       {/* 6. Why Choose Us */}
-      <section className="py-20 bg-slate-50/50">
+      <section className="py-12 md:py-20 bg-slate-50/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-xl mx-auto mb-16">
-            <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+          <div className="text-center max-w-xl mx-auto mb-8 md:mb-16">
+            <h2 className="font-playfair text-2.5xl font-black text-slate-900 sm:text-4xl">
               Why Readers Choose Us
             </h2>
             <p className="text-slate-500 text-sm mt-3 leading-relaxed">
@@ -753,53 +753,53 @@ export default function Books() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
-            <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-4">
-                <Truck className="h-6 w-6" />
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            <div className="rounded-2xl border border-slate-200/60 bg-white p-5 sm:p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-4">
+                <Truck className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="font-poppins font-bold text-slate-900 text-sm">Fast Delivery</h3>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              <h3 className="font-poppins font-bold text-slate-900 text-xs sm:text-sm">Fast Delivery</h3>
+              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 leading-relaxed">
                 Free shipping India-wide with automated tracking links.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 mb-4">
-                <BookOpen className="h-6 w-6" />
+            <div className="rounded-2xl border border-slate-200/60 bg-white p-5 sm:p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 mb-4">
+                <BookOpen className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="font-poppins font-bold text-slate-900 text-sm">Huge Collection</h3>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              <h3 className="font-poppins font-bold text-slate-900 text-xs sm:text-sm">Huge Collection</h3>
+              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 leading-relaxed">
                 Over 50,000 books covering all genres and academic topics.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-4">
-                <ShieldCheck className="h-6 w-6" />
+            <div className="rounded-2xl border border-slate-200/60 bg-white p-5 sm:p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-4">
+                <ShieldCheck className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="font-poppins font-bold text-slate-900 text-sm">Secure Payments</h3>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              <h3 className="font-poppins font-bold text-slate-900 text-xs sm:text-sm">Secure Payments</h3>
+              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 leading-relaxed">
                 100% encrypted direct bank transfer UPI verification.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 mb-4">
-                <RefreshCw className="h-6 w-6" />
+            <div className="rounded-2xl border border-slate-200/60 bg-white p-5 sm:p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 mb-4">
+                <RefreshCw className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="font-poppins font-bold text-slate-900 text-sm">Easy Returns</h3>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              <h3 className="font-poppins font-bold text-slate-900 text-xs sm:text-sm">Easy Returns</h3>
+              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 leading-relaxed">
                 7 days replacement policy if the book is damaged.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 mb-4">
-                <Award className="h-6 w-6" />
+            <div className="col-span-2 md:col-span-1 rounded-2xl border border-slate-200/60 bg-white p-5 sm:p-6 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 mb-4">
+                <Award className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="font-poppins font-bold text-slate-900 text-sm">Expert Picks</h3>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              <h3 className="font-poppins font-bold text-slate-900 text-xs sm:text-sm">Expert Picks</h3>
+              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 leading-relaxed">
                 Curated catalogs prepared weekly by our chief editor.
               </p>
             </div>
@@ -808,11 +808,11 @@ export default function Books() {
       </section>
 
       {/* 7. Customer Reviews */}
-      <section className="py-20 bg-white">
+      <section className="py-12 md:py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-8 md:mb-12">
             <div>
-              <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+              <h2 className="font-playfair text-2.5xl font-black text-slate-900 sm:text-4xl">
                 What Our Customers Say
               </h2>
               <p className="text-slate-500 text-sm mt-2">
@@ -838,13 +838,13 @@ export default function Books() {
 
           <div
             ref={testimonialsRef}
-            className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory"
+            className="flex gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {testimonials.map((test, index) => (
               <div
                 key={index}
-                className="w-full sm:w-[450px] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between"
+                className="w-[290px] sm:w-[450px] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between"
               >
                 <p className="text-slate-600 text-sm italic leading-relaxed">
                   "{test.content}"
@@ -897,16 +897,16 @@ export default function Books() {
       </section>
 
       {/* 9. About Us */}
-      <section className="about-section py-20 bg-slate-50/50">
+      <section className="about-section py-12 md:py-20 bg-slate-50/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="grid grid-cols-1 gap-8 md:gap-12 lg:grid-cols-2 lg:items-center">
             {/* Text Story */}
             <div className="space-y-6">
               <div>
                 <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider inline-block mb-3">
                   Our Story
                 </span>
-                <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+                <h2 className="font-playfair text-2.5xl font-black text-slate-900 sm:text-4xl">
                   Your Trusted Partner in Literary Excellence
                 </h2>
               </div>
@@ -935,7 +935,7 @@ export default function Books() {
             </div>
 
             {/* Metrics Graphics */}
-            <div className="rounded-3xl bg-white border border-slate-200/60 p-8 shadow-sm grid grid-cols-2 gap-8 text-center relative">
+            <div className="rounded-3xl bg-white border border-slate-200/60 p-5 sm:p-8 shadow-sm grid grid-cols-2 gap-6 sm:gap-8 text-center relative">
               <div className="space-y-1">
                 <span className="text-3xl font-black text-blue-600 font-poppins">12K+</span>
                 <h4 className="text-xs font-bold text-slate-900">Books Available</h4>
@@ -962,10 +962,10 @@ export default function Books() {
       </section>
 
       {/* 10. Contact Section */}
-      <section id="contact-section" className="py-20 bg-white">
+      <section id="contact-section" className="py-12 md:py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-xl mx-auto mb-16">
-            <h2 className="font-playfair text-3xl font-black text-slate-900 sm:text-4xl">
+          <div className="text-center max-w-xl mx-auto mb-8 md:mb-16">
+            <h2 className="font-playfair text-2.5xl font-black text-slate-900 sm:text-4xl">
               Get in Touch
             </h2>
             <p className="text-slate-500 text-sm mt-3">
@@ -973,7 +973,7 @@ export default function Books() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* Contact details */}
             <div className="lg:col-span-5 space-y-6">
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-6 flex items-start gap-4">
@@ -1011,7 +1011,7 @@ export default function Books() {
             </div>
 
             {/* Contact Form */}
-            <div className="lg:col-span-7 rounded-2xl border border-slate-200 p-6 sm:p-8 bg-white shadow-sm space-y-5">
+            <div className="lg:col-span-7 rounded-2xl border border-slate-200 p-5 sm:p-8 bg-white shadow-sm space-y-5">
               <h3 className="font-poppins font-bold text-slate-950 text-lg">Send Message</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -1067,10 +1067,10 @@ export default function Books() {
       {/* Floating Bottom Navigation for All Books catalog */}
       <button
         onClick={() => navigate("/all-books")}
-        className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-3 text-sm font-bold shadow-xl shadow-blue-500/25 active:scale-95 transition-all animate-bounce"
+        className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-bold shadow-xl shadow-blue-500/25 active:scale-95 transition-all animate-bounce"
       >
-        <BookOpen className="h-4.5 w-4.5" />
-        Explore Books Catalog
+        <BookOpen className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+        Explore Catalog
       </button>
 
       {/* Toast Notification */}

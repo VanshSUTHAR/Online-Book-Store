@@ -274,7 +274,7 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-12">
+    <div className="min-h-screen bg-[#F8FAFC] py-6 md:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Cart Title Header */}
@@ -444,17 +444,17 @@ export default function Cart() {
 
       {/* Checkout Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col md:flex-row gap-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] rounded-3xl bg-white p-5 sm:p-6 shadow-2xl ring-1 ring-slate-200 overflow-y-auto flex flex-col md:flex-row gap-6 my-auto">
             <button
               onClick={() => setIsCheckoutOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-600 transition-colors z-20"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* Left — Card payment */}
-            <div className="md:w-1/2 flex flex-col items-center justify-center p-4 border-r border-slate-100">
+            <div className="md:w-1/2 flex flex-col items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-100">
               <h3 className="font-poppins font-bold text-slate-900 text-sm mb-2 text-center">
                 Payment Details
               </h3>
