@@ -138,13 +138,13 @@ router.post("/send-otp", async (req, res) => {
       success: true,
       message: "OTP sent successfully",
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("SEND OTP ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: error.message,
+      stack: process.env.NODE_ENV !== "production" ? error.stack : undefined,
     });
   }
 });
