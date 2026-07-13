@@ -16,7 +16,14 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Package
+  Package,
+  Home,
+  Layers,
+  TrendingUp,
+  Info,
+  Mail,
+  User,
+  Handshake
 } from "lucide-react";
 
 export default function Navbar() {
@@ -383,6 +390,15 @@ export default function Navbar() {
 
             {/* Right Buttons / Actions */}
             <div className="flex items-center space-x-2 md:space-x-4">
+              {/* Become a partner button */}
+              <Link
+                to="/become-partner"
+                className="hidden lg:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:text-blue-600 transition-colors shadow-sm"
+              >
+                <Handshake className="h-4 w-4 text-blue-600 animate-bounce-slow" />
+                <span>Become a partner</span>
+              </Link>
+
               {/* Shopping Cart Icon */}
               <Link
                 to="/cart"
@@ -591,105 +607,241 @@ export default function Navbar() {
           </div>
         </div>
 
+        {/* Backdrop Overlay */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3 animate-in slide-in-from-top-5 duration-200 shadow-lg">
-            <a
-              href="#home"
-              onClick={(e) => {
-                scrollToHome(e);
-                setIsMobileMenuOpen(false);
-              }}
-              className="block rounded-lg px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
-            >
-              Home
-            </a>
-            <Link
-              to="/all-books"
-              onClick={() => {
-                setActiveLink("all-books");
-                setIsMobileMenuOpen(false);
-              }}
-              className="block rounded-lg px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
-            >
-              Categories
-            </Link>
-            <a
-              href="#trending"
-              onClick={(e) => {
-                scrollToTrending(e);
-                setIsMobileMenuOpen(false);
-              }}
-              className="block rounded-lg px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
-            >
-              Best Sellers
-            </a>
-            <a
-              href="#about"
-              onClick={(e) => {
-                scrollToAbout(e);
-                setIsMobileMenuOpen(false);
-              }}
-              className="block rounded-lg px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
-            >
-              About Us
-            </a>
-            <a
-              href="#contact"
-              onClick={(e) => {
-                scrollToContact(e);
-                setIsMobileMenuOpen(false);
-              }}
-              className="block rounded-lg px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
-            >
-              Contact
-            </a>
-            {user?.role === "admin" && (
-              <Link
-                to="/admin"
-                onClick={() => {
-                  setActiveLink("admin");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="block rounded-lg px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[280px] sm:max-w-xs bg-white shadow-2xl transition-transform duration-300 transform translate-x-0 md:hidden flex flex-col h-screen overflow-hidden animate-in slide-in-from-right duration-300">
+            {/* Header */}
+            <div className="flex h-16 items-center justify-between px-5 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md shadow-blue-500/10">
+                  <BookOpen className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-playfair text-base font-extrabold text-slate-900">
+                  Online<span className="text-blue-600">Books</span>
+                </span>
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+                aria-label="Close menu"
               >
-                Admin Panel
-              </Link>
-            )}
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-            {user && (
-              <>
-                <Link
-                  to="/my-orders"
-                  onClick={() => {
-                    setActiveLink("my-orders");
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+              {/* User Profile Info Card */}
+              {user ? (
+                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-extrabold text-sm shadow-sm">
+                      {user.name ? user.name[0].toUpperCase() : "U"}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-poppins font-bold text-slate-900 text-sm truncate">
+                        {user.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-slate-100/80 pt-2.5">
+                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded">
+                      {user.role || "Customer"}
+                    </span>
+                    {user.mobile && (
+                      <span className="text-xs text-slate-500 font-semibold">{user.mobile}</span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 pb-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/10"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+
+              {/* Navigation Section */}
+              <div className="space-y-1.5">
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
+                  Menu
+                </span>
+                <a
+                  href="#home"
+                  onClick={(e) => {
+                    scrollToHome(e);
                     setIsMobileMenuOpen(false);
                   }}
-                  className="block rounded-lg px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                    activeLink === "home"
+                      ? "text-blue-600 bg-blue-50/70"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
                 >
-                  My Orders
+                  <Home className="h-4 w-4 shrink-0" />
+                  Home
+                </a>
+                <Link
+                  to="/all-books"
+                  onClick={() => {
+                    setActiveLink("all-books");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                    activeLink === "all-books"
+                      ? "text-blue-600 bg-blue-50/70"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <Layers className="h-4 w-4 shrink-0" />
+                  Categories
                 </Link>
-              </>
-            )}
 
-            {!user && (
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                {/* Become a partner Mobile Link */}
                 <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                  to="/become-partner"
+                  onClick={() => {
+                    setActiveLink("become-partner");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                    activeLink === "become-partner"
+                      ? "text-blue-600 bg-blue-50/70"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
                 >
-                  Login
+                  <Handshake className="h-4 w-4 shrink-0 text-blue-600 animate-pulse" />
+                  Become a partner
                 </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
+
+                <a
+                  href="#trending"
+                  onClick={(e) => {
+                    scrollToTrending(e);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                    activeLink === "trending"
+                      ? "text-blue-600 bg-blue-50/70"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
                 >
-                  Register
-                </Link>
+                  <TrendingUp className="h-4 w-4 shrink-0" />
+                  Best Sellers
+                </a>
+                <a
+                  href="#about"
+                  onClick={(e) => {
+                    scrollToAbout(e);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                    activeLink === "about"
+                      ? "text-blue-600 bg-blue-50/70"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <Info className="h-4 w-4 shrink-0" />
+                  About Us
+                </a>
+                <a
+                  href="#contact"
+                  onClick={(e) => {
+                    scrollToContact(e);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                    activeLink === "contact"
+                      ? "text-blue-600 bg-blue-50/70"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <Mail className="h-4 w-4 shrink-0" />
+                  Contact
+                </a>
+                {user?.role === "admin" && (
+                  <Link
+                    to="/admin"
+                    onClick={() => {
+                      setActiveLink("admin");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                      activeLink === "admin"
+                        ? "text-blue-600 bg-blue-50/70"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    <Lock className="h-4 w-4 shrink-0" />
+                    Admin Panel
+                  </Link>
+                )}
               </div>
-            )}
+
+              {/* Actions Section */}
+              {user && (
+                <div className="space-y-1.5 border-t border-slate-100 pt-5">
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
+                    My Account
+                  </span>
+                  <Link
+                    to="/my-orders"
+                    onClick={() => {
+                      setActiveLink("my-orders");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                      activeLink === "my-orders"
+                        ? "text-blue-600 bg-blue-50/70"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    <Package className="h-4 w-4 shrink-0" />
+                    My Orders
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setShowChangePassword(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                  >
+                    <Key className="h-4 w-4 shrink-0" />
+                    Change Password
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </header>

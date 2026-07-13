@@ -62,7 +62,7 @@ export default function Login() {
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
       }
-      
+
       login(user);
       showToastMsg("✓ Login successful");
 
@@ -113,42 +113,93 @@ export default function Login() {
         </div>
 
         {/* Inputs */}
-        <div className="space-y-4">
+        <div className="space-y-5">
+          {/* Email */}
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-600">
               Email Address
             </label>
+
             <div className="relative">
+              <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="username"
-                className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="
+          w-full
+          h-12
+          rounded-xl
+          border border-slate-200
+          bg-white
+          pl-11
+          pr-4
+          text-sm
+          text-slate-800
+          placeholder:text-slate-400
+          transition-all
+          duration-200
+          outline-none
+          focus:border-blue-500
+          focus:ring-4
+          focus:ring-blue-100
+          hover:border-slate-300
+        "
               />
-              <Mail className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
             </div>
           </div>
 
+          {/* Password */}
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-600">
               Password
             </label>
+
             <div className="relative">
+              <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                className="w-full rounded-xl border border-slate-200 pl-10 pr-10 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="
+          w-full
+          h-12
+          rounded-xl
+          border border-slate-200
+          bg-white
+          pl-11
+          pr-11
+          text-sm
+          text-slate-800
+          placeholder:text-slate-400
+          transition-all
+          duration-200
+          outline-none
+          focus:border-blue-500
+          focus:ring-4
+          focus:ring-blue-100
+          hover:border-slate-300
+        "
               />
-              <Lock className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
+                className="
+          absolute
+          right-4
+          top-1/2
+          -translate-y-1/2
+          text-slate-400
+          transition-colors
+          hover:text-slate-700
+        "
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -293,21 +344,21 @@ export default function Login() {
                         }
                         login(res.data.user);
                         showOtpToastMsg("✓ Login successful");
-                          const fromPath = location.state?.from || "/";
-                          const extraState = location.state ? { ...location.state } : {};
-                          delete extraState.from;
+                        const fromPath = location.state?.from || "/";
+                        const extraState = location.state ? { ...location.state } : {};
+                        delete extraState.from;
 
-                          setTimeout(() => {
-                            setShowOtpLogin(false);
-                            setOtpSentLogin(false);
-                            setOtpLoginEmail("");
-                            setOtpLogin("");
-                            if (res.data.user.role === "admin") {
-                              navigate("/admin");
-                            } else {
-                              navigate(fromPath, { state: extraState });
-                            }
-                          }, 1200);
+                        setTimeout(() => {
+                          setShowOtpLogin(false);
+                          setOtpSentLogin(false);
+                          setOtpLoginEmail("");
+                          setOtpLogin("");
+                          if (res.data.user.role === "admin") {
+                            navigate("/admin");
+                          } else {
+                            navigate(fromPath, { state: extraState });
+                          }
+                        }, 1200);
                       } else {
                         showOtpToastMsg(res.data.message || "Invalid OTP code.");
                       }
