@@ -378,7 +378,7 @@ export default function AllBooks() {
         {/* Mobile Categories Pill Bar */}
         {Object.keys(booksByCategory).length > 0 && (
           <div 
-            className="lg:hidden -mx-4 px-4 overflow-x-auto pb-3 mb-6 scrollbar-hide flex gap-2 snap-x snap-mandatory sticky top-16 bg-[#F8FAFC]/95 backdrop-blur-md z-30 border-b border-slate-100 shadow-sm py-2" 
+            className="lg:hidden -mx-4 px-4 overflow-x-auto pb-3 mb-6 scrollbar-hide flex gap-2 snap-x snap-mandatory sticky top-16 bg-[#F8FAFC] z-30 border-b border-slate-100 shadow-sm py-2" 
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {Object.keys(booksByCategory).map((cat) => {

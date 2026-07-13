@@ -304,7 +304,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md transition-all duration-300">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white md:bg-white/80 md:backdrop-blur-md transition-all duration-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
@@ -617,7 +617,7 @@ export default function Navbar() {
 
         {/* Backdrop Overlay */}
         <div
-          className={`fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm transition-all duration-500 md:hidden ${
+          className={`fixed inset-0 z-50 bg-slate-950/40 transition-all duration-500 md:hidden ${
             isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
           onClick={() => setIsMobileMenuOpen(false)}
@@ -625,7 +625,7 @@ export default function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         <div
-          className={`fixed inset-y-0 right-0 z-50 w-full max-w-[280px] sm:max-w-xs bg-white/95 backdrop-blur-xl border-l border-slate-100/80 shadow-2xl transition-all duration-500 cubic-[cubic-bezier(0.16,1,0.3,1)] md:hidden flex flex-col h-screen overflow-hidden ${
+          className={`fixed inset-y-0 right-0 z-50 w-full max-w-[280px] sm:max-w-xs bg-white border-l border-slate-100 shadow-2xl transition-all duration-500 cubic-[cubic-bezier(0.16,1,0.3,1)] md:hidden flex flex-col h-screen overflow-hidden ${
             isMobileMenuOpen ? "translate-x-0 opacity-100 visible" : "translate-x-full opacity-0 invisible"
           }`}
         >
