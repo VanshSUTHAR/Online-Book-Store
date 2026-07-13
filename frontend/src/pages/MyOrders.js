@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
-import { Package, Clock, CheckCircle, Search, ArrowLeft, ExternalLink } from "lucide-react";
+import { Package, Clock, CheckCircle, Search, ArrowLeft } from "lucide-react";
 
 export default function MyOrders() {
   const navigate = useNavigate();
