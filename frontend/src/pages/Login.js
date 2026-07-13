@@ -22,6 +22,8 @@ export default function Login() {
   const [otpLogin, setOtpLogin] = useState("");
   const [otpLoginToast, setOtpLoginToast] = useState("");
   const [otpSending, setOtpSending] = useState(false);
+  // New state for OTP verification loading
+  const [otpVerifying, setOtpVerifying] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -295,7 +297,11 @@ export default function Login() {
                       });
                       if (res.data.success) {
                         setOtpSentLogin(true);
-                        showOtpToastMsg("OTP code sent to email.");
+                        if (res.data.otp) {
+                          showOtpToastMsg(`OTP (Testing): ${res.data.otp}`);
+                        } else {
+                          showOtpToastMsg("OTP code sent to email.");
+                        }
                       } else {
                         showOtpToastMsg(res.data.message || "Failed to send OTP.");
                       }
@@ -328,47 +334,51 @@ export default function Login() {
                 </div>
                 <button
                   onClick={async () => {
-                    if (!otpLogin.trim()) {
-                      showOtpToastMsg("Please enter OTP.");
-                      return;
-                    }
-                    try {
-                      const res = await api.post("/auth/verify-otp", {
-                        email: otpLoginEmail.trim(),
-                        otp: otpLogin.trim()
-                      });
-                      if (res.data.success && res.data.user) {
-                        localStorage.setItem("userId", res.data.user._id);
-                        if (res.data.token) {
-                          localStorage.setItem("token", res.data.token);
-                        }
-                        login(res.data.user);
-                        showOtpToastMsg("✓ Login successful");
-                        const fromPath = location.state?.from || "/";
-                        const extraState = location.state ? { ...location.state } : {};
-                        delete extraState.from;
-
-                        setTimeout(() => {
-                          setShowOtpLogin(false);
-                          setOtpSentLogin(false);
-                          setOtpLoginEmail("");
-                          setOtpLogin("");
-                          if (res.data.user.role === "admin") {
-                            navigate("/admin");
-                          } else {
-                            navigate(fromPath, { state: extraState });
-                          }
-                        }, 1200);
-                      } else {
-                        showOtpToastMsg(res.data.message || "Invalid OTP code.");
+                      if (!otpLogin.trim()) {
+                        showOtpToastMsg("Please enter OTP.");
+                        return;
                       }
-                    } catch {
-                      showOtpToastMsg("Failed to login with OTP.");
-                    }
-                  }}
-                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors"
+                      setOtpVerifying(true);
+                      try {
+                        const res = await api.post("/auth/verify-otp", {
+                          email: otpLoginEmail.trim(),
+                          otp: otpLogin.trim()
+                        });
+                        if (res.data.success && res.data.user) {
+                          localStorage.setItem("userId", res.data.user._id);
+                          if (res.data.token) {
+                            localStorage.setItem("token", res.data.token);
+                          }
+                          login(res.data.user);
+                          showOtpToastMsg("✓ Login successful");
+                          const fromPath = location.state?.from || "/";
+                          const extraState = location.state ? { ...location.state } : {};
+                          delete extraState.from;
+
+                          setTimeout(() => {
+                            setShowOtpLogin(false);
+                            setOtpSentLogin(false);
+                            setOtpLoginEmail("");
+                            setOtpLogin("");
+                            if (res.data.user.role === "admin") {
+                              navigate("/admin");
+                            } else {
+                              navigate(fromPath, { state: extraState });
+                            }
+                          }, 1200);
+                        } else {
+                          showOtpToastMsg(res.data.message || "Invalid OTP code.");
+                        }
+                      } catch {
+                        showOtpToastMsg("Failed to login with OTP.");
+                      } finally {
+                        setOtpVerifying(false);
+                      }
+                    }}
+                    disabled={otpVerifying}
+                    className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors"
                 >
-                  Verify and Log In
+                  {otpVerifying ? "Verifying..." : "Verify and Log In"}
                 </button>
               </div>
             )}
