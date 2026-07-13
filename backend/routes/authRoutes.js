@@ -54,54 +54,97 @@ const transporter = nodemailer.createTransport({
 });
 // ================= SEND OTP FOR PASSWORD RESET =================
 router.post("/send-otp", async (req, res) => {
-  const email = (req.body.email || "").toLowerCase().trim();
-  const user = await User.findOne({ email });
-  if (!user) return res.json({ success: false, message: "User not found" });
-  // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore[email] = { otp, expires: Date.now() + 10 * 60 * 1000 }; // 10 min expiry
-
-  // Fallback: If credentials are not configured, return OTP directly
-  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
-    console.log(`[OTP Bypass] SMTP credentials not configured. Email: ${email}, OTP: ${otp}`);
-    return res.json({
-      success: true,
-      message: "SMTP credentials not configured. OTP generated for testing.",
-      otp: otp
-    });
-  }
-
-  // Send email
   try {
+    const email = (req.body.email || "").toLowerCase().trim();
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store OTP for 10 minutes
+    otpStore[email] = {
+      otp,
+      expires: Date.now() + 10 * 60 * 1000,
+    };
+
+    // SMTP credentials check
+    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
+      console.log(`OTP for ${email}: ${otp}`);
+
+      return res.json({
+        success: true,
+        message: "SMTP not configured. OTP generated for testing.",
+        otp, // Remove this in production
+      });
+    }
+
     await transporter.sendMail({
-      from: 'Online Book Store <no-reply@onlinebookstore.com>',
+      from: `"Online Book Store" <${process.env.ADMIN_EMAIL}>`,
       to: email,
-      subject: '✨ Verify Your Login – Online Book Store',
-      html: `<div style='font-family:sans-serif;'>
-        <h2 style='color:#2563eb;'>Online Book Store</h2>
-        <p>Dear Reader,</p>
-        <p>Welcome back! To complete your login, please enter the verification code below:</p>
-        <p style='font-size:1.2em;'><span style='font-size:1.5em;'>🔑</span> LOGIN OTP: <b>${otp}</b></p>
-        <p style='color:#d32f2f;'>This code will expire in 10 minutes.</p>
-        <p>If this was you, simply enter the code to continue enjoying your favorite books.</p>
-        <p>If you did not request this login:</p>
-        <ul>
-          <li>Do not share this code</li>
-          <li>Consider updating your password</li>
-          <li>Contact our support team if needed</li>
-        </ul>
-        <p>Stay secure. Stay smart. Stay reading. 📖</p>
-        <hr style='margin:16px 0;'>
-        <p style='font-size:0.9em;'>Warm regards,<br>Online Book Store Support<br><a href='mailto:support@onlinebookstore.com'>support@onlinebookstore.com</a><br>© 2026 Online Book Store</p>
-      </div>`
+      subject: "Verify Your Login - Online Book Store",
+      html: `
+      <div style="font-family:Arial,sans-serif;padding:20px;background:#f5f5f5;">
+        <div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:10px;">
+
+          <h2 style="color:#2563eb;">📚 Online Book Store</h2>
+
+          <p>Hello <strong>${user.name || "Reader"}</strong>,</p>
+
+          <p>Your One-Time Password (OTP) for login is:</p>
+
+          <div style="text-align:center;margin:30px 0;">
+            <span style="
+              font-size:32px;
+              font-weight:bold;
+              letter-spacing:8px;
+              color:#2563eb;
+            ">
+              ${otp}
+            </span>
+          </div>
+
+          <p>This OTP will expire in <strong>10 minutes</strong>.</p>
+
+          <p>If you didn't request this login, you can safely ignore this email.</p>
+
+          <hr>
+
+          <p style="font-size:13px;color:#777;">
+            Regards,<br>
+            Online Book Store Team
+          </p>
+
+        </div>
+      </div>
+      `,
     });
-    return res.json({ success: true });
-  } catch (err) {
-    console.error("Nodemailer error:", err);
+
     return res.json({
       success: true,
-      message: "Failed to send email. OTP generated for testing.",
-      otp: otp
+      message: "OTP sent successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
     });
   }
 });

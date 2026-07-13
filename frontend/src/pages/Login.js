@@ -157,21 +157,33 @@ export default function Login() {
     isResend ? setResendBusy(true) : setOtpSending(true);
 
     try {
-      const res = await api.post("/auth/send-otp", { email: trimmedEmail });
+      const res = await api.post("/auth/send-otp", {
+        email: trimmedEmail,
+      });
+
       if (res.data.success) {
         setOtpStep("otp");
         setOtpDigits(Array(OTP_LENGTH).fill(""));
         setOtpError("");
         setResendCooldown(RESEND_COOLDOWN_SECONDS);
+
         showToastMsg(
-          res.data.otp ? `OTP (testing): ${res.data.otp}` : `Code sent to ${maskEmail(trimmedEmail)}`
+          res.data.otp
+            ? `${res.data.message}\nOTP: ${res.data.otp}`
+            : res.data.message || `Code sent to ${maskEmail(trimmedEmail)}`
         );
+
         setTimeout(() => focusOtpBox(0), 50);
       } else {
         setOtpEmailError(res.data.message || "Failed to send OTP.");
       }
-    } catch {
-      setOtpEmailError("Failed to send OTP. Please try again.");
+    } catch (error) {
+      console.error(error);
+
+      setOtpEmailError(
+        error.response?.data?.message ||
+        "Failed to send OTP. Please try again."
+      );
     } finally {
       setOtpSending(false);
       setResendBusy(false);
