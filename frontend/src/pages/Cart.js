@@ -30,10 +30,10 @@ import {
 const STRIPE_STYLE = {
   style: {
     base: {
-      fontSize: "15px",
+      fontSize: "14px",
       color: "#0f172a",
       fontFamily: "Inter, system-ui, sans-serif",
-      letterSpacing: "0.04em",
+      letterSpacing: "0.02em",
       "::placeholder": { color: "#94a3b8" },
     },
     invalid: { color: "#ef4444" },
@@ -42,12 +42,11 @@ const STRIPE_STYLE = {
 
 // Input-box wrapper style shared by all Stripe elements
 const inputBoxStyle = {
-  border: "1.5px solid #e2e8f0",
-  borderRadius: "10px",
-  background: "#fff",
-  padding: "11px 14px",
-  boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)",
-  transition: "border-color 0.2s",
+  border: "1px solid #e2e8f0",
+  borderRadius: "12px",
+  background: "#f8fafc",
+  padding: "12px 14px",
+  transition: "all 0.2s",
 };
 
 export default function Cart() {
@@ -278,7 +277,7 @@ export default function Cart() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Cart Title Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-6 mb-8">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-6 mb-8">
           <div>
             <h1 className="font-playfair text-3xl font-black text-slate-900 md:text-4xl">
               Shopping Cart
@@ -290,7 +289,7 @@ export default function Cart() {
           {items.length > 0 && (
             <button
               onClick={clearCart}
-              className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors border border-red-200/50 hover:bg-red-50/50 px-3.5 py-1.5 rounded-lg"
+              className="text-xs font-bold text-slate-400 hover:text-red-600 transition-all hover:bg-red-50/50 px-3.5 py-1.5 rounded-xl border border-slate-200/60 hover:border-red-200/50"
             >
               Clear Basket
             </button>
@@ -299,17 +298,17 @@ export default function Cart() {
 
         {items.length === 0 ? (
           /* Empty state */
-          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-200 rounded-3xl bg-white max-w-xl mx-auto shadow-sm">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600 mb-4 animate-bounce">
-              <ShoppingCart className="h-6 w-6" />
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center border border-slate-100 rounded-3xl bg-white max-w-md mx-auto shadow-xl shadow-slate-100/40 animate-in fade-in duration-300">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-6 shadow-inner">
+              <ShoppingCart className="h-7 w-7 animate-pulse" />
             </div>
             <h2 className="font-poppins font-bold text-slate-900 text-lg">Your Cart is Empty</h2>
             <p className="text-slate-400 text-xs mt-2 max-w-xs leading-normal">
-              Looks like you haven't added any books to your cart yet. Visit our categories and fill it up!
+              Looks like you haven't added any books to your cart yet. Explore our curated collections to find your next favorite read!
             </p>
             <Link
               to="/all-books"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-xs font-bold shadow-md shadow-blue-500/10 transition-colors"
+              className="mt-8 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white px-6 py-3 text-xs font-bold shadow-md shadow-blue-500/20 transition-all active:scale-95"
             >
               Browse Catalog
               <ArrowRight className="h-3.5 w-3.5" />
@@ -324,12 +323,12 @@ export default function Cart() {
               {items.map((item, index) => (
                 <div
                   key={`${item._id || item.id || item.title}-${index}`}
-                  className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4 hover:shadow-md transition-shadow relative"
+                  className="group flex gap-4 md:gap-6 rounded-3xl border border-slate-100 bg-white p-4 md:p-5 hover:shadow-xl hover:shadow-slate-100/80 transition-all duration-300 relative overflow-hidden"
                 >
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="h-24 w-18 rounded-lg object-cover shadow-sm bg-slate-100 shrink-0"
+                    className="h-28 w-20 md:h-32 md:w-24 rounded-2xl object-cover shadow-md shadow-slate-200/50 bg-slate-50 shrink-0 group-hover:scale-[1.02] transition-transform duration-300 border border-slate-100"
                     onError={(e) => {
                       e.currentTarget.src =
                         "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400";
@@ -337,35 +336,35 @@ export default function Cart() {
                   />
                   <div className="flex-1 flex flex-col justify-between min-w-0 pr-8">
                     <div>
-                      <h3 className="font-poppins font-bold text-slate-950 text-sm truncate">
+                      <h3 className="font-poppins font-bold text-slate-900 text-sm md:text-base leading-snug group-hover:text-blue-600 transition-colors truncate">
                         {item.title}
                       </h3>
-                      <p className="text-slate-400 text-xs">by {item.author}</p>
-                      <span className="inline-block text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase mt-2 tracking-wide">
+                      <p className="text-slate-400 text-xs md:text-sm mt-0.5">by {item.author}</p>
+                      <span className="inline-block text-[9px] md:text-[10px] font-black text-blue-600 bg-blue-50/80 border border-blue-100 px-2 py-0.5 rounded-md uppercase mt-2 tracking-widest">
                         {item.category || "General"}
                       </span>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-3">
-                      <div className="text-base font-extrabold text-slate-900">
+                    <div className="mt-4 flex flex-wrap items-center gap-4">
+                      <div className="text-lg md:text-xl font-extrabold text-slate-900 font-poppins">
                         ₹{Number(item.price || 0) * Number(item.quantity || 1)}
                       </div>
-                      <div className="flex items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                      <div className="flex items-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50/60 p-0.5">
                         <button
                           type="button"
                           onClick={() => changeItemQuantity(index, Number(item.quantity || 1) - 1)}
                           disabled={Number(item.quantity || 1) <= 1}
-                          className="h-8 w-8 text-sm font-bold text-slate-600 hover:bg-white disabled:cursor-not-allowed disabled:text-slate-300"
+                          className="h-7 w-7 rounded-lg flex items-center justify-center text-sm font-bold text-slate-600 hover:bg-white hover:shadow-sm active:scale-95 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent disabled:hover:shadow-none transition-all"
                           aria-label="Decrease quantity"
                         >
                           -
                         </button>
-                        <span className="flex h-8 min-w-9 items-center justify-center border-x border-slate-200 bg-white px-2 text-xs font-bold text-slate-900">
+                        <span className="flex min-w-8 items-center justify-center text-xs font-bold text-slate-900 px-1">
                           {Number(item.quantity || 1)}
                         </span>
                         <button
                           type="button"
                           onClick={() => changeItemQuantity(index, Number(item.quantity || 1) + 1)}
-                          className="h-8 w-8 text-sm font-bold text-slate-600 hover:bg-white"
+                          className="h-7 w-7 rounded-lg flex items-center justify-center text-sm font-bold text-slate-600 hover:bg-white hover:shadow-sm active:scale-95 transition-all"
                           aria-label="Increase quantity"
                         >
                           +
@@ -377,7 +376,7 @@ export default function Cart() {
                     onClick={() => {
                       removeItem(index);
                     }}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50/80 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 bg-slate-50/50 border border-transparent hover:border-red-100/50"
                     aria-label="Remove item"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -388,45 +387,45 @@ export default function Cart() {
               {/* Add more books */}
               <button
                 onClick={() => navigate("/all-books")}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-100/70 hover:border-blue-400 py-4 text-sm font-bold text-blue-600 transition-all active:scale-[0.98] group"
+                className="w-full flex items-center justify-center gap-2.5 rounded-3xl border-2 border-dashed border-slate-200 hover:border-blue-400 hover:bg-blue-50/20 py-4 text-sm font-bold text-slate-600 hover:text-blue-600 transition-all duration-300 active:scale-[0.99] group"
               >
-                <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
-                Add More Books
+                <Plus className="h-4.5 w-4.5 transition-transform duration-300 group-hover:rotate-90 text-slate-400 group-hover:text-blue-500" />
+                <span>Add More Books</span>
               </button>
             </div>
 
             {/* Right — Order Summary */}
             <div className="lg:col-span-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sticky top-24 space-y-6">
-                <h3 className="font-poppins font-bold text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-2.5">
+              <div className="rounded-3xl border border-slate-100/80 bg-white p-6 shadow-xl shadow-slate-100/50 sticky top-24 space-y-6">
+                <h3 className="font-poppins font-extrabold text-slate-900 text-xs uppercase tracking-widest border-b border-slate-100 pb-3">
                   Order Summary
                 </h3>
-                <div className="space-y-3.5 text-xs text-slate-600">
-                  <div className="flex justify-between">
-                    <span>Items Count</span>
-                    <span className="font-semibold text-slate-800">{itemCount}</span>
+                <div className="space-y-4 text-xs text-slate-500">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Items Count</span>
+                    <span className="font-bold text-slate-900 text-sm">{itemCount}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shipping Charges</span>
-                    <span className="font-semibold text-green-600 uppercase text-[10px] tracking-wide">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Shipping Charges</span>
+                    <span className="font-black text-emerald-600 uppercase text-[9px] tracking-wider bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
                       Free Shipping
                     </span>
                   </div>
-                  <div className="flex justify-between border-t border-slate-100 pt-3 text-sm text-slate-900 font-extrabold">
+                  <div className="flex justify-between border-t border-slate-100 pt-4 text-sm text-slate-900 font-black font-poppins">
                     <span>Total Amount</span>
-                    <span className="text-blue-600">₹{subtotal}</span>
+                    <span className="text-lg text-blue-600 font-extrabold">₹{subtotal}</span>
                   </div>
                 </div>
                 <button
                   onClick={openCheckout}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-sm font-bold text-white transition-all shadow-md shadow-blue-500/10 active:scale-95"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 py-3.5 text-sm font-bold text-white transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
                 >
-                  Proceed to Checkout
+                  <span>Proceed to Checkout</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
-                <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider pt-2 border-t border-slate-100">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  Secure Transaction
+                <div className="flex items-center justify-center gap-2 text-[9px] text-slate-400 font-bold uppercase tracking-wider pt-3 border-t border-slate-100">
+                  <ShieldCheck className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
+                  <span>Secure 256-bit SSL Payment</span>
                 </div>
               </div>
             </div>
@@ -529,7 +528,7 @@ export default function Cart() {
                       placeholder="Recipient's name"
                       value={buyerName}
                       onChange={(e) => setBuyerName(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white px-3.5 py-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all border-slate-200 hover:border-slate-300 focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -541,7 +540,7 @@ export default function Cart() {
                       placeholder="Complete street address details..."
                       value={buyerAddress}
                       onChange={(e) => setBuyerAddress(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white px-3.5 py-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all border-slate-200 hover:border-slate-300 focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -558,7 +557,7 @@ export default function Cart() {
                   type="button"
                   onClick={confirmOrder}
                   disabled={!stripe || isProcessing}
-                  className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors shadow-md shadow-blue-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 py-2.5 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/10 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isProcessing ? "Processing..." : "Confirm Purchase"}
                 </button>
