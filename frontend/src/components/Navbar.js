@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { api } from "../services/api";
+import { fetchCartItems, setLocalCart } from "../services/cartService";
 import {
   BookOpen,
   ShoppingCart,
@@ -35,27 +36,27 @@ export default function Navbar() {
 
   // Sync cart count
   useEffect(() => {
-    const updateCartCount = () => {
-      try {
-        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    let isMounted = true;
+
+    const updateCartCount = async () => {
+      const cart = await fetchCartItems();
+      if (isMounted) {
         setCartCount(cart.length);
-      } catch {
-        setCartCount(0);
       }
     };
+
     updateCartCount();
     window.addEventListener("storage", updateCartCount);
-    // Listen for custom add-to-cart events
     window.addEventListener("cartUpdated", updateCartCount);
-    // Also interval check to make sure it's always responsive
-    const interval = setInterval(updateCartCount, 1500);
+    const interval = setInterval(updateCartCount, user ? 5000 : 1500);
 
     return () => {
+      isMounted = false;
       window.removeEventListener("storage", updateCartCount);
       window.removeEventListener("cartUpdated", updateCartCount);
       clearInterval(interval);
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -213,6 +214,7 @@ export default function Navbar() {
     setShowProfile(false);
     localStorage.removeItem("userId");
     localStorage.removeItem("token");
+    setLocalCart([]);
     navigate("/login");
   };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
+import { addCartItem, removeFirstCartItemByBookId } from "../services/cartService";
 import { sendContactMessage } from "../services/contactService";
 import { useUser } from "../context/UserContext";
 import {
@@ -139,13 +140,13 @@ export default function Books() {
     setTimeout(() => setToast(""), 3000);
   };
 
-  const addToCart = (book) => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    cart.push(book);
-    localStorage.setItem("cart", JSON.stringify(cart));
-    // Trigger event for navbar
-    window.dispatchEvent(new Event("cartUpdated"));
-    showToastMsg(`✓ Added "${book.title}" to cart successfully!`);
+  const addToCart = async (book) => {
+    try {
+      await addCartItem(book);
+      showToastMsg(`✓ Added "${book.title}" to cart successfully!`);
+    } catch {
+      showToastMsg("Failed to add book to cart.");
+    }
   };
 
   const toggleWishlist = (book, e) => {
@@ -281,14 +282,7 @@ export default function Books() {
       return;
     }
 
-    // Remove purchased item from cart
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const bookIndex = cart.findIndex(item => (item._id || item.id) === (selectedBook._id || selectedBook.id));
-    if (bookIndex !== -1) {
-      cart.splice(bookIndex, 1);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      window.dispatchEvent(new Event("cartUpdated"));
-    }
+    await removeFirstCartItemByBookId(selectedBook);
 
     // Create notification
     const notification = {

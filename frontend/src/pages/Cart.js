@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api } from "../services/api";
+import { clearCartItems, fetchCartItems, getLocalCart, removeCartItem } from "../services/cartService";
 import {
   CardNumberElement,
   CardExpiryElement,
@@ -49,11 +50,7 @@ export default function Cart() {
   const { user } = useUser();
 
   const [items, setItems] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("cart") || "[]");
-    } catch {
-      return [];
-    }
+    return getLocalCart();
   });
 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -76,15 +73,30 @@ export default function Cart() {
     setTimeout(() => setToast(""), 3500);
   };
 
-  const saveItems = (nextItems) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchCartItems().then((cartItems) => {
+      if (isMounted) {
+        setItems(cartItems);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  const clearCart = async () => {
+    const nextItems = await clearCartItems();
     setItems(nextItems);
-    localStorage.setItem("cart", JSON.stringify(nextItems));
-    window.dispatchEvent(new Event("cartUpdated"));
+    showToastMsg("Shopping cart cleared.");
   };
 
-  const clearCart = () => {
-    saveItems([]);
-    showToastMsg("Shopping cart cleared.");
+  const removeItem = async (index) => {
+    const nextItems = await removeCartItem(index);
+    setItems(nextItems);
+    showToastMsg("Item removed from cart.");
   };
 
   const openCheckout = () => {
@@ -213,7 +225,8 @@ export default function Cart() {
         localStorage.setItem("notifications", JSON.stringify(existingNotifications));
         window.dispatchEvent(new Event("notificationAdded"));
 
-        clearCart();
+        const nextItems = await clearCartItems();
+        setItems(nextItems);
         setIsCheckoutOpen(false);
         showToastMsg("Payment successful. Your order has been placed.");
         setTimeout(() => {
@@ -308,8 +321,7 @@ export default function Cart() {
                   </div>
                   <button
                     onClick={() => {
-                      saveItems(items.filter((_, i) => i !== index));
-                      showToastMsg("Item removed from cart.");
+                      removeItem(index);
                     }}
                     className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     aria-label="Remove item"
