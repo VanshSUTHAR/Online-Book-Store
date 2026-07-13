@@ -22,7 +22,6 @@ import {
   TrendingUp,
   Info,
   Mail,
-  User,
   Handshake
 } from "lucide-react";
 
