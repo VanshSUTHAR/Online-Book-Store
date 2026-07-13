@@ -21,7 +21,11 @@ import {
   Search,
   Filter,
   RefreshCw,
-  ClipboardList
+  ClipboardList,
+  Handshake,
+  CheckCircle,
+  XCircle,
+  Eye
 } from "lucide-react";
 
 export default function Admin() {
@@ -42,6 +46,7 @@ export default function Admin() {
   const [showBookList, setShowBookList] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
+  const [showPartnerApps, setShowPartnerApps] = useState(false);
 
   // Core Lists States
   const [trendingBooks, setTrendingBooks] = useState([]);
@@ -49,6 +54,11 @@ export default function Admin() {
   const [admins, setAdmins] = useState([]);
   const [contactMessages, setContactMessages] = useState([]);
   const [adminOrders, setAdminOrders] = useState([]);
+  const [partnerApps, setPartnerApps] = useState([]);
+  const [selectedPartnerApp, setSelectedPartnerApp] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [appToReject, setAppToReject] = useState(null);
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("All");
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
@@ -126,6 +136,79 @@ export default function Admin() {
     }
   };
 
+  const fetchPartnerApps = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: token } : {};
+      const res = await api.get("/partner/applications", { headers });
+      if (res.data.success) {
+        setPartnerApps(res.data.applications);
+      }
+    } catch (error) {
+      console.error("Error fetching partner applications:", error);
+    }
+  };
+
+  const handleApprovePartner = async (appId) => {
+    const result = await Swal.fire({
+      title: 'Approve Application?',
+      text: 'This will approve the partner and unlock their seller privileges.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#10B981',
+      cancelButtonColor: '#94A3B8'
+    });
+    if (!result.isConfirmed) return;
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: token } : {};
+      const res = await api.post(`/partner/review/${appId}`, { action: "approve" }, { headers });
+      if (res.data.success) {
+        showToastMsg("✓ Partner application approved successfully!");
+        fetchPartnerApps();
+        if (selectedPartnerApp && selectedPartnerApp._id === appId) {
+          setSelectedPartnerApp(null);
+        }
+      } else {
+        showToastMsg(res.data.message || "Failed to approve partner.");
+      }
+    } catch (err) {
+      showToastMsg("Error approving partner.");
+    }
+  };
+
+  const handleRejectPartner = async (e) => {
+    e.preventDefault();
+    if (!rejectionReason.trim()) {
+      showToastMsg("Please enter a rejection reason.");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: token } : {};
+      const res = await api.post(`/partner/review/${appToReject}`, {
+        action: "reject",
+        rejectionReason: rejectionReason
+      }, { headers });
+      if (res.data.success) {
+        showToastMsg("✓ Partner application rejected.");
+        setShowRejectModal(false);
+        setRejectionReason("");
+        setAppToReject(null);
+        fetchPartnerApps();
+        if (selectedPartnerApp && selectedPartnerApp._id === appToReject) {
+          setSelectedPartnerApp(null);
+        }
+      } else {
+        showToastMsg(res.data.message || "Failed to reject partner.");
+      }
+    } catch (err) {
+      showToastMsg("Error rejecting partner.");
+    }
+  };
+
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     setUpdatingOrderId(orderId);
     try {
@@ -161,6 +244,7 @@ export default function Admin() {
     fetchAdmins();
     fetchTrendingBooks();
     fetchAdminOrders();
+    fetchPartnerApps();
   }, []);
 
   const showToastMsg = (msg) => {
@@ -349,11 +433,15 @@ export default function Admin() {
     setShowBookList(tabName === "bookList");
     setShowMessages(tabName === "messages");
     setShowOrders(tabName === "orders");
+    setShowPartnerApps(tabName === "partnerApps");
     if (tabName === "messages") {
       fetchMessages();
     }
     if (tabName === "orders") {
       fetchAdminOrders();
+    }
+    if (tabName === "partnerApps") {
+      fetchPartnerApps();
     }
   };
 
@@ -437,6 +525,15 @@ export default function Admin() {
             >
               <ClipboardList className="h-4 w-4 shrink-0" />
               <span>Orders ({adminOrders.length})</span>
+            </button>
+            <button
+              onClick={() => triggerTab("partnerApps")}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
+                showPartnerApps ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              }`}
+            >
+              <Handshake className="h-4 w-4 shrink-0" />
+              <span>Partner Apps ({partnerApps.length})</span>
             </button>
           </nav>
         </div>
@@ -1350,6 +1447,369 @@ export default function Admin() {
                     No customer orders found in system.
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: PARTNER APPLICATIONS */}
+          {showPartnerApps && (
+            <div className="space-y-6">
+              <div className="border-b border-slate-100 pb-4 flex justify-between items-center">
+                <div>
+                  <h2 className="font-playfair text-2xl font-black text-slate-900">Partner Applications</h2>
+                  <p className="text-slate-500 text-xs mt-1">Review applicant identity records, payouts details, and activate store dashboard credentials</p>
+                </div>
+                <button
+                  onClick={fetchPartnerApps}
+                  className="rounded-xl border border-slate-200 hover:bg-slate-50 p-2.5 text-xs text-slate-600 font-bold transition-all flex items-center gap-1.5"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Refresh
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th className="px-5 py-4">Applicant</th>
+                        <th className="px-5 py-4">Store Name</th>
+                        <th className="px-5 py-4">Payout Method</th>
+                        <th className="px-5 py-4">Submission Date</th>
+                        <th className="px-5 py-4">Status</th>
+                        <th className="px-5 py-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                      {partnerApps.map((app) => (
+                        <tr key={app._id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-5 py-4">
+                            <div className="font-bold text-slate-900">{app.fullName}</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{app.emailAddress} | {app.mobileNumber}</div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="font-semibold text-slate-800">{app.storeName || "N/A"}</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5 max-w-[200px] truncate">{app.storeDescription || "No description"}</div>
+                          </td>
+                          <td className="px-5 py-4">
+                            {app.payoutOption === "bank" ? (
+                              <div>
+                                <span className="font-semibold text-slate-800">{app.bankName}</span>
+                                <div className="text-[10px] text-slate-400 mt-0.5">A/C: *{app.accountNumber.slice(-4)} | IFSC: {app.ifscCode}</div>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="font-semibold text-slate-800">UPI</span>
+                                <div className="text-[10px] text-slate-400 mt-0.5">{app.upiId}</div>
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 whitespace-nowrap text-slate-500">
+                            {new Date(app.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
+                              app.status === "Approved"
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : app.status === "Rejected"
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200"
+                            }`}>
+                              {app.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-right space-x-2 whitespace-nowrap">
+                            <button
+                              onClick={() => setSelectedPartnerApp(app)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-all"
+                            >
+                              <Eye className="h-3 w-3" />
+                              View Application
+                            </button>
+                            {app.status === "Pending" && (
+                              <>
+                                <button
+                                  onClick={() => handleApprovePartner(app._id)}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-all shadow-sm"
+                                >
+                                  <CheckCircle className="h-3 w-3" />
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setAppToReject(app._id);
+                                    setShowRejectModal(true);
+                                  }}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold transition-all shadow-sm"
+                                >
+                                  <XCircle className="h-3 w-3" />
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {partnerApps.length === 0 && (
+                    <div className="text-center py-16 text-slate-400 font-medium">
+                      No partner applications found in system.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* APPLICATION DETAILS MODAL */}
+          {selectedPartnerApp && (
+            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+              <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 md:p-8 space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
+                <button
+                  onClick={() => setSelectedPartnerApp(null)}
+                  className="absolute top-6 right-6 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 font-playfair">Partner Application Details</h3>
+                  <p className="text-slate-500 text-xs mt-1">Review credentials and verified uploaded documents below</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left panel: Info */}
+                  <div className="space-y-4">
+                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Personal Information</h4>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-400 block">Full Name:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.fullName}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Email Address:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.emailAddress}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Mobile Number:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.mobileNumber}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Date of Birth:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.dob || "N/A"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Store & Business Info</h4>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-400 block">Store Name:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.storeName || "N/A"}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Seller Type:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.sellerType}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">GST Number:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.gstNumber || "N/A"}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Experience (Years):</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.experience || "N/A"}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-400 block">Store Description:</span>
+                          <span className="font-semibold text-slate-800">{selectedPartnerApp.storeDescription || "N/A"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Address</h4>
+                      <p className="text-xs font-semibold text-slate-800">
+                        {selectedPartnerApp.addressLine1}
+                        {selectedPartnerApp.addressLine2 && `, ${selectedPartnerApp.addressLine2}`}
+                        <br />
+                        {selectedPartnerApp.city}, {selectedPartnerApp.state} - {selectedPartnerApp.pincode}
+                        <br />
+                        {selectedPartnerApp.country}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right panel: Identity documents & Payout details */}
+                  <div className="space-y-4">
+                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Payout Details</h4>
+                      {selectedPartnerApp.payoutOption === "bank" ? (
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="text-slate-400 block">Bank Name:</span>
+                            <span className="font-semibold text-slate-800">{selectedPartnerApp.bankName}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block">Account Holder:</span>
+                            <span className="font-semibold text-slate-800">{selectedPartnerApp.accountHolderName}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block">Account Number:</span>
+                            <span className="font-semibold text-slate-800 font-mono">{selectedPartnerApp.accountNumber}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block">IFSC Code:</span>
+                            <span className="font-semibold text-slate-800 font-mono">{selectedPartnerApp.ifscCode}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs">
+                          <span className="text-slate-400 block">UPI ID:</span>
+                          <span className="font-semibold text-slate-800 font-mono">{selectedPartnerApp.upiId}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-4">
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Documents (Aadhaar & PAN)</h4>
+                      <div className="space-y-1 text-xs">
+                        <div>
+                          <span className="text-slate-400">Aadhaar Number: </span>
+                          <span className="font-bold text-slate-800 font-mono">{selectedPartnerApp.aadhaarNumber}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">PAN Number: </span>
+                          <span className="font-bold text-slate-800 font-mono">{selectedPartnerApp.panNumber}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        {selectedPartnerApp.aadhaarFront && (
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-slate-400 block">Aadhaar Front</span>
+                            <a href={selectedPartnerApp.aadhaarFront} target="_blank" rel="noreferrer">
+                              <img src={selectedPartnerApp.aadhaarFront} alt="Aadhaar Front" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
+                            </a>
+                          </div>
+                        )}
+                        {selectedPartnerApp.aadhaarBack && (
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-slate-400 block">Aadhaar Back</span>
+                            <a href={selectedPartnerApp.aadhaarBack} target="_blank" rel="noreferrer">
+                              <img src={selectedPartnerApp.aadhaarBack} alt="Aadhaar Back" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
+                            </a>
+                          </div>
+                        )}
+                        {selectedPartnerApp.panCard && (
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-slate-400 block">PAN Card</span>
+                            <a href={selectedPartnerApp.panCard} target="_blank" rel="noreferrer">
+                              <img src={selectedPartnerApp.panCard} alt="PAN Card" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3 pt-2">
+                        {selectedPartnerApp.profilePicture && (
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-slate-400 block">Profile Picture</span>
+                            <a href={selectedPartnerApp.profilePicture} target="_blank" rel="noreferrer">
+                              <img src={selectedPartnerApp.profilePicture} alt="Profile" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
+                            </a>
+                          </div>
+                        )}
+                        {selectedPartnerApp.storeBanner && (
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-slate-400 block">Store Banner</span>
+                            <a href={selectedPartnerApp.storeBanner} target="_blank" rel="noreferrer">
+                              <img src={selectedPartnerApp.storeBanner} alt="Store Banner" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedPartnerApp.status === "Pending" && (
+                  <div className="flex gap-4 pt-4 border-t border-slate-100 justify-end">
+                    <button
+                      onClick={() => handleApprovePartner(selectedPartnerApp._id)}
+                      className="px-6 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-green-500/10"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Approve Application
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAppToReject(selectedPartnerApp._id);
+                        setShowRejectModal(true);
+                      }}
+                      className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-red-500/10"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Reject Application
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* REJECT REASON INPUT MODAL */}
+          {showRejectModal && (
+            <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 p-6 space-y-4 relative animate-in fade-in zoom-in-95 duration-200">
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectionReason("");
+                    setAppToReject(null);
+                  }}
+                  className="absolute top-4 right-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Specify Rejection Reason</h3>
+                  <p className="text-slate-500 text-xs mt-1">This message will be emailed to the applicant.</p>
+                </div>
+
+                <form onSubmit={handleRejectPartner} className="space-y-4">
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="e.g. Identity proof Aadhaar image is blurry or expired. Please upload a clear high-res photo."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                  />
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-md"
+                    >
+                      Confirm Rejection
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowRejectModal(false);
+                        setRejectionReason("");
+                        setAppToReject(null);
+                      }}
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

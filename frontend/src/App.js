@@ -13,6 +13,7 @@ import Delivery from "./pages/Delivery";
 import FAQ from "./pages/FAQ";
 import MyOrders from "./pages/MyOrders";
 import BecomePartner from "./pages/Become-partner";
+import PartnerDashboard from "./pages/PartnerDashboard";
 import { UserProvider } from "./context/UserContext";
 
 function ScrollToTop() {
@@ -44,6 +45,7 @@ function AppRoutes() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/become-partner" element={<BecomePartner />} />
+          <Route path="/partner-dashboard" element={<PartnerDashboard />} />
         </Routes>
       </main>
       {!isAdminPage && <Footer />}

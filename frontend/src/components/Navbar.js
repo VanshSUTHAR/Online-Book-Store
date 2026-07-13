@@ -22,7 +22,8 @@ import {
   TrendingUp,
   Info,
   Mail,
-  Handshake
+  Handshake,
+  Store
 } from "lucide-react";
 
 export default function Navbar() {
@@ -327,55 +328,50 @@ export default function Navbar() {
               <a
                 href="#home"
                 onClick={scrollToHome}
-                className={`text-sm font-semibold transition-colors py-1 ${
-                  activeLink === "home"
+                className={`text-sm font-semibold transition-colors py-1 ${activeLink === "home"
                     ? "text-blue-600 border-b-2 border-blue-600"
                     : "text-slate-600 hover:text-slate-900"
-                }`}
+                  }`}
               >
                 Home
               </a>
               <Link
                 to="/all-books"
                 onClick={() => setActiveLink("all-books")}
-                className={`text-sm font-semibold transition-colors py-1 ${
-                  activeLink === "all-books"
+                className={`text-sm font-semibold transition-colors py-1 ${activeLink === "all-books"
                     ? "text-blue-600 border-b-2 border-blue-600"
                     : "text-slate-600 hover:text-slate-900"
-                }`}
+                  }`}
               >
                 Categories
               </Link>
               <a
                 href="#trending"
                 onClick={scrollToTrending}
-                className={`text-sm font-semibold transition-colors py-1 ${
-                  activeLink === "trending"
+                className={`text-sm font-semibold transition-colors py-1 ${activeLink === "trending"
                     ? "text-blue-600 border-b-2 border-blue-600"
                     : "text-slate-600 hover:text-slate-900"
-                }`}
+                  }`}
               >
                 Best Sellers
               </a>
               <a
                 href="#about"
                 onClick={scrollToAbout}
-                className={`text-sm font-semibold transition-colors py-1 ${
-                  activeLink === "about"
+                className={`text-sm font-semibold transition-colors py-1 ${activeLink === "about"
                     ? "text-blue-600 border-b-2 border-blue-600"
                     : "text-slate-600 hover:text-slate-900"
-                }`}
+                  }`}
               >
                 About Us
               </a>
               <a
                 href="#contact"
                 onClick={scrollToContact}
-                className={`text-sm font-semibold transition-colors py-1 ${
-                  activeLink === "contact"
+                className={`text-sm font-semibold transition-colors py-1 ${activeLink === "contact"
                     ? "text-blue-600 border-b-2 border-blue-600"
                     : "text-slate-600 hover:text-slate-900"
-                }`}
+                  }`}
               >
                 Contact
               </a>
@@ -383,11 +379,10 @@ export default function Navbar() {
                 <Link
                   to="/admin"
                   onClick={() => setActiveLink("admin")}
-                  className={`text-sm font-semibold transition-colors py-1 ${
-                    activeLink === "admin"
+                  className={`text-sm font-semibold transition-colors py-1 ${activeLink === "admin"
                       ? "text-blue-600 border-b-2 border-blue-600"
                       : "text-slate-600 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   Admin Panel
                 </Link>
@@ -396,22 +391,31 @@ export default function Navbar() {
 
             {/* Right Buttons / Actions */}
             <div className="flex items-center space-x-2 md:space-x-4">
-              {/* Become a partner button */}
-              <Link
-                to="/become-partner"
-                className="hidden lg:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:text-blue-600 transition-colors shadow-sm"
-              >
-                <Handshake className="h-4 w-4 text-blue-600 animate-bounce-slow" />
-                <span>Become a partner</span>
-              </Link>
+              {/* Become a partner / Seller Dashboard button */}
+              {user?.role === "partner" ? (
+                <Link
+                  to="/partner-dashboard"
+                  className="hidden lg:flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 px-3.5 py-1.5 text-xs font-bold text-blue-700 transition-colors shadow-sm animate-pulse"
+                >
+                  <Store className="h-4 w-4 text-blue-600" />
+                  <span>Seller Dashboard</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/become-partner"
+                  className="hidden lg:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:text-blue-600 transition-colors shadow-sm"
+                >
+                  <Handshake className="h-4 w-4 text-blue-600 animate-bounce-slow" />
+                  <span>Become a partner</span>
+                </Link>
+              )}
 
               {/* Shopping Cart Icon */}
               <Link
                 to="/cart"
                 onClick={() => setActiveLink("cart")}
-                className={`relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${
-                  activeLink === "cart" ? "text-blue-600 bg-blue-50" : ""
-                }`}
+                className={`relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${activeLink === "cart" ? "text-blue-600 bg-blue-50" : ""
+                  }`}
               >
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
@@ -427,9 +431,8 @@ export default function Navbar() {
                   <Link
                     to="/my-orders"
                     onClick={() => setActiveLink("my-orders")}
-                    className={`hidden md:block relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${
-                      activeLink === "my-orders" ? "text-blue-600 bg-blue-50" : ""
-                    }`}
+                    className={`hidden md:block relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${activeLink === "my-orders" ? "text-blue-600 bg-blue-50" : ""
+                      }`}
                     title="My Orders"
                   >
                     <Package className="h-5 w-5" />
@@ -439,9 +442,8 @@ export default function Navbar() {
                   <div className="hidden md:block relative" ref={notificationRef}>
                     <button
                       onClick={() => setShowNotifications(!showNotifications)}
-                      className={`p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${
-                        showNotifications ? "bg-slate-100" : ""
-                      }`}
+                      className={`p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors ${showNotifications ? "bg-slate-100" : ""
+                        }`}
                     >
                       <Bell className="h-5 w-5" />
                       {unreadCount > 0 && (
@@ -599,16 +601,16 @@ export default function Navbar() {
 
               {/* Mobile Hamburger menu */}
               <button
-  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-  className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-  aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
->
-  {isMobileMenuOpen ? (
-    <X className="h-6 w-6" />
-  ) : (
-    <Menu className="h-6 w-6" />
-  )}
-</button>
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -698,11 +700,10 @@ export default function Navbar() {
                     scrollToHome(e);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                    activeLink === "home"
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "home"
                       ? "text-blue-600 bg-blue-50/70"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <Home className="h-4 w-4 shrink-0" />
                   Home
@@ -713,32 +714,47 @@ export default function Navbar() {
                     setActiveLink("all-books");
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                    activeLink === "all-books"
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "all-books"
                       ? "text-blue-600 bg-blue-50/70"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <Layers className="h-4 w-4 shrink-0" />
                   Categories
                 </Link>
 
-                {/* Become a partner Mobile Link */}
-                <Link
-                  to="/become-partner"
-                  onClick={() => {
-                    setActiveLink("become-partner");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                    activeLink === "become-partner"
-                      ? "text-blue-600 bg-blue-50/70"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  <Handshake className="h-4 w-4 shrink-0 text-blue-600 animate-pulse" />
-                  Become a partner
-                </Link>
+                {/* Become a partner / Seller Dashboard Mobile Link */}
+                {user?.role === "partner" ? (
+                  <Link
+                    to="/partner-dashboard"
+                    onClick={() => {
+                      setActiveLink("partner-dashboard");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "partner-dashboard"
+                        ? "text-blue-600 bg-blue-50/70"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                  >
+                    <Store className="h-4 w-4 shrink-0 text-blue-600 animate-pulse" />
+                    Seller Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    to="/become-partner"
+                    onClick={() => {
+                      setActiveLink("become-partner");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "become-partner"
+                        ? "text-blue-600 bg-blue-50/70"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                  >
+                    <Handshake className="h-4 w-4 shrink-0 text-blue-600 animate-pulse" />
+                    Become a partner
+                  </Link>
+                )}
 
                 <a
                   href="#trending"
@@ -746,11 +762,10 @@ export default function Navbar() {
                     scrollToTrending(e);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                    activeLink === "trending"
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "trending"
                       ? "text-blue-600 bg-blue-50/70"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <TrendingUp className="h-4 w-4 shrink-0" />
                   Best Sellers
@@ -761,11 +776,10 @@ export default function Navbar() {
                     scrollToAbout(e);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                    activeLink === "about"
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "about"
                       ? "text-blue-600 bg-blue-50/70"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <Info className="h-4 w-4 shrink-0" />
                   About Us
@@ -776,11 +790,10 @@ export default function Navbar() {
                     scrollToContact(e);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                    activeLink === "contact"
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "contact"
                       ? "text-blue-600 bg-blue-50/70"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <Mail className="h-4 w-4 shrink-0" />
                   Contact
@@ -792,11 +805,10 @@ export default function Navbar() {
                       setActiveLink("admin");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                      activeLink === "admin"
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "admin"
                         ? "text-blue-600 bg-blue-50/70"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     <Lock className="h-4 w-4 shrink-0" />
                     Admin Panel
@@ -816,11 +828,10 @@ export default function Navbar() {
                       setActiveLink("my-orders");
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                      activeLink === "my-orders"
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${activeLink === "my-orders"
                         ? "text-blue-600 bg-blue-50/70"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     <Package className="h-4 w-4 shrink-0" />
                     My Orders
