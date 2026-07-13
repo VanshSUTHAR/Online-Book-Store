@@ -1,7 +1,13 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api } from "../services/api";
-import { clearCartItems, fetchCartItems, getLocalCart, removeCartItem } from "../services/cartService";
+import {
+  clearCartItems,
+  fetchCartItems,
+  getLocalCart,
+  removeCartItem,
+  updateCartItemQuantity
+} from "../services/cartService";
 import {
   CardNumberElement,
   CardExpiryElement,
@@ -64,7 +70,12 @@ export default function Cart() {
   const elements = useElements();
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + Number(item.price || 0), 0),
+    () => items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0),
+    [items]
+  );
+
+  const itemCount = useMemo(
+    () => items.reduce((sum, item) => sum + Number(item.quantity || 1), 0),
     [items]
   );
 
@@ -76,14 +87,28 @@ export default function Cart() {
   useEffect(() => {
     let isMounted = true;
 
-    fetchCartItems().then((cartItems) => {
+    const syncCart = () => fetchCartItems().then((cartItems) => {
       if (isMounted) {
         setItems(cartItems);
       }
     });
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncCart();
+      }
+    };
+
+    syncCart();
+    window.addEventListener("focus", syncCart);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    const interval = setInterval(syncCart, localStorage.getItem("token") ? 3000 : 10000);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("focus", syncCart);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearInterval(interval);
     };
   }, [user]);
 
@@ -97,6 +122,11 @@ export default function Cart() {
     const nextItems = await removeCartItem(index);
     setItems(nextItems);
     showToastMsg("Item removed from cart.");
+  };
+
+  const changeItemQuantity = async (index, quantity) => {
+    const nextItems = await updateCartItemQuantity(index, quantity);
+    setItems(nextItems);
   };
 
   const openCheckout = () => {
@@ -151,11 +181,11 @@ export default function Cart() {
       const userId = user?._id || localStorage.getItem("userId");
 
       const productsPayload = items.map((book) => ({
-        productId: book._id || book.id,
+        productId: book._id || book.id || book.bookId,
         title:     book.title,
         price:     Number(book.price),
         image:     book.image,
-        quantity:  book.quantity || 1,
+        quantity:  Number(book.quantity || 1),
       }));
 
       const payment = await api.post("/payment/create-payment-intent", {
@@ -187,10 +217,10 @@ export default function Cart() {
         userId,
         products: productsPayload,
         books: items.map((book) => ({
-          bookId:   book._id || book.id,
+          bookId:   book._id || book.id || book.bookId,
           title:    book.title,
           price:    Number(book.price),
-          quantity: book.quantity || 1,
+          quantity: Number(book.quantity || 1),
           image:    book.image,
           author:   book.author,
           category: book.category,
@@ -210,7 +240,7 @@ export default function Cart() {
         // Add notification for navbar
         const notification = {
           title: "Order Placed Successfully!",
-          message: `Your order of ${items.length} book(s) has been placed. Total: ₹${subtotal}`,
+          message: `Your order of ${itemCount} book(s) has been placed. Total: ₹${subtotal}`,
           time: new Date().toLocaleString(),
           read: false,
           orderDetails: {
@@ -254,7 +284,7 @@ export default function Cart() {
               Shopping Cart
             </h1>
             <p className="text-slate-500 text-xs mt-1.5 font-medium">
-              You have {items.length} book(s) in your basket.
+              You have {itemCount} book(s) in your basket.
             </p>
           </div>
           {items.length > 0 && (
@@ -315,8 +345,32 @@ export default function Cart() {
                         {item.category || "General"}
                       </span>
                     </div>
-                    <div className="text-base font-extrabold text-slate-900 mt-2">
-                      ₹{item.price}
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <div className="text-base font-extrabold text-slate-900">
+                        ₹{Number(item.price || 0) * Number(item.quantity || 1)}
+                      </div>
+                      <div className="flex items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                        <button
+                          type="button"
+                          onClick={() => changeItemQuantity(index, Number(item.quantity || 1) - 1)}
+                          disabled={Number(item.quantity || 1) <= 1}
+                          className="h-8 w-8 text-sm font-bold text-slate-600 hover:bg-white disabled:cursor-not-allowed disabled:text-slate-300"
+                          aria-label="Decrease quantity"
+                        >
+                          -
+                        </button>
+                        <span className="flex h-8 min-w-9 items-center justify-center border-x border-slate-200 bg-white px-2 text-xs font-bold text-slate-900">
+                          {Number(item.quantity || 1)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => changeItemQuantity(index, Number(item.quantity || 1) + 1)}
+                          className="h-8 w-8 text-sm font-bold text-slate-600 hover:bg-white"
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <button
@@ -350,7 +404,7 @@ export default function Cart() {
                 <div className="space-y-3.5 text-xs text-slate-600">
                   <div className="flex justify-between">
                     <span>Items Count</span>
-                    <span className="font-semibold text-slate-800">{items.length}</span>
+                    <span className="font-semibold text-slate-800">{itemCount}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping Charges</span>

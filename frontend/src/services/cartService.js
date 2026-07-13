@@ -11,6 +11,19 @@ function hasToken() {
   return Boolean(localStorage.getItem("token"));
 }
 
+function getMigrationKey() {
+  const userId = localStorage.getItem("userId");
+  return userId ? `cartMigrated:${userId}` : "cartMigrated";
+}
+
+function hasMigratedLocalCart() {
+  return localStorage.getItem(getMigrationKey()) === "true";
+}
+
+function markLocalCartMigrated() {
+  localStorage.setItem(getMigrationKey(), "true");
+}
+
 export function getLocalCart() {
   try {
     return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -24,6 +37,10 @@ export function setLocalCart(items, notify = true) {
   if (notify) {
     window.dispatchEvent(new Event("cartUpdated"));
   }
+}
+
+function getBookId(book) {
+  return book?._id || book?.id || book?.bookId;
 }
 
 function normalizeItems(data) {
@@ -40,13 +57,14 @@ export async function fetchCartItems() {
     let items = normalizeItems(res.data);
     const localItems = getLocalCart();
 
-    if (items.length === 0 && localItems.length > 0) {
+    if (!hasMigratedLocalCart() && items.length === 0 && localItems.length > 0) {
       for (const item of localItems) {
         const addRes = await api.post("/cart/items", { item }, { headers: getAuthHeaders() });
         items = normalizeItems(addRes.data);
       }
     }
 
+    markLocalCartMigrated();
     setLocalCart(items, false);
     return items;
   } catch (err) {
@@ -56,13 +74,45 @@ export async function fetchCartItems() {
 
 export async function addCartItem(book) {
   if (!hasToken()) {
-    const items = [...getLocalCart(), book];
+    const bookId = getBookId(book);
+    const items = [...getLocalCart()];
+    const existingItem = items.find((item) => getBookId(item) === bookId);
+
+    if (existingItem) {
+      existingItem.quantity = Number(existingItem.quantity || 1) + Number(book.quantity || 1);
+    } else {
+      items.push({ ...book, quantity: Number(book.quantity || 1) });
+    }
+
     setLocalCart(items);
     return items;
   }
 
   const res = await api.post("/cart/items", { item: book }, { headers: getAuthHeaders() });
   const items = normalizeItems(res.data);
+  markLocalCartMigrated();
+  setLocalCart(items);
+  return items;
+}
+
+export async function updateCartItemQuantity(index, quantity) {
+  const nextQuantity = Math.max(1, Number(quantity || 1));
+
+  if (!hasToken()) {
+    const items = getLocalCart().map((item, itemIndex) => (
+      itemIndex === index ? { ...item, quantity: nextQuantity } : item
+    ));
+    setLocalCart(items);
+    return items;
+  }
+
+  const res = await api.patch(
+    `/cart/items/${index}`,
+    { quantity: nextQuantity },
+    { headers: getAuthHeaders() }
+  );
+  const items = normalizeItems(res.data);
+  markLocalCartMigrated();
   setLocalCart(items);
   return items;
 }
@@ -76,17 +126,22 @@ export async function removeCartItem(index) {
 
   const res = await api.delete(`/cart/items/${index}`, { headers: getAuthHeaders() });
   const items = normalizeItems(res.data);
+  markLocalCartMigrated();
   setLocalCart(items);
   return items;
 }
 
 export async function removeFirstCartItemByBookId(book) {
-  const bookId = book?._id || book?.id || book?.bookId;
+  const bookId = getBookId(book);
   const items = hasToken() ? await fetchCartItems() : getLocalCart();
-  const index = items.findIndex((item) => (item._id || item.id || item.bookId) === bookId);
+  const index = items.findIndex((item) => getBookId(item) === bookId);
 
   if (index === -1) {
     return items;
+  }
+
+  if (Number(items[index].quantity || 1) > 1) {
+    return updateCartItemQuantity(index, Number(items[index].quantity || 1) - 1);
   }
 
   return removeCartItem(index);
@@ -100,6 +155,7 @@ export async function clearCartItems() {
 
   const res = await api.delete("/cart", { headers: getAuthHeaders() });
   const items = normalizeItems(res.data);
+  markLocalCartMigrated();
   setLocalCart(items);
   return items;
 }

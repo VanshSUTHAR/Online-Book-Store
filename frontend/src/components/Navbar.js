@@ -41,7 +41,7 @@ export default function Navbar() {
     const updateCartCount = async () => {
       const cart = await fetchCartItems();
       if (isMounted) {
-        setCartCount(cart.length);
+        setCartCount(cart.reduce((sum, item) => sum + Number(item.quantity || 1), 0));
       }
     };
 

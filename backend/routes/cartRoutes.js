@@ -55,13 +55,44 @@ router.post("/items", auth, async (req, res) => {
     }
 
     const cart = await findOrCreateCart(getUserId(req));
-    cart.items.push(item);
+    const existingItem = cart.items.find((cartItem) => cartItem.bookId === item.bookId);
+
+    if (existingItem) {
+      existingItem.quantity = Number(existingItem.quantity || 1) + Number(item.quantity || 1);
+    } else {
+      cart.items.push(item);
+    }
+
     await cart.save();
 
     res.status(201).json({ items: cart.items });
   } catch (err) {
     console.error("Add cart item error:", err);
     res.status(500).json({ error: "Failed to add cart item." });
+  }
+});
+
+router.patch("/items/:index", auth, async (req, res) => {
+  try {
+    const index = Number(req.params.index);
+    const quantity = Number(req.body.quantity);
+    const cart = await findOrCreateCart(getUserId(req));
+
+    if (!Number.isInteger(index) || index < 0 || index >= cart.items.length) {
+      return res.status(404).json({ error: "Cart item not found." });
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be at least 1." });
+    }
+
+    cart.items[index].quantity = quantity;
+    await cart.save();
+
+    res.json({ items: cart.items });
+  } catch (err) {
+    console.error("Update cart item quantity error:", err);
+    res.status(500).json({ error: "Failed to update cart item quantity." });
   }
 });
 
