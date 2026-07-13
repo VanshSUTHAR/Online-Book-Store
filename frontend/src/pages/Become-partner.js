@@ -16,6 +16,188 @@ import {
     AlertCircle,
 } from "lucide-react";
 
+// ---------------------------------------------------------------------------
+// Validation helpers
+// ---------------------------------------------------------------------------
+
+const NAME_RE = /^[A-Za-z\s.'-]{3,50}$/;
+const MOBILE_RE = /^[6-9]\d{9}$/;
+const CITY_STATE_RE = /^[A-Za-z\s]{2,50}$/;
+const PINCODE_RE = /^\d{6}$/;
+const AADHAAR_RE = /^\d{12}$/;
+const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+const ACCOUNT_NUMBER_RE = /^\d{9,18}$/;
+const IFSC_RE = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+const UPI_RE = /^[\w.-]{2,49}@[a-zA-Z]{2,64}$/;
+const GST_RE = /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$/;
+
+function calculateAge(dobString) {
+    const dob = new Date(dobString);
+    if (Number.isNaN(dob.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+}
+
+function validateFile(file, { maxSizeMB, requireImage = true } = {}) {
+    if (!file) return "";
+    if (requireImage && file.type && !file.type.startsWith("image/")) {
+        return "Only image files (PNG/JPG) are allowed.";
+    }
+    if (maxSizeMB && file.size > maxSizeMB * 1024 * 1024) {
+        return `File must be smaller than ${maxSizeMB}MB.`;
+    }
+    return "";
+}
+
+// Field-level validators. Each receives (value, formData) and returns an
+// error string, or "" if valid. Fields not listed here have no validation.
+const validators = {
+    fullName: (v) => {
+        if (!v.trim()) return "Full name is required.";
+        if (!NAME_RE.test(v.trim())) return "Enter a valid name (letters only, 3-50 characters).";
+        return "";
+    },
+    mobileNumber: (v) => {
+        if (!v.trim()) return "Mobile number is required.";
+        if (!MOBILE_RE.test(v.trim())) return "Enter a valid 10-digit mobile number.";
+        return "";
+    },
+    dob: (v) => {
+        if (!v) return "";
+        const age = calculateAge(v);
+        if (age === null) return "Enter a valid date.";
+        if (age < 18) return "You must be at least 18 years old.";
+        if (age > 120) return "Enter a valid date of birth.";
+        return "";
+    },
+    storeName: (v) => {
+        if (v && v.length > 100) return "Store name must be under 100 characters.";
+        return "";
+    },
+    storeDescription: (v) => {
+        if (v && v.length > 500) return "Description must be under 500 characters.";
+        return "";
+    },
+    profilePicture: (v) => validateFile(v, { maxSizeMB: 2 }),
+    storeBanner: (v) => validateFile(v, { maxSizeMB: 5 }),
+    addressLine1: (v) => {
+        if (!v.trim()) return "Address line 1 is required.";
+        if (v.trim().length < 5) return "Enter a more complete address.";
+        return "";
+    },
+    city: (v) => {
+        if (!v.trim()) return "City is required.";
+        if (!CITY_STATE_RE.test(v.trim())) return "Enter a valid city name.";
+        return "";
+    },
+    state: (v) => {
+        if (!v.trim()) return "State is required.";
+        if (!CITY_STATE_RE.test(v.trim())) return "Enter a valid state name.";
+        return "";
+    },
+    pincode: (v) => {
+        if (!v.trim()) return "Pincode is required.";
+        if (!PINCODE_RE.test(v.trim())) return "Enter a valid 6-digit pincode.";
+        return "";
+    },
+    country: (v) => (!v.trim() ? "Country is required." : ""),
+    aadhaarNumber: (v) => {
+        if (!v.trim()) return "Aadhaar number is required.";
+        if (!AADHAAR_RE.test(v.trim())) return "Enter a valid 12-digit Aadhaar number.";
+        return "";
+    },
+    panNumber: (v) => {
+        if (!v.trim()) return "PAN number is required.";
+        if (!PAN_RE.test(v.trim().toUpperCase())) return "Enter a valid PAN (e.g. ABCDE1234F).";
+        return "";
+    },
+    aadhaarFront: (v) => {
+        if (!v) return "Aadhaar front image is required.";
+        return validateFile(v, { maxSizeMB: 5 });
+    },
+    aadhaarBack: (v) => {
+        if (!v) return "Aadhaar back image is required.";
+        return validateFile(v, { maxSizeMB: 5 });
+    },
+    panCard: (v) => {
+        if (!v) return "PAN card image is required.";
+        return validateFile(v, { maxSizeMB: 5 });
+    },
+    accountHolderName: (v, fd) => {
+        if (fd.payoutOption !== "bank") return "";
+        if (!v.trim()) return "Account holder name is required.";
+        if (!NAME_RE.test(v.trim())) return "Enter a valid name.";
+        return "";
+    },
+    bankName: (v, fd) => {
+        if (fd.payoutOption !== "bank") return "";
+        if (!v.trim()) return "Bank name is required.";
+        return "";
+    },
+    accountNumber: (v, fd) => {
+        if (fd.payoutOption !== "bank") return "";
+        if (!v.trim()) return "Account number is required.";
+        if (!ACCOUNT_NUMBER_RE.test(v.trim())) return "Enter a valid account number (9-18 digits).";
+        return "";
+    },
+    confirmAccountNumber: (v, fd) => {
+        if (fd.payoutOption !== "bank") return "";
+        if (!v.trim()) return "Please confirm the account number.";
+        if (v !== fd.accountNumber) return "Account numbers do not match.";
+        return "";
+    },
+    ifscCode: (v, fd) => {
+        if (fd.payoutOption !== "bank") return "";
+        if (!v.trim()) return "IFSC code is required.";
+        if (!IFSC_RE.test(v.trim().toUpperCase())) return "Enter a valid IFSC code (e.g. HDFC0001234).";
+        return "";
+    },
+    upiId: (v, fd) => {
+        if (fd.payoutOption !== "upi") return "";
+        if (!v.trim()) return "UPI ID is required.";
+        if (!UPI_RE.test(v.trim())) return "Enter a valid UPI ID (e.g. name@bank).";
+        return "";
+    },
+    gstNumber: (v) => {
+        if (!v || !v.trim()) return "";
+        if (!GST_RE.test(v.trim().toUpperCase())) return "Enter a valid 15-character GSTIN.";
+        return "";
+    },
+    experience: (v) => {
+        if (v === "" || v === null || v === undefined) return "";
+        if (Number.isNaN(Number(v)) || Number(v) < 0 || Number(v) > 70) {
+            return "Enter a valid number of years (0-70).";
+        }
+        return "";
+    },
+};
+
+// Fields that belong to each step (used to validate a whole step at once
+// and to decide which fields to mark "touched" when the user tries to
+// advance without fixing errors).
+const STEP_FIELDS = {
+    1: ["fullName", "mobileNumber", "dob"],
+    2: ["storeName", "storeDescription", "profilePicture", "storeBanner"],
+    3: ["addressLine1", "city", "state", "pincode", "country"],
+    4: ["aadhaarNumber", "panNumber", "aadhaarFront", "aadhaarBack", "panCard"],
+    5: ["accountHolderName", "bankName", "accountNumber", "confirmAccountNumber", "ifscCode", "upiId"],
+    6: ["gstNumber", "experience"],
+    7: [],
+};
+
+const REQUIRED_STEP_FIELDS = {
+    1: ["fullName", "mobileNumber"],
+    2: [],
+    3: ["addressLine1", "city", "state", "pincode", "country"],
+    4: ["aadhaarNumber", "panNumber", "aadhaarFront", "aadhaarBack", "panCard"],
+    5: [], // handled dynamically based on payoutOption below
+    6: [],
+    7: [],
+};
+
 export default function BecomePartner() {
     const { user } = useUser();
     const [currentStep, setCurrentStep] = useState(1);
@@ -57,6 +239,11 @@ export default function BecomePartner() {
         understandReview: false
     });
 
+    // Per-field error messages
+    const [errors, setErrors] = useState({});
+    // Which fields the user has interacted with (controls when errors show)
+    const [touched, setTouched] = useState({});
+
     // Pre-fill email if user is logged in
     useEffect(() => {
         if (user) {
@@ -68,86 +255,124 @@ export default function BecomePartner() {
         }
     }, [user]);
 
+    const runValidator = (name, value, fd) => {
+        const validator = validators[name];
+        if (!validator) return "";
+        return validator(value, fd) || "";
+    };
+
     // Handle Text Inputs
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value
-        }));
+        const nextValue = type === "checkbox" ? checked : value;
+
+        setFormData(prev => {
+            const updated = { ...prev, [name]: nextValue };
+
+            setErrors(prevErrors => {
+                const nextErrors = { ...prevErrors, [name]: runValidator(name, nextValue, updated) };
+                // Keep dependent fields in sync (e.g. confirm account number vs account number)
+                if (name === "accountNumber") {
+                    nextErrors.confirmAccountNumber = runValidator("confirmAccountNumber", updated.confirmAccountNumber, updated);
+                }
+                return nextErrors;
+            });
+
+            return updated;
+        });
+    };
+
+    const handleBlur = (e) => {
+        const { name } = e.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
     };
 
     // Handle File Uploads
     const handleFileChange = (e) => {
         const { name, files } = e.target;
-        if (files && files[0]) {
-            setFormData(prev => ({
-                ...prev,
-                [name]: files[0]
-            }));
-        }
+        const file = files && files[0] ? files[0] : null;
+        if (!file) return;
+
+        setFormData(prev => {
+            const updated = { ...prev, [name]: file };
+            setErrors(prevErrors => ({ ...prevErrors, [name]: runValidator(name, file, updated) }));
+            return updated;
+        });
+        setTouched(prev => ({ ...prev, [name]: true }));
     };
 
-    // Step Validation
-    const checkStepValidity = (stepNum) => {
+    // Validate every relevant field for a given step; returns an errors map
+    const getStepErrors = (stepNum, fd = formData) => {
+        const fields = STEP_FIELDS[stepNum] || [];
+        const stepErrors = {};
+        fields.forEach(name => {
+            const err = runValidator(name, fd[name], fd);
+            if (err) stepErrors[name] = err;
+        });
+        return stepErrors;
+    };
+
+    // Step Validation - now backed by the same validators used for inline errors
+    const checkStepValidity = (stepNum, fd = formData) => {
+        const stepErrors = getStepErrors(stepNum, fd);
+        if (Object.keys(stepErrors).length > 0) return false;
+
         switch (stepNum) {
             case 1:
-                return formData.fullName.trim() !== "" && formData.mobileNumber.trim() !== "";
+                return REQUIRED_STEP_FIELDS[1].every(f => fd[f] && fd[f].trim() !== "");
             case 2:
                 return true; // Optional step
             case 3:
-                return (
-                    formData.addressLine1.trim() !== "" &&
-                    formData.city.trim() !== "" &&
-                    formData.state.trim() !== "" &&
-                    formData.pincode.trim() !== "" &&
-                    formData.country.trim() !== ""
-                );
+                return REQUIRED_STEP_FIELDS[3].every(f => fd[f] && fd[f].trim() !== "");
             case 4:
-                return (
-                    formData.aadhaarNumber.trim().length >= 12 &&
-                    formData.panNumber.trim().length >= 10 &&
-                    formData.aadhaarFront !== null &&
-                    formData.aadhaarBack !== null &&
-                    formData.panCard !== null
-                );
+                return REQUIRED_STEP_FIELDS[4].every(f => fd[f] !== null && fd[f] !== "");
             case 5:
-                if (formData.payoutOption === "bank") {
+                if (fd.payoutOption === "bank") {
                     return (
-                        formData.accountHolderName.trim() !== "" &&
-                        formData.bankName.trim() !== "" &&
-                        formData.accountNumber.trim() !== "" &&
-                        formData.accountNumber === formData.confirmAccountNumber &&
-                        formData.ifscCode.trim() !== ""
+                        fd.accountHolderName.trim() !== "" &&
+                        fd.bankName.trim() !== "" &&
+                        fd.accountNumber.trim() !== "" &&
+                        fd.accountNumber === fd.confirmAccountNumber &&
+                        fd.ifscCode.trim() !== ""
                     );
-                } else {
-                    return formData.upiId.trim().includes("@");
                 }
+                return fd.upiId.trim() !== "";
             case 6:
                 return true;
             case 7:
-                return formData.confirmAccurate && formData.agreeTerms && formData.understandReview;
+                return fd.confirmAccurate && fd.agreeTerms && fd.understandReview;
             default:
                 return false;
         }
     };
 
-    const isStepValid = () => {
-        return checkStepValidity(currentStep);
-    };
+    const isStepValid = () => checkStepValidity(currentStep);
 
     const isStepAccessible = (stepNum) => {
         if (stepNum <= currentStep) return true;
         for (let i = 1; i < stepNum; i++) {
-            if (!checkStepValidity(i)) {
-                return false;
-            }
+            if (!checkStepValidity(i)) return false;
         }
         return true;
     };
 
+    // Mark every field in a step as touched, so errors become visible
+    const touchStep = (stepNum) => {
+        const fields = STEP_FIELDS[stepNum] || [];
+        setTouched(prev => {
+            const next = { ...prev };
+            fields.forEach(f => { next[f] = true; });
+            return next;
+        });
+        setErrors(prev => ({ ...prev, ...getStepErrors(stepNum) }));
+    };
+
     const handleNext = () => {
-        if (isStepValid() && currentStep < totalSteps) {
+        if (!isStepValid()) {
+            touchStep(currentStep);
+            return;
+        }
+        if (currentStep < totalSteps) {
             setCurrentStep(prev => prev + 1);
         }
     };
@@ -170,41 +395,65 @@ export default function BecomePartner() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (isStepValid()) {
-            try {
-                // Convert files to base64
-                const profilePictureBase64 = formData.profilePicture ? await convertFileToBase64(formData.profilePicture) : null;
-                const storeBannerBase64 = formData.storeBanner ? await convertFileToBase64(formData.storeBanner) : null;
-                const aadhaarFrontBase64 = formData.aadhaarFront ? await convertFileToBase64(formData.aadhaarFront) : null;
-                const aadhaarBackBase64 = formData.aadhaarBack ? await convertFileToBase64(formData.aadhaarBack) : null;
-                const panCardBase64 = formData.panCard ? await convertFileToBase64(formData.panCard) : null;
 
-                const payload = {
-                    ...formData,
-                    profilePicture: profilePictureBase64,
-                    storeBanner: storeBannerBase64,
-                    aadhaarFront: aadhaarFrontBase64,
-                    aadhaarBack: aadhaarBackBase64,
-                    panCard: panCardBase64,
-                    userId: user ? user._id || user.id : null
-                };
+        // Validate all steps before submitting, not just the current one
+        const allErrors = {};
+        for (let step = 1; step <= totalSteps; step++) {
+            Object.assign(allErrors, getStepErrors(step));
+        }
+        const allValid = Array.from({ length: totalSteps }, (_, i) => checkStepValidity(i + 1)).every(Boolean);
 
-                const token = localStorage.getItem("token");
-                const headers = {};
-                if (token) {
-                    headers["Authorization"] = token;
+        if (!allValid) {
+            setErrors(prev => ({ ...prev, ...allErrors }));
+            const allFields = Object.values(STEP_FIELDS).flat();
+            setTouched(prev => {
+                const next = { ...prev };
+                allFields.forEach(f => { next[f] = true; });
+                return next;
+            });
+            // Jump to the first invalid step so the user can see what's wrong
+            for (let step = 1; step <= totalSteps; step++) {
+                if (!checkStepValidity(step)) {
+                    setCurrentStep(step);
+                    break;
                 }
-
-                const res = await api.post("/partner/apply", payload, { headers });
-                if (res.data.success) {
-                    alert("Application submitted successfully! Our team will review your application soon.");
-                } else {
-                    alert(res.data.message || "Failed to submit application.");
-                }
-            } catch (err) {
-                console.error(err);
-                alert(err.response?.data?.message || "An error occurred during submission. Please try again.");
             }
+            return;
+        }
+
+        try {
+            // Convert files to base64
+            const profilePictureBase64 = formData.profilePicture ? await convertFileToBase64(formData.profilePicture) : null;
+            const storeBannerBase64 = formData.storeBanner ? await convertFileToBase64(formData.storeBanner) : null;
+            const aadhaarFrontBase64 = formData.aadhaarFront ? await convertFileToBase64(formData.aadhaarFront) : null;
+            const aadhaarBackBase64 = formData.aadhaarBack ? await convertFileToBase64(formData.aadhaarBack) : null;
+            const panCardBase64 = formData.panCard ? await convertFileToBase64(formData.panCard) : null;
+
+            const payload = {
+                ...formData,
+                profilePicture: profilePictureBase64,
+                storeBanner: storeBannerBase64,
+                aadhaarFront: aadhaarFrontBase64,
+                aadhaarBack: aadhaarBackBase64,
+                panCard: panCardBase64,
+                userId: user ? user._id || user.id : null
+            };
+
+            const token = localStorage.getItem("token");
+            const headers = {};
+            if (token) {
+                headers["Authorization"] = token;
+            }
+
+            const res = await api.post("/partner/apply", payload, { headers });
+            if (res.data.success) {
+                alert("Application submitted successfully! Our team will review your application soon.");
+            } else {
+                alert(res.data.message || "Failed to submit application.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.message || "An error occurred during submission. Please try again.");
         }
     };
 
@@ -217,6 +466,23 @@ export default function BecomePartner() {
         { number: 6, label: "Business", icon: Briefcase },
         { number: 7, label: "Confirm", icon: FileCheck }
     ];
+
+    // Small helper to render an error message under a field
+    const FieldError = ({ name }) => {
+        if (!touched[name] || !errors[name]) return null;
+        return (
+            <span className="text-[10px] text-red-500 font-semibold flex items-center gap-1 mt-1">
+                <AlertCircle className="h-3 w-3" />
+                {errors[name]}
+            </span>
+        );
+    };
+
+    const inputClass = (name) =>
+        `w-full rounded-xl border px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 transition-all ${touched[name] && errors[name]
+            ? "border-red-300 focus:ring-red-500/20 focus:border-red-500"
+            : "border-slate-200 focus:ring-blue-500/20 focus:border-blue-500"
+        }`;
 
     return (
         <div className="min-h-screen bg-slate-50/50 py-16 px-4 sm:px-6 lg:px-8">
@@ -327,7 +593,7 @@ export default function BecomePartner() {
                     </div>
 
                     {/* Form Content */}
-                    <form onSubmit={handleSubmit} className="px-6 py-10 sm:px-10 space-y-8">
+                    <form onSubmit={handleSubmit} className="px-6 py-10 sm:px-10 space-y-8" noValidate>
 
                         {/* Step 1: Personal Info */}
                         {currentStep === 1 && (
@@ -341,12 +607,13 @@ export default function BecomePartner() {
                                         <input
                                             type="text"
                                             name="fullName"
-                                            required
                                             value={formData.fullName}
                                             onChange={handleChange}
+                                            onBlur={handleBlur}
                                             placeholder="Enter full name"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            className={inputClass("fullName")}
                                         />
+                                        <FieldError name="fullName" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
@@ -363,12 +630,14 @@ export default function BecomePartner() {
                                         <input
                                             type="tel"
                                             name="mobileNumber"
-                                            required
                                             value={formData.mobileNumber}
                                             onChange={handleChange}
-                                            placeholder="Enter mobile number"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            onBlur={handleBlur}
+                                            placeholder="10-digit mobile number"
+                                            maxLength={10}
+                                            className={inputClass("mobileNumber")}
                                         />
+                                        <FieldError name="mobileNumber" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Date of Birth (Optional)</label>
@@ -377,8 +646,11 @@ export default function BecomePartner() {
                                             name="dob"
                                             value={formData.dob}
                                             onChange={handleChange}
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            onBlur={handleBlur}
+                                            max={new Date().toISOString().split("T")[0]}
+                                            className={inputClass("dob")}
                                         />
+                                        <FieldError name="dob" />
                                     </div>
                                 </div>
                             </div>
@@ -401,9 +673,12 @@ export default function BecomePartner() {
                                             name="storeName"
                                             value={formData.storeName}
                                             onChange={handleChange}
+                                            onBlur={handleBlur}
                                             placeholder="Example: Vansh Book Store"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            maxLength={100}
+                                            className={inputClass("storeName")}
                                         />
+                                        <FieldError name="storeName" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Store Description (Optional)</label>
@@ -412,14 +687,20 @@ export default function BecomePartner() {
                                             rows={4}
                                             value={formData.storeDescription}
                                             onChange={handleChange}
+                                            onBlur={handleBlur}
                                             placeholder="Example: We specialize in engineering, competitive exam, and second-hand books."
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            maxLength={500}
+                                            className={inputClass("storeDescription")}
                                         />
+                                        <div className="flex justify-between items-center mt-1">
+                                            <FieldError name="storeDescription" />
+                                            <span className="text-[10px] text-slate-400 ml-auto">{formData.storeDescription.length}/500</span>
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Profile Picture (Optional)</label>
-                                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-2xl hover:border-blue-500 transition-colors bg-slate-50/30">
+                                            <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-2xl transition-colors bg-slate-50/30 ${touched.profilePicture && errors.profilePicture ? "border-red-300" : "border-slate-200 hover:border-blue-500"}`}>
                                                 <div className="space-y-1 text-center">
                                                     <Upload className="mx-auto h-7 w-7 text-slate-400" />
                                                     <label className="cursor-pointer text-xs font-bold text-blue-600 block">
@@ -431,10 +712,11 @@ export default function BecomePartner() {
                                                     </p>
                                                 </div>
                                             </div>
+                                            <FieldError name="profilePicture" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Store Banner (Optional)</label>
-                                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-2xl hover:border-blue-500 transition-colors bg-slate-50/30">
+                                            <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-2xl transition-colors bg-slate-50/30 ${touched.storeBanner && errors.storeBanner ? "border-red-300" : "border-slate-200 hover:border-blue-500"}`}>
                                                 <div className="space-y-1 text-center">
                                                     <Upload className="mx-auto h-7 w-7 text-slate-400" />
                                                     <label className="cursor-pointer text-xs font-bold text-blue-600 block">
@@ -446,6 +728,7 @@ export default function BecomePartner() {
                                                     </p>
                                                 </div>
                                             </div>
+                                            <FieldError name="storeBanner" />
                                         </div>
                                     </div>
                                 </div>
@@ -464,12 +747,13 @@ export default function BecomePartner() {
                                         <input
                                             type="text"
                                             name="addressLine1"
-                                            required
                                             value={formData.addressLine1}
                                             onChange={handleChange}
+                                            onBlur={handleBlur}
                                             placeholder="House/Shop no., Street, Area"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            className={inputClass("addressLine1")}
                                         />
+                                        <FieldError name="addressLine1" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Address Line 2 (Optional)</label>
@@ -479,7 +763,7 @@ export default function BecomePartner() {
                                             value={formData.addressLine2}
                                             onChange={handleChange}
                                             placeholder="Landmark, Suite, Unit"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            className={inputClass("addressLine2")}
                                         />
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -488,44 +772,49 @@ export default function BecomePartner() {
                                             <input
                                                 type="text"
                                                 name="city"
-                                                required
                                                 value={formData.city}
                                                 onChange={handleChange}
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                onBlur={handleBlur}
+                                                className={inputClass("city")}
                                             />
+                                            <FieldError name="city" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">State *</label>
                                             <input
                                                 type="text"
                                                 name="state"
-                                                required
                                                 value={formData.state}
                                                 onChange={handleChange}
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                onBlur={handleBlur}
+                                                className={inputClass("state")}
                                             />
+                                            <FieldError name="state" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Pincode *</label>
                                             <input
                                                 type="text"
                                                 name="pincode"
-                                                required
                                                 value={formData.pincode}
                                                 onChange={handleChange}
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                onBlur={handleBlur}
+                                                maxLength={6}
+                                                className={inputClass("pincode")}
                                             />
+                                            <FieldError name="pincode" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Country *</label>
                                             <input
                                                 type="text"
                                                 name="country"
-                                                required
                                                 value={formData.country}
                                                 onChange={handleChange}
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                onBlur={handleBlur}
+                                                className={inputClass("country")}
                                             />
+                                            <FieldError name="country" />
                                         </div>
                                     </div>
                                 </div>
@@ -544,24 +833,29 @@ export default function BecomePartner() {
                                         <input
                                             type="text"
                                             name="aadhaarNumber"
-                                            required
                                             value={formData.aadhaarNumber}
                                             onChange={handleChange}
+                                            onBlur={handleBlur}
                                             placeholder="12-digit Aadhaar"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            maxLength={12}
+                                            className={inputClass("aadhaarNumber")}
                                         />
+                                        <FieldError name="aadhaarNumber" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">PAN Number *</label>
                                         <input
                                             type="text"
                                             name="panNumber"
-                                            required
                                             value={formData.panNumber}
                                             onChange={handleChange}
-                                            placeholder="10-digit PAN"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            onBlur={handleBlur}
+                                            placeholder="e.g. ABCDE1234F"
+                                            maxLength={10}
+                                            style={{ textTransform: "uppercase" }}
+                                            className={inputClass("panNumber")}
                                         />
+                                        <FieldError name="panNumber" />
                                     </div>
                                 </div>
 
@@ -569,7 +863,7 @@ export default function BecomePartner() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Aadhaar Front *</label>
-                                        <div className="mt-1 flex justify-center px-4 py-6 border-2 border-slate-200 border-dashed rounded-2xl hover:border-blue-500 transition-colors bg-slate-50/30">
+                                        <div className={`mt-1 flex justify-center px-4 py-6 border-2 border-dashed rounded-2xl transition-colors bg-slate-50/30 ${touched.aadhaarFront && errors.aadhaarFront ? "border-red-300" : "border-slate-200 hover:border-blue-500"}`}>
                                             <div className="space-y-1 text-center">
                                                 <Upload className="mx-auto h-6 w-6 text-slate-400" />
                                                 <label className="cursor-pointer text-xs font-bold text-blue-600 block">
@@ -581,10 +875,11 @@ export default function BecomePartner() {
                                                 </p>
                                             </div>
                                         </div>
+                                        <FieldError name="aadhaarFront" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Aadhaar Back *</label>
-                                        <div className="mt-1 flex justify-center px-4 py-6 border-2 border-slate-200 border-dashed rounded-2xl hover:border-blue-500 transition-colors bg-slate-50/30">
+                                        <div className={`mt-1 flex justify-center px-4 py-6 border-2 border-dashed rounded-2xl transition-colors bg-slate-50/30 ${touched.aadhaarBack && errors.aadhaarBack ? "border-red-300" : "border-slate-200 hover:border-blue-500"}`}>
                                             <div className="space-y-1 text-center">
                                                 <Upload className="mx-auto h-6 w-6 text-slate-400" />
                                                 <label className="cursor-pointer text-xs font-bold text-blue-600 block">
@@ -596,10 +891,11 @@ export default function BecomePartner() {
                                                 </p>
                                             </div>
                                         </div>
+                                        <FieldError name="aadhaarBack" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">PAN Card File *</label>
-                                        <div className="mt-1 flex justify-center px-4 py-6 border-2 border-slate-200 border-dashed rounded-2xl hover:border-blue-500 transition-colors bg-slate-50/30">
+                                        <div className={`mt-1 flex justify-center px-4 py-6 border-2 border-dashed rounded-2xl transition-colors bg-slate-50/30 ${touched.panCard && errors.panCard ? "border-red-300" : "border-slate-200 hover:border-blue-500"}`}>
                                             <div className="space-y-1 text-center">
                                                 <Upload className="mx-auto h-6 w-6 text-slate-400" />
                                                 <label className="cursor-pointer text-xs font-bold text-blue-600 block">
@@ -611,6 +907,7 @@ export default function BecomePartner() {
                                                 </p>
                                             </div>
                                         </div>
+                                        <FieldError name="panCard" />
                                     </div>
                                 </div>
                             </div>
@@ -653,63 +950,67 @@ export default function BecomePartner() {
                                             <input
                                                 type="text"
                                                 name="accountHolderName"
-                                                required
                                                 value={formData.accountHolderName}
                                                 onChange={handleChange}
+                                                onBlur={handleBlur}
                                                 placeholder="Same as Identity card"
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                className={inputClass("accountHolderName")}
                                             />
+                                            <FieldError name="accountHolderName" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Bank Name *</label>
                                             <input
                                                 type="text"
                                                 name="bankName"
-                                                required
                                                 value={formData.bankName}
                                                 onChange={handleChange}
+                                                onBlur={handleBlur}
                                                 placeholder="e.g. HDFC Bank"
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                className={inputClass("bankName")}
                                             />
+                                            <FieldError name="bankName" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Account Number *</label>
                                             <input
                                                 type="password"
                                                 name="accountNumber"
-                                                required
                                                 value={formData.accountNumber}
                                                 onChange={handleChange}
+                                                onBlur={handleBlur}
                                                 placeholder="Enter account number"
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                className={inputClass("accountNumber")}
                                             />
+                                            <FieldError name="accountNumber" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Confirm Account Number *</label>
                                             <input
                                                 type="text"
                                                 name="confirmAccountNumber"
-                                                required
                                                 value={formData.confirmAccountNumber}
                                                 onChange={handleChange}
+                                                onBlur={handleBlur}
                                                 placeholder="Re-enter account number"
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                className={inputClass("confirmAccountNumber")}
                                             />
-                                            {formData.accountNumber && formData.confirmAccountNumber && formData.accountNumber !== formData.confirmAccountNumber && (
-                                                <span className="text-[10px] text-red-500 font-semibold block mt-1">Numbers do not match.</span>
-                                            )}
+                                            <FieldError name="confirmAccountNumber" />
                                         </div>
                                         <div className="md:col-span-2">
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">IFSC Code *</label>
                                             <input
                                                 type="text"
                                                 name="ifscCode"
-                                                required
                                                 value={formData.ifscCode}
                                                 onChange={handleChange}
-                                                placeholder="11-digit IFSC Code"
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                onBlur={handleBlur}
+                                                placeholder="e.g. HDFC0001234"
+                                                maxLength={11}
+                                                style={{ textTransform: "uppercase" }}
+                                                className={inputClass("ifscCode")}
                                             />
+                                            <FieldError name="ifscCode" />
                                         </div>
                                     </div>
                                 ) : (
@@ -718,12 +1019,13 @@ export default function BecomePartner() {
                                         <input
                                             type="text"
                                             name="upiId"
-                                            required
                                             value={formData.upiId}
                                             onChange={handleChange}
+                                            onBlur={handleBlur}
                                             placeholder="e.g. mobile@upi"
-                                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            className={inputClass("upiId")}
                                         />
+                                        <FieldError name="upiId" />
                                     </div>
                                 )}
                             </div>
@@ -771,9 +1073,13 @@ export default function BecomePartner() {
                                                 name="gstNumber"
                                                 value={formData.gstNumber}
                                                 onChange={handleChange}
+                                                onBlur={handleBlur}
                                                 placeholder="15-digit GSTIN"
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                maxLength={15}
+                                                style={{ textTransform: "uppercase" }}
+                                                className={inputClass("gstNumber")}
                                             />
+                                            <FieldError name="gstNumber" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Years of Selling Experience (Optional)</label>
@@ -782,9 +1088,13 @@ export default function BecomePartner() {
                                                 name="experience"
                                                 value={formData.experience}
                                                 onChange={handleChange}
+                                                onBlur={handleBlur}
                                                 placeholder="e.g. 3"
-                                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                min={0}
+                                                max={70}
+                                                className={inputClass("experience")}
                                             />
+                                            <FieldError name="experience" />
                                         </div>
                                     </div>
                                 </div>
@@ -855,11 +1165,7 @@ export default function BecomePartner() {
                                 <button
                                     type="button"
                                     onClick={handleNext}
-                                    disabled={!isStepValid()}
-                                    className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-md shadow-blue-500/10 ${isStepValid()
-                                        ? "bg-blue-600 hover:bg-blue-700"
-                                        : "bg-slate-300 cursor-not-allowed shadow-none"
-                                        }`}
+                                    className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-md shadow-blue-500/10 bg-blue-600 hover:bg-blue-700"
                                 >
                                     Next
                                     <ChevronRight className="h-4 w-4" />

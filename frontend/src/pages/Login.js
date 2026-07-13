@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import { useUser } from "../context/UserContext";
@@ -11,24 +11,43 @@ import {
   X,
   ShieldCheck,
   Send,
-  BookOpen
+  BookOpen,
+  ChevronLeft,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
-export default function Login() {
-  // OTP login states
-  const [showOtpLogin, setShowOtpLogin] = useState(false);
-  const [otpLoginEmail, setOtpLoginEmail] = useState("");
-  const [otpSentLogin, setOtpSentLogin] = useState(false);
-  const [otpLogin, setOtpLogin] = useState("");
-  const [otpLoginToast, setOtpLoginToast] = useState("");
-  const [otpSending, setOtpSending] = useState(false);
-  // New state for OTP verification loading
-  const [otpVerifying, setOtpVerifying] = useState(false);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OTP_LENGTH = 6;
+const RESEND_COOLDOWN_SECONDS = 30;
 
+function maskEmail(email) {
+  const [name, domain] = email.split("@");
+  if (!domain) return email;
+  const visible = name.slice(0, Math.min(2, name.length));
+  const maskedLen = Math.max(name.length - visible.length, 3);
+  return `${visible}${"•".repeat(maskedLen)}@${domain}`;
+}
+
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState("");
+
+  // --- OTP modal state ---------------------------------------------------
+  const [showOtpLogin, setShowOtpLogin] = useState(false);
+  const [otpStep, setOtpStep] = useState("email"); // "email" | "otp"
+  const [otpLoginEmail, setOtpLoginEmail] = useState("");
+  const [otpEmailError, setOtpEmailError] = useState("");
+  const [otpDigits, setOtpDigits] = useState(Array(OTP_LENGTH).fill(""));
+  const [otpError, setOtpError] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendBusy, setResendBusy] = useState(false);
+  const otpBoxRefs = useRef([]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,6 +64,20 @@ export default function Login() {
     }
   }, [user, navigate, location]);
 
+  // Resend cooldown ticker
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  const showToastMsg = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
+  };
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       showToastMsg("Please enter email and password.");
@@ -57,15 +90,14 @@ export default function Login() {
         password: password.trim()
       });
 
-      const user = res.data.user;
+      const loggedInUser = res.data.user;
 
-      // Store credentials
-      localStorage.setItem("userId", user._id);
+      localStorage.setItem("userId", loggedInUser._id);
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
       }
 
-      login(user);
+      login(loggedInUser);
       showToastMsg("✓ Login successful");
 
       const fromPath = location.state?.from || "/";
@@ -73,13 +105,12 @@ export default function Login() {
       delete extraState.from;
 
       setTimeout(() => {
-        if (user.role === "admin") {
+        if (loggedInUser.role === "admin") {
           navigate("/admin");
         } else {
           navigate(fromPath, { state: extraState });
         }
       }, 1200);
-
     } catch (error) {
       showToastMsg(
         error.response?.data?.message || "Invalid email or password"
@@ -87,15 +118,153 @@ export default function Login() {
     }
   };
 
-  const showToastMsg = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+  const handleLoginKeyDown = (e) => {
+    if (e.key === "Enter") handleLogin();
   };
 
-  const showOtpToastMsg = (msg) => {
-    setOtpLoginToast(msg);
-    setTimeout(() => setOtpLoginToast(""), 3000);
+  // --- OTP modal helpers ---------------------------------------------------
+
+  const resetOtpModal = () => {
+    setShowOtpLogin(false);
+    setOtpStep("email");
+    setOtpLoginEmail("");
+    setOtpEmailError("");
+    setOtpDigits(Array(OTP_LENGTH).fill(""));
+    setOtpError("");
+    setOtpSending(false);
+    setOtpVerifying(false);
+    setOtpVerified(false);
+    setResendCooldown(0);
+    setResendBusy(false);
   };
+
+  const focusOtpBox = (index) => {
+    const el = otpBoxRefs.current[index];
+    if (el) el.focus();
+  };
+
+  const sendOtp = async ({ isResend = false } = {}) => {
+    const trimmedEmail = otpLoginEmail.trim();
+    if (!trimmedEmail) {
+      setOtpEmailError("Enter your email address.");
+      return;
+    }
+    if (!EMAIL_RE.test(trimmedEmail)) {
+      setOtpEmailError("Enter a valid email address.");
+      return;
+    }
+    setOtpEmailError("");
+    isResend ? setResendBusy(true) : setOtpSending(true);
+
+    try {
+      const res = await api.post("/auth/send-otp", { email: trimmedEmail });
+      if (res.data.success) {
+        setOtpStep("otp");
+        setOtpDigits(Array(OTP_LENGTH).fill(""));
+        setOtpError("");
+        setResendCooldown(RESEND_COOLDOWN_SECONDS);
+        showToastMsg(
+          res.data.otp ? `OTP (testing): ${res.data.otp}` : `Code sent to ${maskEmail(trimmedEmail)}`
+        );
+        setTimeout(() => focusOtpBox(0), 50);
+      } else {
+        setOtpEmailError(res.data.message || "Failed to send OTP.");
+      }
+    } catch {
+      setOtpEmailError("Failed to send OTP. Please try again.");
+    } finally {
+      setOtpSending(false);
+      setResendBusy(false);
+    }
+  };
+
+  const handleOtpDigitChange = (index, rawValue) => {
+    const digit = rawValue.replace(/\D/g, "").slice(-1);
+    setOtpDigits((prev) => {
+      const next = [...prev];
+      next[index] = digit;
+      return next;
+    });
+    setOtpError("");
+    if (digit && index < OTP_LENGTH - 1) {
+      focusOtpBox(index + 1);
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace") {
+      if (!otpDigits[index] && index > 0) {
+        focusOtpBox(index - 1);
+      }
+      setOtpDigits((prev) => {
+        const next = [...prev];
+        next[index] = "";
+        return next;
+      });
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      focusOtpBox(index - 1);
+    } else if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) {
+      focusOtpBox(index + 1);
+    } else if (e.key === "Enter") {
+      verifyOtp();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    if (!pasted) return;
+    e.preventDefault();
+    const next = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((d, i) => { next[i] = d; });
+    setOtpDigits(next);
+    focusOtpBox(Math.min(pasted.length, OTP_LENGTH - 1));
+  };
+
+  const verifyOtp = useCallback(async () => {
+    const code = otpDigits.join("");
+    if (code.length !== OTP_LENGTH) {
+      setOtpError(`Enter the ${OTP_LENGTH}-digit code.`);
+      return;
+    }
+    setOtpVerifying(true);
+    setOtpError("");
+    try {
+      const res = await api.post("/auth/verify-otp", {
+        email: otpLoginEmail.trim(),
+        otp: code
+      });
+      if (res.data.success && res.data.user) {
+        localStorage.setItem("userId", res.data.user._id);
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token);
+        }
+        setOtpVerified(true);
+        login(res.data.user);
+
+        const fromPath = location.state?.from || "/";
+        const extraState = location.state ? { ...location.state } : {};
+        delete extraState.from;
+
+        setTimeout(() => {
+          resetOtpModal();
+          if (res.data.user.role === "admin") {
+            navigate("/admin");
+          } else {
+            navigate(fromPath, { state: extraState });
+          }
+        }, 900);
+      } else {
+        setOtpError(res.data.message || "Invalid code. Please try again.");
+        setOtpDigits(Array(OTP_LENGTH).fill(""));
+        focusOtpBox(0);
+      }
+    } catch {
+      setOtpError("Something went wrong. Please try again.");
+    } finally {
+      setOtpVerifying(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otpDigits, otpLoginEmail, location, login, navigate]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
@@ -124,32 +293,14 @@ export default function Login() {
 
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleLoginKeyDown}
                 autoComplete="username"
-                className="
-          w-full
-          h-12
-          rounded-xl
-          border border-slate-200
-          bg-white
-          pl-11
-          pr-4
-          text-sm
-          text-slate-800
-          placeholder:text-slate-400
-          transition-all
-          duration-200
-          outline-none
-          focus:border-blue-500
-          focus:ring-4
-          focus:ring-blue-100
-          hover:border-slate-300
-        "
+                className="w-full h-12 rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-800 placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-slate-300"
               />
             </div>
           </div>
@@ -162,52 +313,21 @@ export default function Login() {
 
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleLoginKeyDown}
                 autoComplete="current-password"
-                className="
-          w-full
-          h-12
-          rounded-xl
-          border border-slate-200
-          bg-white
-          pl-11
-          pr-11
-          text-sm
-          text-slate-800
-          placeholder:text-slate-400
-          transition-all
-          duration-200
-          outline-none
-          focus:border-blue-500
-          focus:ring-4
-          focus:ring-blue-100
-          hover:border-slate-300
-        "
+                className="w-full h-12 rounded-xl border border-slate-200 bg-white pl-11 pr-11 text-sm text-slate-800 placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-slate-300"
               />
-
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="
-          absolute
-          right-4
-          top-1/2
-          -translate-y-1/2
-          text-slate-400
-          transition-colors
-          hover:text-slate-700
-        "
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
@@ -249,144 +369,164 @@ export default function Login() {
 
       {/* OTP Modal Overlay */}
       {showOtpLogin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in-30 duration-200">
-          <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 animate-in zoom-in-95 duration-205">
-            <button
-              onClick={() => {
-                setShowOtpLogin(false);
-                setOtpSentLogin(false);
-              }}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-            >
-              <X className="h-5 w-5" />
-            </button>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) resetOtpModal(); }}
+          onKeyDown={(e) => { if (e.key === "Escape") resetOtpModal(); }}
+        >
+          <div className="relative w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl ring-1 ring-slate-200 animate-in zoom-in-95 duration-200">
 
-            <div className="flex items-center gap-2 mb-4">
-              <ShieldCheck className="h-5 w-5 text-blue-600" />
-              <h3 className="font-poppins font-bold text-slate-900 text-base">
-                Login with OTP
-              </h3>
+            {/* Header row */}
+            <div className="flex items-center justify-between mb-1">
+              {otpStep === "otp" ? (
+                <button
+                  onClick={() => {
+                    setOtpStep("email");
+                    setOtpDigits(Array(OTP_LENGTH).fill(""));
+                    setOtpError("");
+                    setResendCooldown(0);
+                  }}
+                  className="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors -ml-1 px-1 py-1 rounded-lg"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </button>
+              ) : <span />}
+              <button
+                onClick={resetOtpModal}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-50"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            {!otpSentLogin ? (
-              /* Requesting email code */
+            {/* Icon + title */}
+            <div className="flex flex-col items-center text-center gap-2 mb-6">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 border border-blue-100">
+                <ShieldCheck className="h-5 w-5 text-blue-600" />
+              </div>
+              <h3 className="font-poppins font-bold text-slate-900 text-base">
+                {otpStep === "email" ? "Login with OTP" : "Enter Verification Code"}
+              </h3>
+              <p className="text-xs text-slate-400 font-medium max-w-[280px] leading-relaxed">
+                {otpStep === "email"
+                  ? "We'll email you a one-time code to sign in — no password needed."
+                  : <>Code sent to <span className="font-bold text-slate-600">{maskEmail(otpLoginEmail.trim())}</span></>}
+              </p>
+            </div>
+
+            {otpStep === "email" ? (
+              /* --- Step 1: email --- */
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
                     Email Address
                   </label>
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={otpLoginEmail}
-                    onChange={(e) => setOtpLoginEmail(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={otpLoginEmail}
+                      onChange={(e) => { setOtpLoginEmail(e.target.value); setOtpEmailError(""); }}
+                      onKeyDown={(e) => e.key === "Enter" && sendOtp()}
+                      autoFocus
+                      className={`w-full rounded-xl border pl-10 pr-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 transition-all ${otpEmailError
+                        ? "border-red-300 focus:ring-red-100"
+                        : "border-slate-200 focus:ring-blue-100 focus:border-blue-500"
+                        }`}
+                    />
+                  </div>
+                  {otpEmailError && (
+                    <p className="text-[10px] text-red-500 font-semibold mt-1.5">{otpEmailError}</p>
+                  )}
                 </div>
                 <button
                   disabled={otpSending}
-                  onClick={async () => {
-                    if (!otpLoginEmail.trim()) {
-                      showOtpToastMsg("Please enter your email.");
-                      return;
-                    }
-                    setOtpSending(true);
-                    try {
-                      const res = await api.post("/auth/send-otp", {
-                        email: otpLoginEmail.trim()
-                      });
-                      if (res.data.success) {
-                        setOtpSentLogin(true);
-                        if (res.data.otp) {
-                          showOtpToastMsg(`OTP (Testing): ${res.data.otp}`);
-                        } else {
-                          showOtpToastMsg("OTP code sent to email.");
-                        }
-                      } else {
-                        showOtpToastMsg(res.data.message || "Failed to send OTP.");
-                      }
-                    } catch {
-                      showOtpToastMsg("Failed to send OTP.");
-                    } finally {
-                      setOtpSending(false);
-                    }
-                  }}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors"
+                  onClick={() => sendOtp()}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed py-2.5 text-xs font-bold text-white transition-colors"
                 >
-                  <Send className="h-3.5 w-3.5" />
-                  {otpSending ? "Sending code..." : "Send Verification Code"}
+                  {otpSending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Sending code...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-3.5 w-3.5" />
+                      Send Verification Code
+                    </>
+                  )}
                 </button>
               </div>
             ) : (
-              /* Verifying email code */
-              <div className="space-y-4">
+              /* --- Step 2: otp --- */
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">
-                    OTP Code
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter 6-digit code"
-                    value={otpLogin}
-                    onChange={(e) => setOtpLogin(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+                  <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+                    {otpDigits.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={(el) => (otpBoxRefs.current[idx] = el)}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        disabled={otpVerified}
+                        onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        className={`h-12 w-10 rounded-xl border text-center text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 transition-all ${otpError
+                          ? "border-red-300 focus:ring-red-100"
+                          : otpVerified
+                            ? "border-green-300 bg-green-50 text-green-700"
+                            : "border-slate-200 focus:ring-blue-100 focus:border-blue-500"
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  {otpError && (
+                    <p className="text-[10px] text-red-500 font-semibold text-center mt-2.5">{otpError}</p>
+                  )}
                 </div>
-                <button
-                  onClick={async () => {
-                      if (!otpLogin.trim()) {
-                        showOtpToastMsg("Please enter OTP.");
-                        return;
-                      }
-                      setOtpVerifying(true);
-                      try {
-                        const res = await api.post("/auth/verify-otp", {
-                          email: otpLoginEmail.trim(),
-                          otp: otpLogin.trim()
-                        });
-                        if (res.data.success && res.data.user) {
-                          localStorage.setItem("userId", res.data.user._id);
-                          if (res.data.token) {
-                            localStorage.setItem("token", res.data.token);
-                          }
-                          login(res.data.user);
-                          showOtpToastMsg("✓ Login successful");
-                          const fromPath = location.state?.from || "/";
-                          const extraState = location.state ? { ...location.state } : {};
-                          delete extraState.from;
 
-                          setTimeout(() => {
-                            setShowOtpLogin(false);
-                            setOtpSentLogin(false);
-                            setOtpLoginEmail("");
-                            setOtpLogin("");
-                            if (res.data.user.role === "admin") {
-                              navigate("/admin");
-                            } else {
-                              navigate(fromPath, { state: extraState });
-                            }
-                          }, 1200);
-                        } else {
-                          showOtpToastMsg(res.data.message || "Invalid OTP code.");
-                        }
-                      } catch {
-                        showOtpToastMsg("Failed to login with OTP.");
-                      } finally {
-                        setOtpVerifying(false);
-                      }
-                    }}
-                    disabled={otpVerifying}
-                    className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white transition-colors"
-                >
-                  {otpVerifying ? "Verifying..." : "Verify and Log In"}
-                </button>
-              </div>
-            )}
+                {otpVerified ? (
+                  <div className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-50 border border-green-200 py-2.5 text-xs font-bold text-green-700">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Verified — logging you in...
+                  </div>
+                ) : (
+                  <button
+                    onClick={verifyOtp}
+                    disabled={otpVerifying || otpDigits.join("").length !== OTP_LENGTH}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed py-2.5 text-xs font-bold text-white transition-colors"
+                  >
+                    {otpVerifying ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify and Log In"
+                    )}
+                  </button>
+                )}
 
-            {/* OTP specific status notifications */}
-            {otpLoginToast && (
-              <div className="mt-3.5 rounded-lg bg-slate-900 py-2 text-center text-[11px] text-white font-semibold">
-                {otpLoginToast}
+                {!otpVerified && (
+                  <div className="text-center text-[11px] text-slate-400 font-semibold">
+                    {resendCooldown > 0 ? (
+                      <span>Resend code in {resendCooldown}s</span>
+                    ) : (
+                      <button
+                        onClick={() => sendOtp({ isResend: true })}
+                        disabled={resendBusy}
+                        className="font-bold text-blue-600 hover:text-blue-700 disabled:text-slate-300 transition-colors"
+                      >
+                        {resendBusy ? "Resending..." : "Didn't get a code? Resend"}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
