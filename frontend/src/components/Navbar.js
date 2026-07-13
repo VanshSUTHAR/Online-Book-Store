@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { api } from "../services/api";
 import { fetchCartItems, setLocalCart } from "../services/cartService";
@@ -27,6 +27,7 @@ import {
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, login, logout } = useUser();
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -111,21 +112,27 @@ export default function Navbar() {
     };
     window.addEventListener("notificationAdded", handleNotificationAdded);
 
-    const path = window.location.pathname;
+    return () => {
+      window.removeEventListener("notificationAdded", handleNotificationAdded);
+    };
+  }, []);
+
+  useEffect(() => {
+    const path = location.pathname;
     if (path === "/all-books") {
       setActiveLink("all-books");
     } else if (path === "/cart") {
       setActiveLink("cart");
     } else if (path === "/admin") {
       setActiveLink("admin");
-    } else {
+    } else if (path === "/become-partner") {
+      setActiveLink("become-partner");
+    } else if (path === "/") {
       setActiveLink("home");
+    } else {
+      setActiveLink("");
     }
-
-    return () => {
-      window.removeEventListener("notificationAdded", handleNotificationAdded);
-    };
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
