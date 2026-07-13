@@ -14,6 +14,7 @@ const contactRoutes = require("./routes/contactRoutes");
 const oauthRoutes = require("./routes/oauthRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const cartRoutes = require("./routes/cartRoutes");
+const partnerRoutes = require("./routes/partnerRoutes");
 
 
 const app = express();
@@ -54,7 +55,8 @@ app.use(cors({
   credentials: true,
   optionsSuccessStatus: 204,
 }));
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
@@ -101,7 +103,8 @@ app.use("/api/trending", trendingRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/oauth", oauthRoutes);
 app.use("/api/payment", paymentRoutes);
-app.use("/api/cart", cartRoutes);
+app.use(process.env.NODE_ENV === 'test' ? '/api/cart' : '/api/cart', cartRoutes);
+app.use("/api/partner", partnerRoutes);
 
 // Debug test POST route (should be after all middleware/routes)
 app.post("/api/test", (req, res) => {

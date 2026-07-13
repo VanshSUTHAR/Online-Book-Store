@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/UserContext";
+import { api } from "../services/api";
 import {
     User,
     Store,
@@ -13,10 +14,6 @@ import {
     Upload,
     Check,
     AlertCircle,
-    HelpCircle,
-    TrendingUp,
-    Layers,
-    Home
 } from "lucide-react";
 
 export default function BecomePartner() {
@@ -161,10 +158,53 @@ export default function BecomePartner() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const convertFileToBase64 = (file) => {
+        if (!file || typeof file === "string") return Promise.resolve(file);
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (isStepValid()) {
-            alert("Application submitted successfully! Our team will review your application soon.");
+            try {
+                // Convert files to base64
+                const profilePictureBase64 = formData.profilePicture ? await convertFileToBase64(formData.profilePicture) : null;
+                const storeBannerBase64 = formData.storeBanner ? await convertFileToBase64(formData.storeBanner) : null;
+                const aadhaarFrontBase64 = formData.aadhaarFront ? await convertFileToBase64(formData.aadhaarFront) : null;
+                const aadhaarBackBase64 = formData.aadhaarBack ? await convertFileToBase64(formData.aadhaarBack) : null;
+                const panCardBase64 = formData.panCard ? await convertFileToBase64(formData.panCard) : null;
+
+                const payload = {
+                    ...formData,
+                    profilePicture: profilePictureBase64,
+                    storeBanner: storeBannerBase64,
+                    aadhaarFront: aadhaarFrontBase64,
+                    aadhaarBack: aadhaarBackBase64,
+                    panCard: panCardBase64,
+                    userId: user ? user._id || user.id : null
+                };
+
+                const token = localStorage.getItem("token");
+                const headers = {};
+                if (token) {
+                    headers["Authorization"] = token;
+                }
+
+                const res = await api.post("/partner/apply", payload, { headers });
+                if (res.data.success) {
+                    alert("Application submitted successfully! Our team will review your application soon.");
+                } else {
+                    alert(res.data.message || "Failed to submit application.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert(err.response?.data?.message || "An error occurred during submission. Please try again.");
+            }
         }
     };
 
@@ -263,13 +303,13 @@ export default function BecomePartner() {
                                                 disabled={!isStepAccessible(step.number)}
                                                 onClick={() => setCurrentStep(step.number)}
                                                 className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all duration-300 ${isCompleted
-                                                        ? "bg-blue-600 border-blue-600 text-white cursor-pointer hover:bg-blue-700 hover:border-blue-700"
-                                                        : isActive
-                                                            ? "bg-slate-800 border-blue-500 text-blue-500 cursor-default"
-                                                            : isStepAccessible(step.number)
-                                                                ? "bg-slate-950 border-slate-700 text-slate-300 cursor-pointer hover:border-blue-400 hover:text-blue-400"
-                                                                : "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
-                                                     }`}
+                                                    ? "bg-blue-600 border-blue-600 text-white cursor-pointer hover:bg-blue-700 hover:border-blue-700"
+                                                    : isActive
+                                                        ? "bg-slate-800 border-blue-500 text-blue-500 cursor-default"
+                                                        : isStepAccessible(step.number)
+                                                            ? "bg-slate-950 border-slate-700 text-slate-300 cursor-pointer hover:border-blue-400 hover:text-blue-400"
+                                                            : "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
+                                                    }`}
                                                 title={step.label}
                                             >
                                                 {isCompleted ? <Check className="h-4.5 w-4.5" /> : <StepIcon className="h-4.5 w-4.5" />}
@@ -588,8 +628,8 @@ export default function BecomePartner() {
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, payoutOption: "bank" }))}
                                         className={`py-2.5 text-xs font-bold rounded-xl transition-all ${formData.payoutOption === "bank"
-                                                ? "bg-white text-slate-900 shadow-sm"
-                                                : "text-slate-500 hover:text-slate-950"
+                                            ? "bg-white text-slate-900 shadow-sm"
+                                            : "text-slate-500 hover:text-slate-950"
                                             }`}
                                     >
                                         Bank Account
@@ -598,8 +638,8 @@ export default function BecomePartner() {
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, payoutOption: "upi" }))}
                                         className={`py-2.5 text-xs font-bold rounded-xl transition-all ${formData.payoutOption === "upi"
-                                                ? "bg-white text-slate-900 shadow-sm"
-                                                : "text-slate-500 hover:text-slate-950"
+                                            ? "bg-white text-slate-900 shadow-sm"
+                                            : "text-slate-500 hover:text-slate-950"
                                             }`}
                                     >
                                         UPI ID
@@ -817,8 +857,8 @@ export default function BecomePartner() {
                                     onClick={handleNext}
                                     disabled={!isStepValid()}
                                     className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-md shadow-blue-500/10 ${isStepValid()
-                                            ? "bg-blue-600 hover:bg-blue-700"
-                                            : "bg-slate-300 cursor-not-allowed shadow-none"
+                                        ? "bg-blue-600 hover:bg-blue-700"
+                                        : "bg-slate-300 cursor-not-allowed shadow-none"
                                         }`}
                                 >
                                     Next
@@ -829,8 +869,8 @@ export default function BecomePartner() {
                                     type="submit"
                                     disabled={!isStepValid()}
                                     className={`flex items-center gap-1.5 px-8 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-md shadow-blue-500/10 ${isStepValid()
-                                            ? "bg-green-600 hover:bg-green-700"
-                                            : "bg-slate-300 cursor-not-allowed shadow-none"
+                                        ? "bg-green-600 hover:bg-green-700"
+                                        : "bg-slate-300 cursor-not-allowed shadow-none"
                                         }`}
                                 >
                                     Submit Application
