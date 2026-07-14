@@ -493,7 +493,7 @@ export default function BecomePartner() {
 
                     {/* Header Card */}
                     <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl p-8 shadow-xl border border-slate-800">
-                        <h1 className="text-2xl font-extrabold tracking-tight font-playfair">
+                        <h1 className="text-2xl font-extrabold tracking-tight">
                             Book Partner Program
                         </h1>
                         <p className="mt-2 text-xs text-slate-400 leading-relaxed">
@@ -549,46 +549,48 @@ export default function BecomePartner() {
                 <div className="lg:col-span-8 bg-white rounded-3xl shadow-xl border border-slate-100/80 overflow-hidden order-1 lg:order-2 animate-in fade-in duration-300">
 
                     {/* Timeline / Progress Stepper */}
-                    <div className="bg-slate-900 px-4 sm:px-6 py-6 sm:py-8 text-white border-b border-slate-800">
-                        <div className="flex items-center justify-between max-w-lg mx-auto">
-                            {steps.map((step, idx) => {
-                                const StepIcon = step.icon;
-                                const isCompleted = currentStep > step.number;
-                                const isActive = currentStep === step.number;
-                                return (
-                                    <React.Fragment key={step.number}>
-                                        {idx > 0 && (
-                                            <div
-                                                className={`flex-1 h-0.5 mx-0.5 sm:mx-1 transition-all duration-300 ${isCompleted ? "bg-blue-500" : "bg-slate-700"
-                                                    }`}
-                                            />
-                                        )}
-                                        <div className="flex flex-col items-center relative">
-                                            <button
-                                                type="button"
-                                                disabled={!isStepAccessible(step.number)}
-                                                onClick={() => setCurrentStep(step.number)}
-                                                className={`flex h-7.5 w-7.5 sm:h-9 sm:w-9 items-center justify-center rounded-full border-2 transition-all duration-300 ${isCompleted
-                                                    ? "bg-blue-600 border-blue-600 text-white cursor-pointer hover:bg-blue-700 hover:border-blue-700"
-                                                    : isActive
-                                                        ? "bg-slate-800 border-blue-500 text-blue-500 cursor-default"
-                                                        : isStepAccessible(step.number)
-                                                            ? "bg-slate-950 border-slate-700 text-slate-300 cursor-pointer hover:border-blue-400 hover:text-blue-400"
-                                                            : "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
-                                                    }`}
-                                                title={step.label}
-                                            >
-                                                {isCompleted ? <Check className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" /> : <StepIcon className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />}
-                                            </button>
-                                        </div>
-                                    </React.Fragment>
-                                );
-                            })}
-                        </div>
-                        <div className="text-center mt-4">
-                            <span className="text-xs font-bold text-slate-400 tracking-wider uppercase">
-                                Step {currentStep} of {totalSteps} — {steps[currentStep - 1].label}
-                            </span>
+                    <div className="bg-gradient-to-br from-slate-900 to-indigo-950 px-4 sm:px-6 py-6 sm:py-8 text-white border-b border-slate-800">
+                        <div className="max-w-lg mx-auto w-full">
+                            <div className="flex items-center justify-between w-full">
+                                {steps.map((step, idx) => {
+                                    const StepIcon = step.icon;
+                                    const isCompleted = currentStep > step.number;
+                                    const isActive = currentStep === step.number;
+                                    return (
+                                        <React.Fragment key={step.number}>
+                                            {idx > 0 && (
+                                                <div
+                                                    className={`flex-1 h-0.5 mx-0.5 sm:mx-1 transition-all duration-300 ${isCompleted ? "bg-blue-500" : "bg-slate-700"
+                                                        }`}
+                                                />
+                                            )}
+                                            <div className="flex flex-col items-center relative">
+                                                <button
+                                                    type="button"
+                                                    disabled={!isStepAccessible(step.number)}
+                                                    onClick={() => setCurrentStep(step.number)}
+                                                    className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border-2 transition-all duration-300 ${isCompleted
+                                                        ? "bg-blue-600 border-blue-600 text-white cursor-pointer hover:bg-blue-700 hover:border-blue-700"
+                                                        : isActive
+                                                            ? "bg-slate-800 border-blue-500 text-blue-500 cursor-default"
+                                                            : isStepAccessible(step.number)
+                                                                ? "bg-slate-950 border-slate-700 text-slate-300 cursor-pointer hover:border-blue-400 hover:text-blue-400"
+                                                                : "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
+                                                        }`}
+                                                    title={step.label}
+                                                >
+                                                    {isCompleted ? <Check className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" /> : <StepIcon className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />}
+                                                </button>
+                                            </div>
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+                            <div className="text-center mt-4">
+                                <span className="text-xs font-bold text-slate-400 tracking-wider uppercase">
+                                    Step {currentStep} of {totalSteps} — {steps[currentStep - 1].label}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -1154,7 +1156,7 @@ export default function BecomePartner() {
                                 type="button"
                                 onClick={handlePrev}
                                 disabled={currentStep === 1}
-                                className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition-colors ${currentStep === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-50 bg-white"
+                                className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-700 transition-colors ${currentStep === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-100 hover:border-slate-400 hover:text-slate-800 bg-white"
                                     }`}
                             >
                                 <ChevronLeft className="h-4 w-4" />
