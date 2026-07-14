@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/UserContext";
 import { api } from "../services/api";
+import { useNavigate } from "react-router-dom";
 import {
     User,
     Store,
@@ -200,8 +201,14 @@ const REQUIRED_STEP_FIELDS = {
 
 export default function BecomePartner() {
     const { user } = useUser();
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 7;
+
+    // Authentication and submission states
+    const [authLoading, setAuthLoading] = useState(true);
+    const [partnerStatus, setPartnerStatus] = useState(null);
+    const [statusLoading, setStatusLoading] = useState(true);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -254,6 +261,57 @@ export default function BecomePartner() {
             }));
         }
     }, [user]);
+
+    // Check auth state with a short grace period for sync
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        const storedUserId = localStorage.getItem("userId");
+        
+        if (!token || !storedUserId) {
+            setAuthLoading(false);
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setAuthLoading(false);
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            navigate("/login", { state: { from: "/become-partner" } });
+        }
+    }, [authLoading, user, navigate]);
+
+    // Fetch and check partner status
+    useEffect(() => {
+        if (!user) {
+            setStatusLoading(false);
+            return;
+        }
+
+        async function fetchPartnerStatus() {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = token ? { Authorization: token } : {};
+                const res = await api.get("/partner/my-status", { headers });
+                if (res.data.success) {
+                    setPartnerStatus(res.data.application?.status || null);
+                    if (res.data.role === "partner" || res.data.role === "admin") {
+                        navigate("/partner-dashboard");
+                    }
+                }
+            } catch (err) {
+                console.error("Error checking partner status:", err);
+            } finally {
+                setStatusLoading(false);
+            }
+        }
+
+        fetchPartnerStatus();
+    }, [user, navigate]);
 
     const runValidator = (name, value, fd) => {
         const validator = validators[name];
@@ -385,11 +443,43 @@ export default function BecomePartner() {
 
     const convertFileToBase64 = (file) => {
         if (!file || typeof file === "string") return Promise.resolve(file);
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    const MAX_WIDTH = 1000;
+                    const MAX_HEIGHT = 1000;
+                    
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+                    resolve(dataUrl);
+                };
+                img.onerror = () => resolve(event.target.result);
+            };
+            reader.onerror = () => resolve(null);
         });
     };
 
@@ -452,8 +542,9 @@ export default function BecomePartner() {
                 alert(res.data.message || "Failed to submit application.");
             }
         } catch (err) {
-            console.error(err);
-            alert(err.response?.data?.message || "An error occurred during submission. Please try again.");
+            console.error("Submission error details:", err);
+            const errMsg = err.response?.data?.message || err.response?.data?.error || err.message || "An error occurred during submission. Please try again.";
+            alert(errMsg);
         }
     };
 
@@ -483,6 +574,36 @@ export default function BecomePartner() {
             ? "border-red-300 focus:ring-red-500/20 focus:border-red-500"
             : "border-slate-200 focus:ring-blue-500/20 focus:border-blue-500"
         }`;
+
+    if (authLoading || statusLoading) {
+        return (
+            <div className="min-h-screen bg-slate-50/50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (partnerStatus === "Pending") {
+        return (
+            <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-4">
+                    <AlertCircle className="h-12 w-12 text-blue-500 mx-auto animate-pulse" />
+                    <h2 className="text-xl font-bold text-slate-900">Application Under Review</h2>
+                    <p className="text-sm text-slate-500">
+                        Thank you for applying! Our team is currently reviewing your partner application.
+                        We will notify you by email as soon as it is processed.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all"
+                    >
+                        Back to Home
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50/50 py-6 md:py-16 px-4 sm:px-6 lg:px-8">
