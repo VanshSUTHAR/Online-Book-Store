@@ -21,41 +21,87 @@ A premium, full-featured web application for browsing, ordering, and managing bo
 
 ---
 
-## 🌟 Key Features
+## 🖥️ Frontend Pages Directory (`src/pages`)
 
-### 📖 1. Bookstore Catalog
-* **Dynamic Search & Filtration:** Advanced search, category tabs (Fiction, Tech, Manga, etc.), sorting, and filters on the [AllBooks](file:///d:/online-books/frontend/src/pages/AllBooks.js) catalog.
-* **Interactive Shopping Cart:** Real-time cart calculations, items increment/decrement, and database synchronization.
-* **Trending Feed:** Dynamic display of popular titles powered by specific popularity metrics.
+The frontend application consists of 12 main views, each mapped to a specific path in [App.js](file:///d:/online-books/frontend/src/App.js):
 
-### 🔐 2. Authentication Suite
-* **Secure JWT Login:** Clean login forms with password toggles and cookie configuration.
-* **Passwordless OTP Sign-in:** Multi-digit email verification flow with resend timers and cooldown controls.
-* **Auth Guards & Grace Periods:** Dynamic redirection logic that grants access tokens a brief grace window to load local sessions smoothly without flashing login screens.
-
-### 💼 3. Book Partner Program (Seller Enrollment)
-* **7-Step Registration Wizard:** Interactive registration system for third-party sellers:
-  1. **Info:** Personal details (auto-fills from user profile).
-  2. **Store:** Optional store title and details.
-  3. **Address:** Physical location and coordinates.
-  4. **Identity:** Aadhaar Card & PAN Card info with mandatory uploads.
-  5. **Payout:** Select Bank Account or UPI ID with validation.
-  6. **Business:** Corporate or Individual seller classification (GST / selling experience).
-  7. **Confirm:** Consent checklist.
-* **Client-Side Image Compression:** To circumvent Vercel's **4.5MB payload limitations**, uploads are automatically compressed client-side to maximum dimensions of 1000px at 60% JPEG quality using the Canvas API.
-* **Registration States:** Gracefully manages the review pipeline, showing an "Application Under Review" screen to pending applicants and redirecting approved partners to their dashboard.
-
-### 📊 4. Partner Dashboard
-* **Product Catalog Controls:** Partners can upload new book listings, configure prices, write detailed descriptions, choose genre categories, and upload book covers.
-* **Sales Analytics & Orders:** Tracking system for active orders, store metrics, and monthly payout details.
-
-### 🛡️ 5. Administrative Console
-* **Application Review Queue:** Central hub for administrators to verify partner applications, review uploaded Aadhaar/PAN cards, and approve or reject applications with custom reasons.
-* **User Management & Audit Trails:** Admin view for user accounts, logs of recent authentication occurrences, and system-wide activities.
+1. **🏠 [Books.js](file:///d:/online-books/frontend/src/pages/Books.js) (Home Page)**
+   * Displays the book showcase, trending sliders, interactive category grids, dynamic star-field backgrounds (`tsparticles`), and general bookstore headers.
+2. **📚 [AllBooks.js](file:///d:/online-books/frontend/src/pages/AllBooks.js) (Book Search & Filter)**
+   * Provides a comprehensive catalog browser containing a live text search bar, sidebar filtering (by genre, custom price sliders, rating levels), sorting parameters (price, title, rating), and instant cart addition.
+3. **🤝 [Become-partner.js](file:///d:/online-books/frontend/src/pages/Become-partner.js) (Seller Enrollment Onboarding)**
+   * A 7-step partner application registration wizard checking user details, store name, address, payout options (Bank Account / UPI ID), identity verification (Aadhaar & PAN card image upload), and corporate status.
+   * Features client-side image compression (down to 1000px maximum boundaries with 60% JPEG quality) to respect Vercel's **4.5MB payload size limits**.
+   * Integrates automatic redirection to the dashboard for approved sellers and a custom "Application Under Review" screen for pending applicants.
+4. **📊 [PartnerDashboard.js](file:///d:/online-books/frontend/src/pages/PartnerDashboard.js) (Seller Console)**
+   * Access-controlled dashboard allowing approved partners to insert new catalog items (title, author, original/discounted price, category selection, description, and image URL), inspect uploaded items, and trace cumulative sales metrics.
+5. **🛒 [Cart.js](file:///d:/online-books/frontend/src/pages/Cart.js) (Shopping Cart)**
+   * Displays selected books, quantities, and calculated item subtotals. Synchronizes the cart status with the backend database or falls back to local storage session caching.
+6. **💳 [Orders.js](file:///d:/online-books/frontend/src/pages/Orders.js) (Checkout Processing)**
+   * Form-based delivery registration page prompting for customer contact details, shipping location, and payment choices. Launches Stripe billing inputs on checkout confirmation.
+7. **👤 [Login.js](file:///d:/online-books/frontend/src/pages/Login.js) (Authentication & OTP Verification)**
+   * Double-mode portal permitting logins via email-password credentials or dynamic 6-digit email OTP keys (automated nodemailer triggers) backed by resend timers and rate cooldowns.
+8. **📝 [Register.js](file:///d:/online-books/frontend/src/pages/Register.js) (Account Registration)**
+   * Simple user onboarding page with instant field checks for full name, email, password, and mobile number.
+9. **📦 [MyOrders.js](file:///d:/online-books/frontend/src/pages/MyOrders.js) (Customer Order History)**
+   * Access portal for logged-in buyers to check their order transactions, delivery timelines, payment confirmations, and historical details.
+10. **🛡️ [Admin.js](file:///d:/online-books/frontend/src/pages/Admin.js) (Administrative Control Center)**
+    * Ultimate admin panel displaying bookstore analytics (total sales, user counts, approved sellers) and tools to review seller applications (inspect Aadhaar/PAN cards, check payout routes, and approve or reject submissions).
+11. **🚚 [Delivery.js](file:///d:/online-books/frontend/src/pages/Delivery.js) (Shipping Operations Guide)**
+    * Info page outlining courier partners, shipping speeds, shipping rates, and delivery rules.
+12. **❓ [FAQ.js](file:///d:/online-books/frontend/src/pages/FAQ.js) (Support & QA Accordion)**
+    * Accordion-style layout resolving customer issues regarding shipping times, cancellations, payment options, and return processes.
 
 ---
 
-## 📂 Project Architecture
+## 🎨 Global Layout Components (`src/components`)
+
+1. **[Navbar.js](file:///d:/online-books/frontend/src/components/Navbar.js) (Header Controller)**
+   * Premium nav header carrying active page navigation, real-time cart badge counts, notification dropdown trays, and user profile management (login/logout triggers).
+2. **[Footer.js](file:///d:/online-books/frontend/src/components/Footer.js) (Footer Layout)**
+   * Grid section carrying info columns, shopping catalogs, newsletter headers, and payment system badges.
+3. **[StripeCheckout.js](file:///d:/online-books/frontend/src/components/StripeCheckout.js) (Payment Modal)**
+   * Stripe-integrated layout that securely displays credit/debit card forms and validates charges.
+
+---
+
+## 🛠️ Backend Routing Directory (`backend/routes`)
+
+Endpoints are divided logically into specific routes:
+
+1. **🔐 [authRoutes.js](file:///d:/online-books/backend/routes/authRoutes.js)**
+   * `POST /register` - Creates a new user profile.
+   * `POST /login` - Processes passwords and issues JWTs.
+   * `POST /send-otp` / `POST /verify-otp` - OTP verification logic.
+2. **🤝 [partnerRoutes.js](file:///d:/online-books/backend/routes/partnerRoutes.js)**
+   * `POST /apply` - Submits partner application data.
+   * `GET /my-status` - Checks current seller status for active sessions.
+   * `GET /applications` - Fetches all pending/reviewed enrollments (Admin).
+   * `POST /review/:id` - Approves or rejects an applicant (Admin).
+3. **🛡️ [admin.js](file:///d:/online-books/backend/routes/admin.js)**
+   * `GET /users` - Fetches platform profiles.
+   * `GET /logs` - Fetches audit trails and admin statistics.
+4. **📖 [bookRoutes.js](file:///d:/online-books/backend/routes/bookRoutes.js)**
+   * `GET /` - Fetches standard catalog lists.
+   * `POST /` - Adds a new book option.
+   * `DELETE /:id` - Removes a book item from database.
+5. **🛒 [cartRoutes.js](file:///d:/online-books/backend/routes/cartRoutes.js)**
+   * `GET /` / `POST /` / `DELETE /:id` - Coordinates live cart updates in MongoDB.
+6. **📦 [orderRoutes.js](file:///d:/online-books/backend/routes/orderRoutes.js)**
+   * `POST /` - Registers checkout details.
+   * `GET /user-orders` - Feeds buyer history pages.
+7. **📈 [trendingRoutes.js](file:///d:/online-books/backend/routes/trendingRoutes.js)**
+   * `GET /` - Queries dynamic analytics to select popular books.
+8. **💳 [paymentRoutes.js](file:///d:/online-books/backend/routes/paymentRoutes.js)**
+   * `POST /create-payment-intent` - Validates payment values through Stripe.
+9. **📧 [contactRoutes.js](file:///d:/online-books/backend/routes/contactRoutes.js)**
+   * `POST /` - Accepts contact query logs.
+10. **🌐 [oauthRoutes.js](file:///d:/online-books/backend/routes/oauthRoutes.js)**
+    * Connects authentication redirects for Google or other social platforms.
+
+---
+
+## 📂 Project Directory Structure
 
 ```
 online-books/
@@ -77,7 +123,7 @@ online-books/
 
 ---
 
-## 🛠️ Installation & Getting Started
+## 🛠️ Setup & Running Guide
 
 ### Prerequisites
 * [Node.js](https://nodejs.org/) (v16 or higher)
@@ -125,23 +171,3 @@ online-books/
    npm start
    ```
    Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 📍 API Reference
-
-### Auth Routes (`/api/auth`)
-* `POST /login` - Log in with password
-* `POST /send-otp` - Dispatch OTP verification email
-* `POST /verify-otp` - Confirm OTP and issue JWT token
-
-### Partner Routes (`/api/partner`)
-* `POST /apply` - Submit a new partner registration application
-* `GET /my-status` - Query current seller application status
-* `GET /applications` - List all submitted applications (Admin Only)
-* `POST /review/:id` - Approve or reject applications (Admin Only)
-
-### Catalog Routes (`/api/books`)
-* `GET /` - Retrieve books catalog
-* `POST /` - Insert a new book listing
-* `DELETE /:id` - Erase a book from inventory
