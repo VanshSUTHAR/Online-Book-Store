@@ -65,25 +65,63 @@ The frontend application consists of 12 main views, each mapped to a specific pa
 
 ---
 
-## 🛠️ Backend Routing Directory (`backend/routes`)
+## ⚙️ Backend Core Specifications
 
-Endpoints are divided logically into specific routes:
+### 🖥️ 1. Server Entry Point (`backend/server.js`)
+* Configures Express middleware with payload size constraints set to **`50mb`** (via `express.json` and `express.urlencoded`) to permit Base64 string file parsing for identity proofs.
+* Sets up CORS (Cross-Origin Resource Sharing) validating dynamic host lists (like Vercel deployments and localhost ports).
+* Manages MongoDB network exceptions, executing local fallbacks if cloud SRV lookups fail.
+
+### 🛡️ 2. Token Security Gate (`backend/middleware/authMiddleware.js`)
+* Decodes request headers (`Authorization`), strips away prefix formatting (`Bearer `), and queries signatures using JWT keys.
+* Carries dev-fallback checks allowing body parameter `userId` passing for local debugging.
+
+---
+
+## 📂 Database Schema Models (`backend/models`)
+
+The application defines 10 specialized MongoDB Mongoose database models:
+
+1. **👤 [User.js](file:///d:/online-books/backend/models/User.js)**
+   * Stores customer credentials: Full Name, Email (unique index), hashed Password, and Role (`customer` | `partner` | `admin`).
+2. **🤝 [PartnerApplication.js](file:///d:/online-books/backend/models/PartnerApplication.js)**
+   * Manages applicant details: User ID relationship, Store Name/Description, address columns, Payout options (Bank/UPI details), business parameters (GSTIN, experience years), application status (`Pending` | `Approved` | `Rejected`), and Base64 images for **Aadhaar Front, Aadhaar Back, and PAN Card**.
+3. **📖 [Book.js](file:///d:/online-books/backend/models/Book.js)**
+   * Defines standard bookstore offerings: Title, Author, Description, Category (Fiction, Technology, etc.), original Price, discount Price, cover imageUrl, aggregate user rating, and creation date.
+4. **🛒 [Cart.js](file:///d:/online-books/backend/models/Cart.js)**
+   * Maps user cart items, tracking individual book models, item counts, and selection dates.
+5. **📦 [Order.js](file:///d:/online-books/backend/models/Order.js)**
+   * Logs sales profiles: Customer details, shipment location, payment references, bought items list, prices, checkout method, status, and completion time.
+6. **🔔 [Notification.js](file:///d:/online-books/backend/models/Notification.js)**
+   * Real-time notifications system logging profile alerts, system highlights, and admin alerts (like registration applications).
+7. **🪵 [ActivityLog.js](file:///d:/online-books/backend/models/ActivityLog.js)**
+   * Audits events (logins, uploads, purchases) alongside IP addresses and descriptive details.
+8. **📊 [LoginLog.js](file:///d:/online-books/backend/models/LoginLog.js)**
+   * Audits authentication metadata, keeping user relationship IDs, log-in times, and network details.
+9. **✉️ [Contact.js](file:///d:/online-books/backend/models/Contact.js)**
+   * Collects help questions: Sender name, email address, custom message, and submission dates.
+10. **📈 [TrendingBooks.js](file:///d:/online-books/backend/models/TrendingBooks.js)**
+    * Relates popular bookstore items for custom homepage sliders.
+
+---
+
+## 📍 Backend API Routing Reference (`backend/routes`)
 
 1. **🔐 [authRoutes.js](file:///d:/online-books/backend/routes/authRoutes.js)**
-   * `POST /register` - Creates a new user profile.
-   * `POST /login` - Processes passwords and issues JWTs.
-   * `POST /send-otp` / `POST /verify-otp` - OTP verification logic.
+   * `POST /register` - Register a new account.
+   * `POST /login` - Password verification and JWT delivery.
+   * `POST /send-otp` / `POST /verify-otp` - Dispatch and validation for email OTPs.
 2. **🤝 [partnerRoutes.js](file:///d:/online-books/backend/routes/partnerRoutes.js)**
-   * `POST /apply` - Submits partner application data.
-   * `GET /my-status` - Checks current seller status for active sessions.
-   * `GET /applications` - Fetches all pending/reviewed enrollments (Admin).
-   * `POST /review/:id` - Approves or rejects an applicant (Admin).
+   * `POST /apply` - Submits a partner application payload.
+   * `GET /my-status` - Checks application state.
+   * `GET /applications` - Fetches all submitted applications (Admin).
+   * `POST /review/:id` - Approves or rejects a candidate (Admin).
 3. **🛡️ [admin.js](file:///d:/online-books/backend/routes/admin.js)**
-   * `GET /users` - Fetches platform profiles.
-   * `GET /logs` - Fetches audit trails and admin statistics.
+   * `GET /users` - Lists registered accounts.
+   * `GET /logs` - Audit logs and admin analytics.
 4. **📖 [bookRoutes.js](file:///d:/online-books/backend/routes/bookRoutes.js)**
    * `GET /` - Fetches standard catalog lists.
-   * `POST /` - Adds a new book option.
+   * `POST /` - Creates a book listing.
    * `DELETE /:id` - Removes a book item from database.
 5. **🛒 [cartRoutes.js](file:///d:/online-books/backend/routes/cartRoutes.js)**
    * `GET /` / `POST /` / `DELETE /:id` - Coordinates live cart updates in MongoDB.
@@ -91,13 +129,13 @@ Endpoints are divided logically into specific routes:
    * `POST /` - Registers checkout details.
    * `GET /user-orders` - Feeds buyer history pages.
 7. **📈 [trendingRoutes.js](file:///d:/online-books/backend/routes/trendingRoutes.js)**
-   * `GET /` - Queries dynamic analytics to select popular books.
+   * `GET /` - Dynamic analytics querying popular catalog listings.
 8. **💳 [paymentRoutes.js](file:///d:/online-books/backend/routes/paymentRoutes.js)**
-   * `POST /create-payment-intent` - Validates payment values through Stripe.
+   * `POST /create-payment-intent` - Connects checkout prices to Stripe billing.
 9. **📧 [contactRoutes.js](file:///d:/online-books/backend/routes/contactRoutes.js)**
-   * `POST /` - Accepts contact query logs.
+   * `POST /` - Registers client inquiries.
 10. **🌐 [oauthRoutes.js](file:///d:/online-books/backend/routes/oauthRoutes.js)**
-    * Connects authentication redirects for Google or other social platforms.
+    * Connects login redirects for third-party profiles (Google, etc.).
 
 ---
 
@@ -125,49 +163,115 @@ online-books/
 
 ## 🛠️ Setup & Running Guide
 
-### Prerequisites
-* [Node.js](https://nodejs.org/) (v16 or higher)
-* [MongoDB](https://www.mongodb.com/) (running instance)
+### 📋 Prerequisites & Environment Verification
 
-### 1. Setup Backend
-1. Navigate to backend:
+Before proceeding, ensure you have the correct environments set up on your machine:
+* **Node.js:** Verify you have version 16.x or higher installed:
+  ```bash
+  node -v
+  npm -v
+  ```
+* **MongoDB:** You must have a MongoDB instance running.
+  * **Local Instance:** Typically runs at `mongodb://127.0.0.1:27017/onlineBookStore`. Ensure the Mongo service is running (`services.msc` on Windows or `brew services start mongodb-community` on macOS).
+  * **Cloud Instance:** Create a free database cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and copy the connection string.
+
+---
+
+### 📦 1. Detailed Backend Configuration
+
+1. **Navigate to the Backend Directory:**
    ```bash
    cd backend
    ```
-2. Install dependencies:
+
+2. **Install Server-Side Dependencies:**
+   This installs Express, Mongoose, JWT utilities, CORS middleware, Stripe SDK, and Nodemailer:
    ```bash
    npm install
    ```
-3. Create a `.env` file in the `backend/` directory:
+
+3. **Configure Environment Variables:**
+   Create a `.env` file directly under the `backend/` folder and configure the following keys:
    ```env
+   # Network settings
    PORT=5000
-   MONGO_URI=mongodb://localhost:27017/onlineBookStore
-   JWT_SECRET=your_jwt_secret
+
+   # Database settings (Replace with your Atlas URI if using cloud)
+   MONGO_URI=mongodb://127.0.0.1:27017/onlineBookStore
+
+   # JWT Signature (Choose a strong secret phrase)
+   JWT_SECRET=your_jwt_secret_key_here
+
+   # SMTP Credentials for OTP Verification & Admin Alerts
+   # Note: For Gmail, you must generate a 16-character 'App Password' from Google Account Settings -> Security -> 2-Step Verification.
    ADMIN_EMAIL=your_email@gmail.com
-   ADMIN_EMAIL_PASS=your_app_password
-   STRIPE_SECRET_KEY=your_stripe_secret_key
-   ```
-4. Start the server:
-   ```bash
-   npm start
+   ADMIN_EMAIL_PASS=your_16_digit_app_password
+
+   # Stripe Private Keys (Retrieved from Stripe Developer Dashboard -> API Keys)
+   STRIPE_SECRET_KEY=sk_test_your_secret_key
    ```
 
-### 2. Setup Frontend
-1. Navigate to frontend:
+4. **Launch the Server:**
+   You have two options for starting the backend process:
+   * **Development Mode (Auto-Reload on Code Change):**
+     ```bash
+     npm run dev
+     ```
+     *(Uses `nodemon` to automatically restart the server when files are edited.)*
+   * **Production / Standard Mode:**
+     ```bash
+     npm start
+     ```
+   On launch, you should see console logs verifying `Server running on port 5000` and `MongoDB connected`.
+
+---
+
+### 💻 2. Detailed Frontend Configuration
+
+1. **Navigate to the Frontend Directory:**
    ```bash
    cd ../frontend
    ```
-2. Install dependencies:
+
+2. **Install Client-Side Dependencies:**
+   Installs React packages, Lucide React icons, Stripe Elements, Axios, Tailwind configurations, and animated particles library:
    ```bash
    npm install
    ```
-3. Create a `.env` file in the `frontend/` directory:
+
+3. **Configure Frontend Environment:**
+   Create a `.env` file directly under the `frontend/` folder and populate it:
    ```env
+   # API Target (Points to the active backend server instance)
    REACT_APP_API_URL=http://localhost:5000
-   REACT_APP_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+
+   # Stripe Public Key (Retrieved from Stripe Developer Dashboard -> API Keys)
+   REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
    ```
-4. Run application:
-   ```bash
-   npm start
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+4. **Execute the Client Application:**
+   * **Run Local Dev Server:**
+     ```bash
+     npm start
+     ```
+     This starts the app locally. Your default web browser will automatically open [http://localhost:3000](http://localhost:3000).
+   * **Build Production Bundle:**
+     ```bash
+     npm run build
+     ```
+     *(Compiles code down to minified HTML, CSS, and JS bundles ready for static deployments like Vercel or Netlify.)*
+
+---
+
+### 🛡️ 3. Establishing the Initial Admin Account
+
+To access the administrative console `/admin` and review/approve seller requests:
+1. Register a standard user account using the website's sign-up form.
+2. Open your MongoDB interface (e.g., **MongoDB Compass** or the `mongosh` terminal).
+3. Connect to your database instance and navigate to the `onlineBookStore` database.
+4. Open the `users` collection.
+5. Find the document matching the email address you just registered.
+6. Edit the `role` field value, changing it from `"customer"` to `"admin"`.
+7. Save the document modifications.
+8. Log out from the bookstore website and log back in. The navigation bar will now show the **Admin Console** dashboard options.
+
