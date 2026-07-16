@@ -38,7 +38,6 @@ import {
   ExternalLink,
   Store,
   ShieldAlert,
-  Globe,
   Clock,
   Copy,
   Check
@@ -97,7 +96,7 @@ export default function Admin() {
     description: "",
     image: ""
   });
-  
+
   const [adminData, setAdminData] = useState({
     email: "",
     password: "",
@@ -469,7 +468,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row font-sans">
-      
+
       {/* Sidebar / Top Navigation Header */}
       <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-b md:border-b-0 md:border-r border-slate-800 sticky top-0 z-40 md:relative">
         <div>
@@ -496,63 +495,56 @@ export default function Admin() {
           <nav className="p-3 md:p-4 flex md:flex-col overflow-x-auto md:overflow-x-visible gap-2 md:space-y-1 scrollbar-none">
             <button
               onClick={() => triggerTab("addAdmin")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showAddAdmin ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showAddAdmin ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+                }`}
             >
               <UserPlus className="h-4 w-4 shrink-0" />
               <span>Add Admin</span>
             </button>
             <button
               onClick={() => triggerTab("addBook")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showAddBook ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showAddBook ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+                }`}
             >
               <PlusCircle className="h-4 w-4 shrink-0" />
               <span>Add Book</span>
             </button>
             <button
               onClick={() => triggerTab("trending")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showTrendingBooks ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showTrendingBooks ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+                }`}
             >
               <Flame className="h-4 w-4 shrink-0" />
               <span>Trending Books</span>
             </button>
             <button
               onClick={() => triggerTab("bookList")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showBookList ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showBookList ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+                }`}
             >
               <BookOpen className="h-4 w-4 shrink-0" />
               <span>View Books ({books.length})</span>
             </button>
             <button
               onClick={() => triggerTab("messages")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showMessages ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showMessages ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+                }`}
             >
               <MessageSquare className="h-4 w-4 shrink-0" />
               <span>Messages ({contactMessages.length})</span>
             </button>
             <button
               onClick={() => triggerTab("orders")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showOrders ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showOrders ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+                }`}
             >
               <ClipboardList className="h-4 w-4 shrink-0" />
               <span>Orders ({adminOrders.length})</span>
             </button>
             <button
               onClick={() => triggerTab("partnerApps")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${
-                showPartnerApps ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
-              }`}
+              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showPartnerApps ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+                }`}
             >
               <Handshake className="h-4 w-4 shrink-0" />
               <span>Partner Apps ({partnerApps.length})</span>
@@ -574,7 +566,7 @@ export default function Admin() {
 
       {/* Main Panel Content */}
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto space-y-6 md:space-y-8">
-        
+
         {/* TOP METRICS SUMMARY STRIP (KPIs) */}
         <section className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex items-center gap-3 sm:gap-4">
@@ -628,7 +620,7 @@ export default function Admin() {
 
         {/* Tab content renderer */}
         <section className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm min-h-[400px]">
-          
+
           {/* TAB 1: ADD ADMIN */}
           {showAddAdmin && !editingBook && (
             <div className="space-y-6">
@@ -982,11 +974,10 @@ export default function Admin() {
                                   }
                                 }
                               }}
-                              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 ${
-                                isTrending
+                              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 ${isTrending
                                   ? "bg-amber-100 text-amber-800 border border-amber-300"
                                   : "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white"
-                              }`}
+                                }`}
                             >
                               <Flame className={`h-3.5 w-3.5 ${isTrending ? "fill-amber-500 text-amber-500" : ""}`} />
                               <span>{isTrending ? "Trending" : "Add"}</span>
@@ -1031,13 +1022,11 @@ export default function Admin() {
                         showToastMsg("Error saving trending collection.");
                       }
                     }}
-                    className={`min-h-[350px] max-h-[60vh] overflow-y-auto rounded-3xl border-2 border-dashed flex flex-col items-center ${
-                      trendingBooks.length === 0 ? "justify-center" : "justify-start"
-                    } p-4 sm:p-6 transition-all duration-300 ${
-                      isDraggingOver
+                    className={`min-h-[350px] max-h-[60vh] overflow-y-auto rounded-3xl border-2 border-dashed flex flex-col items-center ${trendingBooks.length === 0 ? "justify-center" : "justify-start"
+                      } p-4 sm:p-6 transition-all duration-300 ${isDraggingOver
                         ? "border-blue-500 bg-blue-50/50 shadow-lg scale-102"
                         : "border-amber-400 bg-amber-50/20"
-                    }`}
+                      }`}
                   >
                     {trendingBooks.length === 0 ? (
                       <div className="text-center text-amber-600 text-xs max-w-xs space-y-2">
@@ -1143,9 +1132,8 @@ export default function Admin() {
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-3 w-3 ${
-                                  i < bk.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"
-                                }`}
+                                className={`h-3 w-3 ${i < bk.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"
+                                  }`}
                               />
                             ))}
                           </div>
@@ -1531,13 +1519,12 @@ export default function Admin() {
                             {new Date(app.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-5 py-4">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
-                              app.status === "Approved"
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${app.status === "Approved"
                                 ? "bg-green-50 text-green-700 border-green-200"
                                 : app.status === "Rejected"
-                                ? "bg-red-50 text-red-700 border-red-200"
-                                : "bg-amber-50 text-amber-700 border-amber-200"
-                            }`}>
+                                  ? "bg-red-50 text-red-700 border-red-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                              }`}>
                               {app.status}
                             </span>
                           </td>
@@ -1628,7 +1615,7 @@ export default function Admin() {
             return (
               <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
                 <div className="bg-white rounded-[32px] w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
-                  
+
                   {/* Sticky Header */}
                   <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white z-10">
                     <div>
@@ -1652,7 +1639,7 @@ export default function Admin() {
 
                   {/* Scrollable Body */}
                   <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/20">
-                    
+
                     {selectedPartnerApp.status === "Rejected" && (
                       <div className="bg-rose-50/80 border border-rose-100/80 rounded-2xl p-4 flex gap-3 text-xs text-rose-800 animate-in slide-in-from-top-2 duration-300">
                         <ShieldAlert className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
@@ -1666,7 +1653,7 @@ export default function Admin() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Left Column: Info & Business */}
                       <div className="space-y-6">
-                        
+
                         {/* Personal Information */}
                         <div className="bg-white border border-slate-100/80 p-5 rounded-3xl shadow-sm space-y-4">
                           <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
@@ -1692,7 +1679,7 @@ export default function Admin() {
                             {renderDetailField("Seller Type", selectedPartnerApp.sellerType, <User className="h-3.5 w-3.5" />, "sellerType")}
                             {renderDetailField("GST Number", selectedPartnerApp.gstNumber, <FileText className="h-3.5 w-3.5" />, "gstNumber", true)}
                             {renderDetailField("Experience (Years)", selectedPartnerApp.experience, <Briefcase className="h-3.5 w-3.5" />, "experience")}
-                            
+
                             <div className="col-span-2 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 p-3.5 rounded-2xl transition-all duration-200 hover:shadow-sm hover:border-slate-200/60 relative group">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Store Description</span>
                               <p className="text-slate-700 text-xs font-semibold leading-relaxed whitespace-pre-line">{selectedPartnerApp.storeDescription || "N/A"}</p>
