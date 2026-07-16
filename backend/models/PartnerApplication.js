@@ -31,6 +31,7 @@ const partnerApplicationSchema = new mongoose.Schema({
   gstNumber: { type: String },
   experience: { type: String },
   status: { type: String, default: "Pending" }, // Pending, Approved, Rejected
+  rejectionReason: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 

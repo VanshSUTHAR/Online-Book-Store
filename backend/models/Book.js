@@ -9,7 +9,9 @@ const bookSchema = new mongoose.Schema({
   rating: { type: Number, default: 5 },
   category: { type: String },
   description: { type: String },
-  image: { type: String }
+  image: { type: String },
+  condition: { type: String, default: "Good" },
+  originalPartnerPrice: { type: Number }
 });
 
 module.exports = mongoose.model("Book", bookSchema);

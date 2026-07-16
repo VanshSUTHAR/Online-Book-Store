@@ -25,7 +25,23 @@ import {
   Handshake,
   CheckCircle,
   XCircle,
-  Eye
+  Eye,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
+  CreditCard,
+  Briefcase,
+  FileText,
+  Download,
+  ExternalLink,
+  Store,
+  ShieldAlert,
+  Globe,
+  Clock,
+  Copy,
+  Check
 } from "lucide-react";
 
 export default function Admin() {
@@ -59,6 +75,12 @@ export default function Admin() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [appToReject, setAppToReject] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
+  const handleCopy = (text, fieldName) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("All");
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
@@ -1564,207 +1586,274 @@ export default function Admin() {
           )}
 
           {/* APPLICATION DETAILS MODAL */}
-          {selectedPartnerApp && (
-            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-              <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 md:p-8 space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
-                <button
-                  onClick={() => setSelectedPartnerApp(null)}
-                  className="absolute top-6 right-6 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+          {selectedPartnerApp && (() => {
+            const statusConfig = {
+              Pending: { bg: "bg-amber-50 text-amber-700 border-amber-200", icon: Clock, label: "Pending Review" },
+              Approved: { bg: "bg-emerald-50 text-emerald-700 border-emerald-200", icon: CheckCircle, label: "Approved" },
+              Rejected: { bg: "bg-rose-50 text-rose-700 border-rose-200", icon: XCircle, label: "Rejected" }
+            };
+            const statusInfo = statusConfig[selectedPartnerApp.status] || { bg: "bg-slate-50 text-slate-700 border-slate-200", icon: Info, label: selectedPartnerApp.status };
+            const StatusIcon = statusInfo.icon;
 
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 font-playfair">Partner Application Details</h3>
-                  <p className="text-slate-500 text-xs mt-1">Review credentials and verified uploaded documents below</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Left panel: Info */}
-                  <div className="space-y-4">
-                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Personal Information</h4>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span className="text-slate-400 block">Full Name:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.fullName}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block">Email Address:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.emailAddress}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block">Mobile Number:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.mobileNumber}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block">Date of Birth:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.dob || "N/A"}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Store & Business Info</h4>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span className="text-slate-400 block">Store Name:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.storeName || "N/A"}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block">Seller Type:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.sellerType}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block">GST Number:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.gstNumber || "N/A"}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block">Experience (Years):</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.experience || "N/A"}</span>
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-slate-400 block">Store Description:</span>
-                          <span className="font-semibold text-slate-800">{selectedPartnerApp.storeDescription || "N/A"}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Address</h4>
-                      <p className="text-xs font-semibold text-slate-800">
-                        {selectedPartnerApp.addressLine1}
-                        {selectedPartnerApp.addressLine2 && `, ${selectedPartnerApp.addressLine2}`}
-                        <br />
-                        {selectedPartnerApp.city}, {selectedPartnerApp.state} - {selectedPartnerApp.pincode}
-                        <br />
-                        {selectedPartnerApp.country}
-                      </p>
-                    </div>
+            const renderDetailField = (label, value, icon, fieldKey, canCopy = false) => {
+              const isCopied = copiedField === fieldKey;
+              return (
+                <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 p-3 rounded-2xl transition-all duration-200 hover:shadow-sm hover:border-slate-200/60 group relative flex flex-col justify-between min-h-[64px]">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      {label}
+                    </span>
+                    <span className="text-slate-800 font-semibold text-xs break-all pr-6 block">
+                      {value || "N/A"}
+                    </span>
                   </div>
-
-                  {/* Right panel: Identity documents & Payout details */}
-                  <div className="space-y-4">
-                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Payout Details</h4>
-                      {selectedPartnerApp.payoutOption === "bank" ? (
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <span className="text-slate-400 block">Bank Name:</span>
-                            <span className="font-semibold text-slate-800">{selectedPartnerApp.bankName}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block">Account Holder:</span>
-                            <span className="font-semibold text-slate-800">{selectedPartnerApp.accountHolderName}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block">Account Number:</span>
-                            <span className="font-semibold text-slate-800 font-mono">{selectedPartnerApp.accountNumber}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block">IFSC Code:</span>
-                            <span className="font-semibold text-slate-800 font-mono">{selectedPartnerApp.ifscCode}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-xs">
-                          <span className="text-slate-400 block">UPI ID:</span>
-                          <span className="font-semibold text-slate-800 font-mono">{selectedPartnerApp.upiId}</span>
-                        </div>
-                      )}
+                  {icon && (
+                    <div className="absolute right-3 top-3 text-slate-300 group-hover:text-slate-400 transition-colors">
+                      {icon}
                     </div>
-
-                    <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-4">
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Documents (Aadhaar & PAN)</h4>
-                      <div className="space-y-1 text-xs">
-                        <div>
-                          <span className="text-slate-400">Aadhaar Number: </span>
-                          <span className="font-bold text-slate-800 font-mono">{selectedPartnerApp.aadhaarNumber}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400">PAN Number: </span>
-                          <span className="font-bold text-slate-800 font-mono">{selectedPartnerApp.panNumber}</span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-3">
-                        {selectedPartnerApp.aadhaarFront && (
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 block">Aadhaar Front</span>
-                            <a href={selectedPartnerApp.aadhaarFront} target="_blank" rel="noreferrer">
-                              <img src={selectedPartnerApp.aadhaarFront} alt="Aadhaar Front" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
-                            </a>
-                          </div>
-                        )}
-                        {selectedPartnerApp.aadhaarBack && (
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 block">Aadhaar Back</span>
-                            <a href={selectedPartnerApp.aadhaarBack} target="_blank" rel="noreferrer">
-                              <img src={selectedPartnerApp.aadhaarBack} alt="Aadhaar Back" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
-                            </a>
-                          </div>
-                        )}
-                        {selectedPartnerApp.panCard && (
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 block">PAN Card</span>
-                            <a href={selectedPartnerApp.panCard} target="_blank" rel="noreferrer">
-                              <img src={selectedPartnerApp.panCard} alt="PAN Card" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        {selectedPartnerApp.profilePicture && (
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 block">Profile Picture</span>
-                            <a href={selectedPartnerApp.profilePicture} target="_blank" rel="noreferrer">
-                              <img src={selectedPartnerApp.profilePicture} alt="Profile" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
-                            </a>
-                          </div>
-                        )}
-                        {selectedPartnerApp.storeBanner && (
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 block">Store Banner</span>
-                            <a href={selectedPartnerApp.storeBanner} target="_blank" rel="noreferrer">
-                              <img src={selectedPartnerApp.storeBanner} alt="Store Banner" className="h-16 w-full object-cover rounded-lg border border-slate-200 hover:scale-105 transition-transform bg-slate-100" />
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedPartnerApp.status === "Pending" && (
-                  <div className="flex gap-4 pt-4 border-t border-slate-100 justify-end">
+                  )}
+                  {canCopy && value && value !== "N/A" && (
                     <button
-                      onClick={() => handleApprovePartner(selectedPartnerApp._id)}
-                      className="px-6 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-green-500/10"
+                      onClick={() => handleCopy(value, fieldKey)}
+                      className="absolute right-3 bottom-3 p-1 rounded bg-white hover:bg-slate-100 border border-slate-100 shadow-sm text-slate-400 hover:text-slate-600 transition-all opacity-0 group-hover:opacity-100"
+                      title="Copy to clipboard"
                     >
-                      <CheckCircle className="h-4 w-4" />
-                      Approve Application
+                      {isCopied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                     </button>
+                  )}
+                </div>
+              );
+            };
+
+            return (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                <div className="bg-white rounded-[32px] w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
+                  
+                  {/* Sticky Header */}
+                  <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white z-10">
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Partner Application Details</h3>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${statusInfo.bg}`}>
+                          <StatusIcon className="h-3.5 w-3.5" />
+                          {statusInfo.label}
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-xs mt-0.5">Submitted on {new Date(selectedPartnerApp.createdAt).toLocaleDateString()} at {new Date(selectedPartnerApp.createdAt).toLocaleTimeString()}</p>
+                    </div>
+
                     <button
-                      onClick={() => {
-                        setAppToReject(selectedPartnerApp._id);
-                        setShowRejectModal(true);
-                      }}
-                      className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-red-500/10"
+                      onClick={() => setSelectedPartnerApp(null)}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-all"
                     >
-                      <XCircle className="h-4 w-4" />
-                      Reject Application
+                      <X className="h-5 w-5" />
                     </button>
                   </div>
-                )}
+
+                  {/* Scrollable Body */}
+                  <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/20">
+                    
+                    {selectedPartnerApp.status === "Rejected" && (
+                      <div className="bg-rose-50/80 border border-rose-100/80 rounded-2xl p-4 flex gap-3 text-xs text-rose-800 animate-in slide-in-from-top-2 duration-300">
+                        <ShieldAlert className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold block text-sm text-rose-900 mb-0.5">Application Rejected</span>
+                          <span className="text-rose-700">{selectedPartnerApp.rejectionReason || "Provided details were incomplete or invalid."}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Left Column: Info & Business */}
+                      <div className="space-y-6">
+                        
+                        {/* Personal Information */}
+                        <div className="bg-white border border-slate-100/80 p-5 rounded-3xl shadow-sm space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <User className="h-4 w-4 text-violet-500" />
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Personal Information</h4>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {renderDetailField("Full Name", selectedPartnerApp.fullName, <User className="h-3.5 w-3.5" />, "fullName")}
+                            {renderDetailField("Email Address", selectedPartnerApp.emailAddress, <Mail className="h-3.5 w-3.5" />, "emailAddress", true)}
+                            {renderDetailField("Mobile Number", selectedPartnerApp.mobileNumber, <Phone className="h-3.5 w-3.5" />, "mobileNumber", true)}
+                            {renderDetailField("Date of Birth", selectedPartnerApp.dob, <Calendar className="h-3.5 w-3.5" />, "dob")}
+                          </div>
+                        </div>
+
+                        {/* Store & Business Info */}
+                        <div className="bg-white border border-slate-100/80 p-5 rounded-3xl shadow-sm space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <Store className="h-4 w-4 text-sky-500" />
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Store & Business Info</h4>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {renderDetailField("Store Name", selectedPartnerApp.storeName, <Store className="h-3.5 w-3.5" />, "storeName")}
+                            {renderDetailField("Seller Type", selectedPartnerApp.sellerType, <User className="h-3.5 w-3.5" />, "sellerType")}
+                            {renderDetailField("GST Number", selectedPartnerApp.gstNumber, <FileText className="h-3.5 w-3.5" />, "gstNumber", true)}
+                            {renderDetailField("Experience (Years)", selectedPartnerApp.experience, <Briefcase className="h-3.5 w-3.5" />, "experience")}
+                            
+                            <div className="col-span-2 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 p-3.5 rounded-2xl transition-all duration-200 hover:shadow-sm hover:border-slate-200/60 relative group">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Store Description</span>
+                              <p className="text-slate-700 text-xs font-semibold leading-relaxed whitespace-pre-line">{selectedPartnerApp.storeDescription || "N/A"}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Address */}
+                        <div className="bg-white border border-slate-100/80 p-5 rounded-3xl shadow-sm space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <MapPin className="h-4 w-4 text-rose-500" />
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Address</h4>
+                          </div>
+                          <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl space-y-2 relative group hover:border-slate-200/60 hover:shadow-sm transition-all">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Registration Address</span>
+                            <div className="text-xs text-slate-800 font-semibold space-y-1">
+                              <p>{selectedPartnerApp.addressLine1}</p>
+                              {selectedPartnerApp.addressLine2 && <p>{selectedPartnerApp.addressLine2}</p>}
+                              <p className="text-slate-600 font-medium">
+                                {selectedPartnerApp.city}, {selectedPartnerApp.state} - {selectedPartnerApp.pincode}
+                              </p>
+                              <p className="text-slate-500 font-medium">{selectedPartnerApp.country}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Right Column: Payout & Documents */}
+                      <div className="space-y-6">
+
+                        {/* Payout Details */}
+                        <div className="bg-white border border-slate-100/80 p-5 rounded-3xl shadow-sm space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <CreditCard className="h-4 w-4 text-emerald-500" />
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Payout Details</h4>
+                          </div>
+                          {selectedPartnerApp.payoutOption === "bank" ? (
+                            <div className="grid grid-cols-2 gap-4">
+                              {renderDetailField("Bank Name", selectedPartnerApp.bankName, <Store className="h-3.5 w-3.5" />, "bankName")}
+                              {renderDetailField("Account Holder", selectedPartnerApp.accountHolderName, <User className="h-3.5 w-3.5" />, "accountHolderName")}
+                              {renderDetailField("Account Number", selectedPartnerApp.accountNumber, <CreditCard className="h-3.5 w-3.5" />, "accountNumber", true)}
+                              {renderDetailField("IFSC Code", selectedPartnerApp.ifscCode, <FileText className="h-3.5 w-3.5" />, "ifscCode", true)}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1">
+                              {renderDetailField("UPI ID", selectedPartnerApp.upiId, <CreditCard className="h-3.5 w-3.5" />, "upiId", true)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Verification Documents */}
+                        <div className="bg-white border border-slate-100/80 p-5 rounded-3xl shadow-sm space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <FileText className="h-4 w-4 text-amber-500" />
+                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Documents</h4>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {renderDetailField("Aadhaar Number", selectedPartnerApp.aadhaarNumber, <FileText className="h-3.5 w-3.5" />, "aadhaarNumber", true)}
+                            {renderDetailField("PAN Number", selectedPartnerApp.panNumber, <FileText className="h-3.5 w-3.5" />, "panNumber", true)}
+                          </div>
+
+                          {/* Image Thumbnails Gallery */}
+                          <div className="space-y-3 pt-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Uploaded Files</span>
+                            <div className="grid grid-cols-3 gap-3">
+                              {[
+                                { src: selectedPartnerApp.aadhaarFront, label: "Aadhaar Front" },
+                                { src: selectedPartnerApp.aadhaarBack, label: "Aadhaar Back" },
+                                { src: selectedPartnerApp.panCard, label: "PAN Card" }
+                              ].map((doc, idx) => doc.src && (
+                                <div key={idx} className="group relative rounded-xl border border-slate-200 bg-slate-900 aspect-[16/10] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                  <img src={doc.src} alt={doc.label} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                  <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-2 text-center">
+                                    <span className="text-white text-[9px] font-bold uppercase tracking-wider mb-1.5">{doc.label}</span>
+                                    <div className="flex gap-1.5">
+                                      <a href={doc.src} target="_blank" rel="noreferrer" className="p-1.5 bg-white/95 rounded-lg text-slate-800 hover:bg-white shadow transition-all hover:scale-105" title="Open Fullscreen">
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                      </a>
+                                      <a href={doc.src} download={`${doc.label.toLowerCase().replace(/\s+/g, '_')}_${selectedPartnerApp.fullName}.png`} className="p-1.5 bg-white/95 rounded-lg text-slate-800 hover:bg-white shadow transition-all hover:scale-105" title="Download">
+                                        <Download className="h-3.5 w-3.5" />
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Additional media if present (Profile/Banner) */}
+                            {(selectedPartnerApp.profilePicture || selectedPartnerApp.storeBanner) && (
+                              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                                {[
+                                  { src: selectedPartnerApp.profilePicture, label: "Profile Picture" },
+                                  { src: selectedPartnerApp.storeBanner, label: "Store Banner" }
+                                ].map((doc, idx) => doc.src && (
+                                  <div key={idx} className="group relative rounded-xl border border-slate-200 bg-slate-900 aspect-[16/10] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                    <img src={doc.src} alt={doc.label} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                    <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-2 text-center">
+                                      <span className="text-white text-[9px] font-bold uppercase tracking-wider mb-1.5">{doc.label}</span>
+                                      <div className="flex gap-1.5">
+                                        <a href={doc.src} target="_blank" rel="noreferrer" className="p-1.5 bg-white/95 rounded-lg text-slate-800 hover:bg-white shadow transition-all hover:scale-105" title="Open Fullscreen">
+                                          <ExternalLink className="h-3.5 w-3.5" />
+                                        </a>
+                                        <a href={doc.src} download={`${doc.label.toLowerCase().replace(/\s+/g, '_')}_${selectedPartnerApp.fullName}.png`} className="p-1.5 bg-white/95 rounded-lg text-slate-800 hover:bg-white shadow transition-all hover:scale-105" title="Download">
+                                          <Download className="h-3.5 w-3.5" />
+                                        </a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sticky Footer Action Bar */}
+                  <div className="px-8 py-5 border-t border-slate-100 flex justify-end gap-3 shrink-0 bg-white z-10">
+                    {selectedPartnerApp.status === "Pending" ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setAppToReject(selectedPartnerApp._id);
+                            setShowRejectModal(true);
+                          }}
+                          className="px-6 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                        >
+                          <XCircle className="h-4 w-4 text-rose-500" />
+                          Reject Application
+                        </button>
+                        <button
+                          onClick={() => handleApprovePartner(selectedPartnerApp._id)}
+                          className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/10 active:scale-98"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Approve Application
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedPartnerApp(null)}
+                        className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition-all shadow-md"
+                      >
+                        Close Details
+                      </button>
+                    )}
+                  </div>
+
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* REJECT REASON INPUT MODAL */}
           {showRejectModal && (
             <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 p-6 space-y-4 relative animate-in fade-in zoom-in-95 duration-200">
+              <div className="bg-white rounded-[24px] w-full max-w-md shadow-2xl border border-slate-100 p-6 space-y-4 relative animate-in fade-in zoom-in-95 duration-200">
                 <button
                   onClick={() => {
                     setShowRejectModal(false);
@@ -1788,15 +1877,9 @@ export default function Admin() {
                     placeholder="e.g. Identity proof Aadhaar image is blurry or expired. Please upload a clear high-res photo."
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all placeholder:text-slate-400"
                   />
                   <div className="flex gap-3 justify-end">
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-md"
-                    >
-                      Confirm Rejection
-                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -1804,9 +1887,15 @@ export default function Admin() {
                         setRejectionReason("");
                         setAppToReject(null);
                       }}
-                      className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors"
+                      className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors"
                     >
                       Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors shadow-md shadow-rose-500/10"
+                    >
+                      Confirm Rejection
                     </button>
                   </div>
                 </form>

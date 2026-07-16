@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
 // Add a new book (auto-calculate discount)
 router.post("/", async (req, res) => {
   try {
-    const { title, author, price, originalPrice, rating, category, description, image } = req.body;
+    const { title, author, price, originalPrice, rating, category, description, image, condition, originalPartnerPrice } = req.body;
     let discount = req.body.discount;
     if (originalPrice && price) {
       discount = Math.round(((originalPrice - price) / originalPrice) * 100);
@@ -37,7 +37,9 @@ router.post("/", async (req, res) => {
       rating: rating || 5,
       category,
       description,
-      image
+      image,
+      condition: condition || "Good",
+      originalPartnerPrice
     });
     await newBook.save();
     res.json({ message: "Book added successfully", book: newBook });
@@ -64,7 +66,7 @@ router.delete("/:id", async (req, res) => {
 // Update/edit a book by MongoDB _id
 router.put("/:id", async (req, res) => {
   try {
-    const { title, author, price, originalPrice, rating, category, description, image, discount } = req.body;
+    const { title, author, price, originalPrice, rating, category, description, image, discount, condition, originalPartnerPrice } = req.body;
     let updatedDiscount = discount;
     if (originalPrice && price) {
       updatedDiscount = Math.round(((originalPrice - price) / originalPrice) * 100);
@@ -80,7 +82,9 @@ router.put("/:id", async (req, res) => {
         rating,
         category,
         description,
-        image
+        image,
+        condition,
+        originalPartnerPrice
       },
       { new: true }
     );
