@@ -80,11 +80,13 @@ export default function PartnerDashboard() {
     }
   }, [user, navigate]);
 
-  // Fetch partner's books (or standard catalog for demo purposes)
+  // Fetch only this partner's listed books
   useEffect(() => {
     async function fetchMyBooks() {
       try {
-        const res = await api.get("/books");
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: token } : {};
+        const res = await api.get("/books/my", { headers });
         setBooks(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching books:", err);
@@ -171,7 +173,9 @@ export default function PartnerDashboard() {
         originalPrice: formData.originalPrice ? Number(formData.originalPrice) : null,
       };
 
-      await api.post("/books", bookPayload);
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: token } : {};
+      await api.post("/books", bookPayload, { headers });
       Swal.fire("Success!", "Book listed successfully in bookstore.", "success");
       setFormData({
         title: "",
@@ -183,9 +187,9 @@ export default function PartnerDashboard() {
         image: "",
         condition: ""
       });
-      // Refresh list
-      const res = await api.get("/books");
-      setBooks(Array.isArray(res.data) ? res.data : []);
+      // Refresh only this partner's book list
+      const refreshRes = await api.get("/books/my", { headers });
+      setBooks(Array.isArray(refreshRes.data) ? refreshRes.data : []);
     } catch (error) {
       Swal.fire("Error", "Could not list book.", "error");
     }
@@ -322,7 +326,7 @@ export default function PartnerDashboard() {
               <Package className="h-6 w-6" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Listings</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">My Listings</span>
               <span className="text-2xl font-black text-slate-900 font-poppins">{books.length} Books</span>
             </div>
           </div>
@@ -364,14 +368,14 @@ export default function PartnerDashboard() {
           {/* List Books Panel */}
           <div className="xl:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 font-playfair">Store Inventory</h3>
-              <p className="text-slate-500 text-xs mt-0.5">Manage and review active books displayed in the bookstore</p>
+              <h3 className="text-lg font-bold text-slate-900 font-playfair">My Listings</h3>
+              <p className="text-slate-500 text-xs mt-0.5">Books you have listed in the bookstore</p>
             </div>
 
             {/* Mobile card view */}
             <div className="block sm:hidden space-y-3">
               {books.length === 0 ? (
-                <p className="text-center text-slate-400 py-8 text-sm">No books listed in store catalog yet.</p>
+                <p className="text-center text-slate-400 py-8 text-sm">You haven't listed any books yet. Use the form to add your first listing.</p>
               ) : books.map((bk) => (
                 <div key={bk._id} className="flex items-center gap-3 border border-slate-100 rounded-2xl p-3 bg-slate-50/50">
                   <img src={bk.image} alt={bk.title} className="w-10 h-14 object-cover rounded-lg shadow-sm bg-slate-100 shrink-0" />
@@ -448,7 +452,7 @@ export default function PartnerDashboard() {
                   {books.length === 0 && (
                     <tr>
                       <td colSpan="3" className="px-4 py-8 text-center text-slate-400">
-                        No books listed in store catalog yet.
+                        You haven't listed any books yet.
                       </td>
                     </tr>
                   )}
