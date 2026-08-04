@@ -11,7 +11,8 @@ const bookSchema = new mongoose.Schema({
   description: { type: String },
   image: { type: String },
   condition: { type: String, default: "Good" },
-  originalPartnerPrice: { type: Number }
+  originalPartnerPrice: { type: Number },
+  addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
 });
 
 // Indexes — dramatically speed up filtered queries (category, text search)
