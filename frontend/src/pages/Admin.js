@@ -44,15 +44,15 @@ import {
 } from "lucide-react";
 
 export default function Admin() {
-  const { user } = useUser();
+  const { user, isAuthLoading } = useUser();
   const navigate = useNavigate();
 
   // Redirect if not admin
   useEffect(() => {
-    if (!user || user.role !== "admin") {
+    if (!isAuthLoading && (!user || user.role !== "admin")) {
       navigate("/", { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isAuthLoading, navigate]);
 
   // Sidebar Tabs
   const [showAddAdmin, setShowAddAdmin] = useState(true);

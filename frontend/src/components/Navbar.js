@@ -68,7 +68,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    if (!userId) return;
+    if (!userId || user) return;
 
     async function fetchUser() {
       try {
@@ -85,7 +85,7 @@ export default function Navbar() {
     }
     fetchUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const stored = localStorage.getItem("notifications");

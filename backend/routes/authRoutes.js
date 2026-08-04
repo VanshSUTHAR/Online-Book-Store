@@ -185,6 +185,23 @@ router.get("/admins", async (req, res) => {
   }
 });
 
+// ================= DELETE ADMIN =================
+router.delete("/admins/:id", async (req, res) => {
+  try {
+    const adminId = req.params.id;
+    const admin = await User.findById(adminId);
+
+    if (!admin || admin.role !== "admin") {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    await User.findByIdAndDelete(adminId);
+    return res.json({ message: "Admin removed successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
 // ================= REGISTER =================
 router.post("/register", async (req, res) => {
   try {
