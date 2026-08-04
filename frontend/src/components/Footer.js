@@ -212,7 +212,7 @@ export default function Footer() {
 
                 <span>Made by </span>
                 <a
-                  href="https://devstudiooffical.netlify.app/"
+                  href="vanshsuthar022.netlify.app/"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
