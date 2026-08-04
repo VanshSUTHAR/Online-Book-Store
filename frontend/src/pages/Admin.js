@@ -85,6 +85,8 @@ export default function Admin() {
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("All");
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [bookSearchTerm, setBookSearchTerm] = useState("");
+  const [bookCategoryFilter, setBookCategoryFilter] = useState("All");
 
   // Form States
   const [formData, setFormData] = useState({
@@ -1127,12 +1129,78 @@ export default function Admin() {
 
           {/* TAB 4: VIEW BOOKS CATALOG TABLE LAYOUT */}
           {showBookList && !editingBook && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="border-b border-slate-100 pb-4">
-                <h2 className="font-playfair text-2xl font-black text-slate-900">Catalog Database</h2>
-                <p className="text-slate-500 text-xs mt-1">Review active books, selling prices, categories, and ratings database logs</p>
+            <div className="space-y-5 animate-fade-in">
+              {/* Header */}
+              <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h2 className="font-playfair text-xl sm:text-2xl font-black text-slate-900">Catalog Database</h2>
+                  <p className="text-slate-500 text-xs mt-1">Review active books, selling prices, categories, and ratings database logs</p>
+                </div>
+                <button
+                  onClick={fetchBooks}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors self-start"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Refresh
+                </button>
               </div>
 
+              {/* Search & Filter Strip */}
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60">
+                {/* Search Input */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by title or author..."
+                    value={bookSearchTerm}
+                    onChange={(e) => setBookSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  />
+                  {bookSearchTerm && (
+                    <button
+                      onClick={() => setBookSearchTerm("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Filter */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Filter className="h-4 w-4 text-slate-400 shrink-0" />
+                  <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Category:</span>
+                  <select
+                    value={bookCategoryFilter}
+                    onChange={(e) => setBookCategoryFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-full sm:w-auto"
+                  >
+                    <option value="All">All Categories</option>
+                    <option value="Fiction">Fiction</option>
+                    <option value="Non-Fiction">Non-Fiction</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Business">Business</option>
+                    <option value="Self-Help">Self-Help</option>
+                    <option value="Children">Children</option>
+                    <option value="Academic">Academic</option>
+                    <option value="Manga">Manga</option>
+                  </select>
+                </div>
+
+                {/* Results Count */}
+                {(bookSearchTerm || bookCategoryFilter !== "All") && (
+                  <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap shrink-0">
+                    {books.filter(bk => {
+                      const q = bookSearchTerm.toLowerCase();
+                      const matchesSearch = !q || bk.title?.toLowerCase().includes(q) || bk.author?.toLowerCase().includes(q);
+                      const matchesCat = bookCategoryFilter === "All" || bk.category === bookCategoryFilter;
+                      return matchesSearch && matchesCat;
+                    }).length} result(s)
+                  </span>
+                )}
+              </div>
+
+              {/* Table */}
               <div className="overflow-x-auto border border-slate-200 rounded-2xl sm:rounded-3xl shadow-sm bg-white">
                 <table className="min-w-full divide-y divide-slate-100 text-left">
                   <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -1145,65 +1213,92 @@ export default function Admin() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                    {books.map((bk) => (
-                      <tr key={bk._id} className="hover:bg-slate-50/40 transition-colors">
-                        <td className="px-6 py-4 flex items-center gap-3">
-                          <img src={bk.image} alt={bk.title} className="w-9 h-12 rounded object-cover shadow-sm bg-slate-100 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="font-bold text-slate-900 truncate max-w-[200px] sm:max-w-xs">{bk.title}</p>
-                            <p className="text-slate-400 text-[10px] mt-0.5">by {bk.author}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-block text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            {bk.category || "General"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-baseline gap-1 font-bold text-slate-900">
-                            <span>₹{bk.price}</span>
-                            {bk.originalPrice && (
-                              <span className="text-slate-400 text-[10px] line-through font-semibold">
-                                ₹{bk.originalPrice}
-                              </span>
+                    {books
+                      .filter((bk) => {
+                        const q = bookSearchTerm.toLowerCase();
+                        const matchesSearch = !q || bk.title?.toLowerCase().includes(q) || bk.author?.toLowerCase().includes(q);
+                        const matchesCat = bookCategoryFilter === "All" || bk.category === bookCategoryFilter;
+                        return matchesSearch && matchesCat;
+                      })
+                      .map((bk) => (
+                        <tr key={bk._id} className="hover:bg-slate-50/40 transition-colors">
+                          <td className="px-6 py-4 flex items-center gap-3">
+                            <img src={bk.image} alt={bk.title} className="w-9 h-12 rounded object-cover shadow-sm bg-slate-100 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-900 truncate max-w-[200px] sm:max-w-xs">{bk.title}</p>
+                              <p className="text-slate-400 text-[10px] mt-0.5">by {bk.author}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-block text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              {bk.category || "General"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-baseline gap-1 font-bold text-slate-900">
+                              <span>₹{bk.price}</span>
+                              {bk.originalPrice && (
+                                <span className="text-slate-400 text-[10px] line-through font-semibold">
+                                  ₹{bk.originalPrice}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-3 w-3 ${i < bk.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"
+                                    }`}
+                                />
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="inline-flex gap-2">
+                              <button
+                                onClick={() => handleEditBook(bk)}
+                                className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 p-2 rounded-lg transition-colors"
+                                title="Edit book details"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteBook(bk._id)}
+                                className="text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 p-2 rounded-lg transition-colors"
+                                title="Delete book from database"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+
+                    {/* Empty state */}
+                    {books.filter((bk) => {
+                      const q = bookSearchTerm.toLowerCase();
+                      const matchesSearch = !q || bk.title?.toLowerCase().includes(q) || bk.author?.toLowerCase().includes(q);
+                      const matchesCat = bookCategoryFilter === "All" || bk.category === bookCategoryFilter;
+                      return matchesSearch && matchesCat;
+                    }).length === 0 && (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-14 text-center">
+                          <div className="flex flex-col items-center gap-2 text-slate-400">
+                            <Search className="h-8 w-8 text-slate-300" />
+                            <p className="font-semibold text-sm text-slate-500">
+                              {books.length === 0 ? "Catalog database is empty." : "No books match your search."}
+                            </p>
+                            {(bookSearchTerm || bookCategoryFilter !== "All") && (
+                              <button
+                                onClick={() => { setBookSearchTerm(""); setBookCategoryFilter("All"); }}
+                                className="text-xs text-blue-600 hover:underline font-semibold mt-1"
+                              >
+                                Clear filters
+                              </button>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-3 w-3 ${i < bk.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"
-                                  }`}
-                              />
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="inline-flex gap-2">
-                            <button
-                              onClick={() => handleEditBook(bk)}
-                              className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 p-2 rounded-lg transition-colors"
-                              title="Edit book details"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteBook(bk._id)}
-                              className="text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 p-2 rounded-lg transition-colors"
-                              title="Delete book from database"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {books.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-12 text-center text-slate-400">
-                          Catalog database is empty.
                         </td>
                       </tr>
                     )}
@@ -1212,6 +1307,7 @@ export default function Admin() {
               </div>
             </div>
           )}
+
 
           {/* TAB 5: SUPPORT TICKETS & CUSTOMER MESSAGES */}
           {showMessages && !showAddAdmin && !editingBook && (
