@@ -226,10 +226,10 @@ export default function Footer() {
         <div className="mt-12 border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© 2026 Online Book Store. Crafted with elegance for global readers.</p>
           <div className="flex space-x-6">
-            <a href="/faq" className="hover:text-slate-400 transition-colors">
+            <a href="/privacy-policy" className="hover:text-slate-400 transition-colors">
               Privacy Policy
             </a>
-            <a href="/delivery" className="hover:text-slate-400 transition-colors">
+            <a href="/terms-of-use" className="hover:text-slate-400 transition-colors">
               Terms of Use
             </a>
           </div>

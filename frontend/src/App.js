@@ -14,6 +14,8 @@ import FAQ from "./pages/FAQ";
 import MyOrders from "./pages/MyOrders";
 import BecomePartner from "./pages/Become-partner";
 import PartnerDashboard from "./pages/PartnerDashboard";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
 import { UserProvider } from "./context/UserContext";
 
 function ScrollToTop() {
@@ -46,6 +48,8 @@ function AppRoutes() {
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/become-partner" element={<BecomePartner />} />
           <Route path="/partner-dashboard" element={<PartnerDashboard />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-use" element={<TermsOfUse />} />
         </Routes>
       </main>
       {!isAdminPage && <Footer />}
