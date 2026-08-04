@@ -42,16 +42,24 @@ router.post("/change-password", async (req, res) => {
 // In-memory OTP store (for demo; use Redis or DB in production)
 const otpStore = {};
 
-// Nodemailer setup for Gmail
+// Nodemailer setup for Gmail SMTP
 const getTransporter = () => {
   const user = (process.env.ADMIN_EMAIL || "").trim();
   const pass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
 
-  if (!user || !pass) return null;
+  if (!user || !pass) {
+    console.warn("[OTP] SMTP Credentials missing in environment variables!");
+    return null;
+  }
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // SSL
     auth: { user, pass },
+    tls: {
+      rejectUnauthorized: false,
+    },
   });
 };
 
@@ -72,7 +80,7 @@ router.post("/send-otp", async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "No registered user found with this email address",
       });
     }
 
@@ -88,65 +96,122 @@ router.post("/send-otp", async (req, res) => {
     let emailSent = false;
     let emailErrorMsg = null;
     const transporter = getTransporter();
+    const adminEmail = (process.env.ADMIN_EMAIL || "").trim();
 
     if (transporter) {
       try {
-        await transporter.sendMail({
-          from: `"Online Book Store" <${process.env.ADMIN_EMAIL.trim()}>`,
+        const info = await transporter.sendMail({
+          from: `Online Book Store <${adminEmail}>`,
           to: email,
-          subject: "Verify Your Login - Online Book Store",
+          subject: "🔑 Your Login Verification Code - Online Book Store",
+          text: `Hello ${user.name || "Reader"},\n\nYour One-Time Password (OTP) for login to Online Book Store is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this code, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,
           html: `
-          <div style="font-family:Arial,sans-serif;padding:20px;background:#f5f5f5;">
-            <div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:10px;">
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verification Code - Online Book Store</title>
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f1f5f9; padding: 40px 10px;">
+              <tr>
+                <td align="center">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                    
+                    <!-- Header -->
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); padding: 36px 30px; text-align: center;">
+                        <div style="font-size: 42px; margin-bottom: 8px;">📚</div>
+                        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">Online Book Store</h1>
+                        <p style="color: #c7d2fe; font-size: 13px; font-weight: 500; margin: 6px 0 0 0; letter-spacing: 0.5px;">Your Portal to Endless Stories</p>
+                      </td>
+                    </tr>
 
-              <h2 style="color:#2563eb;">📚 Online Book Store</h2>
+                    <!-- Body Content -->
+                    <tr>
+                      <td style="padding: 40px 36px 30px 36px;">
+                        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 12px;">
+                          Hello ${user.name ? user.name : "Book Lover"}, 👋
+                        </h2>
+                        <p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 24px 0;">
+                          We received a request to access your account. Please use the One-Time Password (OTP) below to complete your login:
+                        </p>
 
-              <p>Hello <strong>${user.name || "Reader"}</strong>,</p>
+                        <!-- OTP Box -->
+                        <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 28px 20px; text-align: center; margin-bottom: 24px;">
+                          <span style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 10px;">
+                            One-Time Verification Code
+                          </span>
+                          <div style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 900; letter-spacing: 10px; color: #4338ca; text-shadow: 0 1px 2px rgba(0,0,0,0.05); margin: 5px 0;">
+                            ${otp}
+                          </div>
+                          <div style="display: inline-block; background-color: #fef3c7; color: #92400e; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 12px;">
+                            ⏱️ Valid for 10 minutes
+                          </div>
+                        </div>
 
-              <p>Your One-Time Password (OTP) for login is:</p>
+                        <!-- Security Notice -->
+                        <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 24px;">
+                          <p style="font-size: 12px; line-height: 1.5; color: #1e40af; margin: 0;">
+                            <strong>🛡️ Security Tip:</strong> Never share this code with anyone. Our support team will never ask for your verification code.
+                          </p>
+                        </div>
 
-              <div style="text-align:center;margin:30px 0;">
-                <span style="
-                  font-size:32px;
-                  font-weight:bold;
-                  letter-spacing:8px;
-                  color:#2563eb;
-                ">
-                  ${otp}
-                </span>
-              </div>
+                        <p style="font-size: 13px; color: #94a3b8; line-height: 1.5; margin: 0;">
+                          If you did not initiate this login request, no action is needed. Your account remains safe and secure.
+                        </p>
+                      </td>
+                    </tr>
 
-              <p>This OTP will expire in <strong>10 minutes</strong>.</p>
+                    <!-- Divider -->
+                    <tr>
+                      <td style="padding: 0 36px;">
+                        <div style="border-top: 1px solid #f1f5f9;"></div>
+                      </td>
+                    </tr>
 
-              <p>If you didn't request this login, you can safely ignore this email.</p>
+                    <!-- Footer -->
+                    <tr>
+                      <td style="padding: 24px 36px 36px 36px; text-align: center; background-color: #ffffff;">
+                        <p style="font-size: 13px; font-weight: 600; color: #475569; margin: 0 0 6px 0;">
+                          Happy Reading! 📖
+                        </p>
+                        <p style="font-size: 12px; color: #94a3b8; margin: 0 0 12px 0;">
+                          Online Book Store Team
+                        </p>
+                        <p style="font-size: 11px; color: #cbd5e1; margin: 0;">
+                          © ${new Date().getFullYear()} Online Book Store. All rights reserved.
+                        </p>
+                      </td>
+                    </tr>
 
-              <hr>
-
-              <p style="font-size:13px;color:#777;">
-                Regards,<br>
-                Online Book Store Team
-              </p>
-
-            </div>
-          </div>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
           `,
         });
         emailSent = true;
-        console.log(`[OTP] Email successfully sent to ${email}`);
+        console.log(`[OTP] Email successfully sent to ${email}. Response: ${info.response}`);
       } catch (mailErr) {
         console.error("[OTP] Gmail send failed:", mailErr);
         emailErrorMsg = mailErr.message;
       }
+    } else {
+      emailErrorMsg = "SMTP server not configured";
     }
 
     return res.json({
       success: true,
       message: emailSent
-        ? "OTP sent to your email!"
-        : "OTP generated successfully",
+        ? `Verification code sent to ${email}`
+        : `OTP generated (Email delivery issue: ${emailErrorMsg})`,
       emailSent,
       emailError: emailErrorMsg,
-      otp, // Always return OTP so user can view/autofill on UI
+      otp,
     });
   } catch (error) {
     console.error("SEND OTP ERROR:", error);
