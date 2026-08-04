@@ -45,6 +45,7 @@ export default function Login() {
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
+  const [receivedOtp, setReceivedOtp] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendBusy, setResendBusy] = useState(false);
   const otpBoxRefs = useRef([]);
@@ -138,6 +139,7 @@ export default function Login() {
     setOtpSending(false);
     setOtpVerifying(false);
     setOtpVerified(false);
+    setReceivedOtp("");
     setResendCooldown(0);
     setResendBusy(false);
   };
@@ -145,6 +147,13 @@ export default function Login() {
   const focusOtpBox = (index) => {
     const el = otpBoxRefs.current[index];
     if (el) el.focus();
+  };
+
+  const autofillOtp = (otpCode) => {
+    if (!otpCode || otpCode.length !== OTP_LENGTH) return;
+    const digits = otpCode.split("");
+    setOtpDigits(digits);
+    setOtpError("");
   };
 
   const sendOtp = async ({ isResend = false } = {}) => {
@@ -171,10 +180,15 @@ export default function Login() {
         setOtpError("");
         setResendCooldown(RESEND_COOLDOWN_SECONDS);
 
+        if (res.data.otp) {
+          setReceivedOtp(res.data.otp);
+          autofillOtp(res.data.otp);
+        }
+
         showToastMsg(
-          res.data.otp
-            ? `${res.data.message}\nOTP: ${res.data.otp}`
-            : res.data.message || `Code sent to ${maskEmail(trimmedEmail)}`
+          res.data.emailSent
+            ? `Code sent to ${maskEmail(trimmedEmail)}`
+            : `OTP generated: ${res.data.otp}`
         );
 
         setTimeout(() => focusOtpBox(0), 50);
@@ -480,6 +494,21 @@ export default function Login() {
             ) : (
               /* --- Step 2: otp --- */
               <div className="space-y-5">
+                {receivedOtp && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs font-semibold text-amber-800">
+                    <div>
+                      <span className="block text-[10px] text-amber-600 font-bold uppercase">Your Verification OTP</span>
+                      <span className="font-mono text-base font-black tracking-widest text-amber-900">{receivedOtp}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => autofillOtp(receivedOtp)}
+                      className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] rounded-lg shadow transition-all active:scale-95"
+                    >
+                      Auto Fill
+                    </button>
+                  </div>
+                )}
                 <div>
                   <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
                     {otpDigits.map((digit, idx) => (

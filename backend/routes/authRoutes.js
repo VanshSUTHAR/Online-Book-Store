@@ -42,16 +42,19 @@ router.post("/change-password", async (req, res) => {
 // In-memory OTP store (for demo; use Redis or DB in production)
 const otpStore = {};
 
-// Nodemailer setup (configure with your SMTP)
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.ADMIN_EMAIL,
-    pass: process.env.ADMIN_EMAIL_PASS,
-  },
-});
+// Nodemailer setup for Gmail
+const getTransporter = () => {
+  const user = (process.env.ADMIN_EMAIL || "").trim();
+  const pass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+
+  if (!user || !pass) return null;
+
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: { user, pass },
+  });
+};
+
 // ================= SEND OTP FOR PASSWORD RESET =================
 router.post("/send-otp", async (req, res) => {
   try {
@@ -82,67 +85,68 @@ router.post("/send-otp", async (req, res) => {
       expires: Date.now() + 10 * 60 * 1000,
     };
 
-    // SMTP credentials check
-    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
-      console.log(`OTP for ${email}: ${otp}`);
+    let emailSent = false;
+    let emailErrorMsg = null;
+    const transporter = getTransporter();
 
-      return res.json({
-        success: true,
-        message: "SMTP not configured. OTP generated for testing.",
-        otp, // Remove this in production
-      });
-    }
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: `"Online Book Store" <${process.env.ADMIN_EMAIL.trim()}>`,
+          to: email,
+          subject: "Verify Your Login - Online Book Store",
+          html: `
+          <div style="font-family:Arial,sans-serif;padding:20px;background:#f5f5f5;">
+            <div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:10px;">
 
-    // Send email (best-effort; OTP is always returned in response for display)
-    try {
-      await transporter.sendMail({
-        from: `"Online Book Store" <${process.env.ADMIN_EMAIL}>`,
-        to: email,
-        subject: "Verify Your Login - Online Book Store",
-        html: `
-        <div style="font-family:Arial,sans-serif;padding:20px;background:#f5f5f5;">
-          <div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:10px;">
+              <h2 style="color:#2563eb;">📚 Online Book Store</h2>
 
-            <h2 style="color:#2563eb;">📚 Online Book Store</h2>
+              <p>Hello <strong>${user.name || "Reader"}</strong>,</p>
 
-            <p>Hello <strong>${user.name || "Reader"}</strong>,</p>
+              <p>Your One-Time Password (OTP) for login is:</p>
 
-            <p>Your One-Time Password (OTP) for login is:</p>
+              <div style="text-align:center;margin:30px 0;">
+                <span style="
+                  font-size:32px;
+                  font-weight:bold;
+                  letter-spacing:8px;
+                  color:#2563eb;
+                ">
+                  ${otp}
+                </span>
+              </div>
 
-            <div style="text-align:center;margin:30px 0;">
-              <span style="
-                font-size:32px;
-                font-weight:bold;
-                letter-spacing:8px;
-                color:#2563eb;
-              ">
-                ${otp}
-              </span>
+              <p>This OTP will expire in <strong>10 minutes</strong>.</p>
+
+              <p>If you didn't request this login, you can safely ignore this email.</p>
+
+              <hr>
+
+              <p style="font-size:13px;color:#777;">
+                Regards,<br>
+                Online Book Store Team
+              </p>
+
             </div>
-
-            <p>This OTP will expire in <strong>10 minutes</strong>.</p>
-
-            <p>If you didn't request this login, you can safely ignore this email.</p>
-
-            <hr>
-
-            <p style="font-size:13px;color:#777;">
-              Regards,<br>
-              Online Book Store Team
-            </p>
-
           </div>
-        </div>
-        `,
-      });
-    } catch (mailErr) {
-      console.warn("Email send failed (OTP still valid):", mailErr.message);
+          `,
+        });
+        emailSent = true;
+        console.log(`[OTP] Email successfully sent to ${email}`);
+      } catch (mailErr) {
+        console.error("[OTP] Gmail send failed:", mailErr);
+        emailErrorMsg = mailErr.message;
+      }
     }
 
     return res.json({
       success: true,
-      message: "OTP generated successfully",
-      otp, // Always return OTP so it can be shown on screen
+      message: emailSent
+        ? "OTP sent to your email!"
+        : "OTP generated successfully",
+      emailSent,
+      emailError: emailErrorMsg,
+      otp, // Always return OTP so user can view/autofill on UI
     });
   } catch (error) {
     console.error("SEND OTP ERROR:", error);
