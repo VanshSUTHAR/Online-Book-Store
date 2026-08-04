@@ -1,10 +1,9 @@
 
 const express = require("express");
-
 const Book = require("../models/Book");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
-
 
 
 
@@ -22,9 +21,21 @@ router.get("/", async (req, res) => {
 });
 
 
+// Get only books listed by the currently authenticated partner
+router.get("/my", authMiddleware, async (req, res) => {
+  try {
+    const books = await Book.find({ addedBy: req.user }).lean();
+    res.set("Cache-Control", "no-store");
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 // Add a new book (auto-calculate discount)
-router.post("/", async (req, res) => {
+// Uses optional auth — if token is present, records addedBy for partner tracking
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const { title, author, price, originalPrice, rating, category, description, image, condition, originalPartnerPrice } = req.body;
     let discount = req.body.discount;
@@ -42,7 +53,8 @@ router.post("/", async (req, res) => {
       description,
       image,
       condition: condition || "Good",
-      originalPartnerPrice
+      originalPartnerPrice,
+      addedBy: req.user || null  // Track which partner (or admin) added this book
     });
     await newBook.save();
     res.json({ message: "Book added successfully", book: newBook });
