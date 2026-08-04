@@ -120,14 +120,7 @@ export default function Footer() {
                   Non-Fiction Catalog
                 </button>
               </li>
-              <li>
-                <button
-                  onClick={() => scrollToSection("Technology", "/all-books")}
-                  className="hover:text-blue-400 transition-colors text-left"
-                >
-                  Technology Books
-                </button>
-              </li>
+
             </ul>
           </div>
 
