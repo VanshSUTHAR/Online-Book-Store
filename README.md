@@ -2,7 +2,19 @@
 
 A premium, full-featured web application for browsing, ordering, and managing books, including an administrative console and a multi-step seller enrollment program.
 
----
+## ✨ Key Features
+
+- Browse and search books with category-based filtering and sorting
+- Add books to a cart and proceed through a checkout flow with Stripe integration
+- Register and log in with email/password or OTP-based authentication
+- View personal order history and shipment-related updates
+- Become a partner by submitting a seller application through a guided multi-step onboarding form
+- Manage seller applications and store operations from an admin dashboard
+- Receive notifications for important account and order-related events
+
+## 🌐 Project Overview
+
+This project demonstrates a complete e-commerce flow for an online bookstore with role-based access for customers, partners, and administrators. It combines a modern React frontend with an Express and MongoDB backend to provide a polished shopping experience and a practical admin management system.
 
 ## 🚀 Tech Stack
 
@@ -161,7 +173,21 @@ online-books/
 
 ---
 
-## 🛠️ Setup & Running Guide
+## � Deployment Notes
+
+- The frontend can be deployed on Vercel, Netlify, or any static hosting platform.
+- The backend can be deployed on Render, Railway, Cyclic, or similar Node.js hosting services.
+- Make sure to set your environment variables in the hosting platform before deployment.
+- For production, replace test Stripe keys with live keys and ensure your MongoDB Atlas connection string is configured correctly.
+
+## 🛠️ Troubleshooting
+
+- If login or OTP does not work, verify that your email credentials in the backend environment variables are correct.
+- If the app cannot connect to MongoDB, confirm that the MongoDB service is running or your Atlas URI is valid.
+- If images or uploads fail, check the server payload size limits and ensure your file sizes are within acceptable limits.
+- If the frontend cannot reach the backend, confirm that the `REACT_APP_API_URL` value points to the correct backend URL.
+
+## �🛠️ Setup & Running Guide
 
 ### 📋 Prerequisites & Environment Verification
 

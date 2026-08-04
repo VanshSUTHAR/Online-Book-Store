@@ -28,10 +28,13 @@ export default function Register() {
   useEffect(() => {
     const loggedInUserId = user?._id || user?.id;
     if (loggedInUserId) {
-      if (user?.role === "admin") {
+      const fromPath = location.state?.from;
+      const shouldGoToAdmin = user?.role === "admin" && (!fromPath || fromPath === "/login" || fromPath === "/register");
+
+      if (shouldGoToAdmin) {
         navigate("/admin");
       } else {
-        navigate(location.state?.from || "/");
+        navigate(fromPath || "/");
       }
     }
   }, [user, navigate, location]);
@@ -63,7 +66,8 @@ export default function Register() {
       delete extraState.from;
 
       setTimeout(() => {
-        if (res.data.user.role === "admin") {
+        const shouldGoToAdmin = res.data.user.role === "admin" && (!location.state?.from || location.state?.from === "/login" || location.state?.from === "/register");
+        if (shouldGoToAdmin) {
           navigate("/admin");
         } else {
           navigate(fromPath, { state: extraState });
