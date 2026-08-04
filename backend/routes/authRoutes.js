@@ -93,50 +93,56 @@ router.post("/send-otp", async (req, res) => {
       });
     }
 
-    await transporter.sendMail({
-      from: `"Online Book Store" <${process.env.ADMIN_EMAIL}>`,
-      to: email,
-      subject: "Verify Your Login - Online Book Store",
-      html: `
-      <div style="font-family:Arial,sans-serif;padding:20px;background:#f5f5f5;">
-        <div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:10px;">
+    // Send email (best-effort; OTP is always returned in response for display)
+    try {
+      await transporter.sendMail({
+        from: `"Online Book Store" <${process.env.ADMIN_EMAIL}>`,
+        to: email,
+        subject: "Verify Your Login - Online Book Store",
+        html: `
+        <div style="font-family:Arial,sans-serif;padding:20px;background:#f5f5f5;">
+          <div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:10px;">
 
-          <h2 style="color:#2563eb;">📚 Online Book Store</h2>
+            <h2 style="color:#2563eb;">📚 Online Book Store</h2>
 
-          <p>Hello <strong>${user.name || "Reader"}</strong>,</p>
+            <p>Hello <strong>${user.name || "Reader"}</strong>,</p>
 
-          <p>Your One-Time Password (OTP) for login is:</p>
+            <p>Your One-Time Password (OTP) for login is:</p>
 
-          <div style="text-align:center;margin:30px 0;">
-            <span style="
-              font-size:32px;
-              font-weight:bold;
-              letter-spacing:8px;
-              color:#2563eb;
-            ">
-              ${otp}
-            </span>
+            <div style="text-align:center;margin:30px 0;">
+              <span style="
+                font-size:32px;
+                font-weight:bold;
+                letter-spacing:8px;
+                color:#2563eb;
+              ">
+                ${otp}
+              </span>
+            </div>
+
+            <p>This OTP will expire in <strong>10 minutes</strong>.</p>
+
+            <p>If you didn't request this login, you can safely ignore this email.</p>
+
+            <hr>
+
+            <p style="font-size:13px;color:#777;">
+              Regards,<br>
+              Online Book Store Team
+            </p>
+
           </div>
-
-          <p>This OTP will expire in <strong>10 minutes</strong>.</p>
-
-          <p>If you didn't request this login, you can safely ignore this email.</p>
-
-          <hr>
-
-          <p style="font-size:13px;color:#777;">
-            Regards,<br>
-            Online Book Store Team
-          </p>
-
         </div>
-      </div>
-      `,
-    });
+        `,
+      });
+    } catch (mailErr) {
+      console.warn("Email send failed (OTP still valid):", mailErr.message);
+    }
 
     return res.json({
       success: true,
-      message: "OTP sent successfully",
+      message: "OTP generated successfully",
+      otp, // Always return OTP so it can be shown on screen
     });
   } catch (error) {
     console.error("SEND OTP ERROR:", error);
