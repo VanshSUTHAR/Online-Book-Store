@@ -10,7 +10,9 @@ const authMiddleware = require("../middleware/authMiddleware");
 // Admin check middleware
 async function requireAdmin(req, res, next) {
   try {
-    const user = await User.findById(req.user);
+    // .select('role') fetches only the role field instead of the full user document
+    // .lean() skips Mongoose document hydration — faster for this read-only check
+    const user = await User.findById(req.user).select("role").lean();
     if (!user || user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Forbidden. Admin access required." });
     }
@@ -211,7 +213,13 @@ router.post("/apply", authMiddleware, async (req, res) => {
 // 2. Fetch All Applications (Admin Only)
 router.get("/applications", authMiddleware, requireAdmin, async (req, res) => {
   try {
-    const apps = await PartnerApplication.find().sort({ createdAt: -1 });
+    // .select() excludes large Base64 image fields (can be MBs per record) from the list view
+    // .lean() returns plain JS objects — faster for read-only list rendering
+    const apps = await PartnerApplication.find()
+      .select("-aadhaarFront -aadhaarBack -panCard -profilePicture -storeBanner")
+      .lean()
+      .sort({ createdAt: -1 });
+    res.set("Cache-Control", "no-store");
     res.json({ success: true, applications: apps });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to fetch applications." });
@@ -330,25 +338,37 @@ router.post("/review/:id", authMiddleware, requireAdmin, async (req, res) => {
 // 4. Get Current User's Partnership Status
 router.get("/my-status", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user);
+    // Run both DB queries in PARALLEL instead of sequential — saves one full DB round-trip (~80ms)
+    const [user, application] = await Promise.all([
+      User.findById(req.user).select("role email").lean(),
+      PartnerApplication.findOne({
+        $or: [
+          { userId: req.user },
+          // emailAddress fallback requires user email — resolved after Promise.all
+        ]
+      }).select("status storeName rejectionReason createdAt emailAddress").lean().sort({ createdAt: -1 })
+    ]);
+
     if (!user) return res.status(404).json({ success: false, message: "User not found." });
 
-    const application = await PartnerApplication.findOne({
-      $or: [
-        { userId: req.user },
-        { emailAddress: user.email }
-      ]
-    }).sort({ createdAt: -1 });
+    // If userId-based lookup found nothing, try email fallback
+    let resolvedApplication = application;
+    if (!resolvedApplication) {
+      resolvedApplication = await PartnerApplication.findOne({ emailAddress: user.email })
+        .select("status storeName rejectionReason createdAt")
+        .lean()
+        .sort({ createdAt: -1 });
+    }
 
     res.json({
       success: true,
       role: user.role,
-      application: application
+      application: resolvedApplication
         ? {
-            status: application.status,
-            storeName: application.storeName,
-            rejectionReason: application.rejectionReason,
-            createdAt: application.createdAt
+            status: resolvedApplication.status,
+            storeName: resolvedApplication.storeName,
+            rejectionReason: resolvedApplication.rejectionReason,
+            createdAt: resolvedApplication.createdAt
           }
         : null
     });

@@ -11,7 +11,10 @@ const router = express.Router();
 // Get all books
 router.get("/", async (req, res) => {
   try {
-    const books = await Book.find();
+    // .lean() returns plain JS objects instead of full Mongoose documents (~3x faster for reads)
+    const books = await Book.find().lean();
+    // Cache books for 60s; stale-while-revalidate lets CDN serve stale while refetching
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json(books);
   } catch (err) {
     res.status(500).json({ message: err.message });

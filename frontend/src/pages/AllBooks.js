@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { api } from "../services/api";
+import { api, cachedGet } from "../services/api";
 import { addCartItem, removeFirstCartItemByBookId } from "../services/cartService";
 import { useUser } from "../context/UserContext";
 import {
@@ -84,7 +84,8 @@ export default function AllBooks() {
   }, [location.state, user, navigate, location.pathname]);
 
   useEffect(() => {
-    api.get("/books")
+    // cachedGet() returns from in-memory cache if Books.js already fetched within 60s
+    cachedGet("/books")
       .then((res) => {
         setBooks(Array.isArray(res.data) ? res.data : []);
       })

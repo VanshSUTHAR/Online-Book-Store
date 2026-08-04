@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { api } from "../services/api";
+import { api, cachedGet } from "../services/api";
 import { addCartItem, removeFirstCartItemByBookId } from "../services/cartService";
 import { sendContactMessage } from "../services/contactService";
 import { useUser } from "../context/UserContext";
@@ -103,19 +103,23 @@ export default function Books() {
   }, [location.state, user, navigate, location.pathname]);
 
   useEffect(() => {
-    // Fetch all books
-    api.get("/books")
-      .then(res => {
-        setBooks(Array.isArray(res.data) ? res.data : []);
-      })
-      .catch(() => setBooks([]));
-
-    // Fetch trending book IDs
-    api.get("/trending")
-      .then(res => {
-        setTrendingIds(Array.isArray(res.data) ? res.data : []);
-      })
-      .catch(() => setTrendingIds([]));
+    // Fetch books and trending IDs in PARALLEL — neither depends on the other
+    // cachedGet() serves from in-memory cache if called again within 60s
+    Promise.allSettled([
+      cachedGet("/books"),
+      cachedGet("/trending"),
+    ]).then(([booksResult, trendingResult]) => {
+      if (booksResult.status === "fulfilled") {
+        setBooks(Array.isArray(booksResult.value.data) ? booksResult.value.data : []);
+      } else {
+        setBooks([]);
+      }
+      if (trendingResult.status === "fulfilled") {
+        setTrendingIds(Array.isArray(trendingResult.value.data) ? trendingResult.value.data : []);
+      } else {
+        setTrendingIds([]);
+      }
+    });
 
     // Load wishlist
     try {

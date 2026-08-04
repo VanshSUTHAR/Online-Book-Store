@@ -58,9 +58,16 @@ export async function fetchCartItems() {
     const localItems = getLocalCart();
 
     if (!hasMigratedLocalCart() && items.length === 0 && localItems.length > 0) {
-      for (const item of localItems) {
-        const addRes = await api.post("/cart/items", { item }, { headers: getAuthHeaders() });
-        items = normalizeItems(addRes.data);
+      // Migrate all local cart items in PARALLEL instead of one-by-one sequential loop
+      // For N items: reduces migration time from N×RTT to ~1×RTT
+      const addRequests = localItems.map((item) =>
+        api.post("/cart/items", { item }, { headers: getAuthHeaders() })
+      );
+      const results = await Promise.all(addRequests);
+      // Use the last successful response as the final cart state
+      const lastResult = results[results.length - 1];
+      if (lastResult) {
+        items = normalizeItems(lastResult.data);
       }
     }
 

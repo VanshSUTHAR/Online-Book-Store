@@ -40,4 +40,7 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Compound index — directly supports .find({userId}).sort({createdAt:-1}) in order routes
+orderSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Order", orderSchema);

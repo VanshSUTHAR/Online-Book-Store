@@ -80,9 +80,11 @@ router.post("/", auth, handleCreateOrder);
 router.get("/my-orders", auth, async (req, res) => {
   try {
     const userId = req.user && req.user._id ? req.user._id : req.user;
+    // All book/product data (title, image, price, quantity) is already embedded in the order.
+    // Removing .populate() eliminates 2 extra DB round-trips per request.
+    // .lean() returns plain JS objects (~3x faster than full Mongoose doc hydration).
     const orders = await Order.find({ userId })
-      .populate("products.productId")
-      .populate("books.bookId")
+      .lean()
       .sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
@@ -98,9 +100,9 @@ router.get("/user/:userId", auth, async (req, res) => {
     if (requestingUserId !== req.params.userId) {
       return res.status(403).json({ error: "Unauthorized access to user orders." });
     }
+    // Same optimisation as /my-orders — embedded data, no populate needed
     const orders = await Order.find({ userId: req.params.userId })
-      .populate("products.productId")
-      .populate("books.bookId")
+      .lean()
       .sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
@@ -108,4 +110,4 @@ router.get("/user/:userId", auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;

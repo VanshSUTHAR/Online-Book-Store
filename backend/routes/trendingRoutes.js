@@ -1,11 +1,15 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const TrendingBooks = require("../models/TrendingBooks");
 const router = express.Router();
 
 // Get trending books
 router.get("/", async (req, res) => {
   try {
-    const trending = await TrendingBooks.findOne();
+    // .lean() skips Mongoose document hydration — faster for read-only list
+    const trending = await TrendingBooks.findOne().lean();
+    // Trending rarely changes — safe to cache for 2 minutes
+    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=600");
     res.json(trending ? trending.bookIds : []);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -20,7 +24,6 @@ router.post("/", async (req, res) => {
       console.error('bookIds is not an array:', bookIds);
       return res.status(400).json({ message: "bookIds must be an array" });
     }
-    const mongoose = require('mongoose');
     let objectIds = [];
     try {
       objectIds = bookIds.map(id => {

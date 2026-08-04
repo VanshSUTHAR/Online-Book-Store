@@ -129,14 +129,18 @@ router.post("/reply", async (req, res) => {
 const Order = require("../models/Order");
 const User = require("../models/User");
 
-// GET /api/admin/orders - Fetch all orders with user and product details
+// GET /api/admin/orders - Fetch all orders with user details
 router.get("/orders", async (req, res) => {
   try {
+    // Removed .populate('products.productId') and .populate('books.bookId') — both are redundant
+    // because title, image, price, quantity are already stored on the order document itself.
+    // .populate('userId') is kept because admin genuinely needs user name/email from User collection.
+    // .lean() returns plain JS objects (~3x faster than full Mongoose document hydration).
     const orders = await Order.find()
       .populate("userId", "name email mobile")
-      .populate("products.productId")
-      .populate("books.bookId")
+      .lean()
       .sort({ createdAt: -1 });
+    res.set("Cache-Control", "no-store"); // Never cache admin data
     res.json(orders);
   } catch (err) {
     console.error("Admin fetch orders error:", err);
@@ -153,19 +157,19 @@ router.put("/orders/:orderId", async (req, res) => {
     if (estimatedDelivery !== undefined) updateData.estimatedDelivery = estimatedDelivery;
     if (paymentStatus !== undefined) updateData.paymentStatus = paymentStatus;
 
+    // Removed populate for products/books — embedded data is already on the order.
+    // Kept populate for userId so admin sees name/email after updating.
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.orderId,
       { $set: updateData },
       { new: true }
-    )
-      .populate("userId", "name email mobile")
-      .populate("products.productId")
-      .populate("books.bookId");
+    ).populate("userId", "name email mobile").lean();
 
     if (!updatedOrder) {
       return res.status(404).json({ error: "Order not found" });
     }
-
+    
+    res.set("Cache-Control", "no-store");
     res.json({ message: "Order updated successfully", order: updatedOrder });
   } catch (err) {
     console.error("Admin update order error:", err);

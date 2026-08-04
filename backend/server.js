@@ -55,8 +55,9 @@ app.use(cors({
   credentials: true,
   optionsSuccessStatus: 204,
 }));
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+// Use a tight global limit; the partner route (Base64 uploads) gets its own 50mb limit below
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ limit: "5mb", extended: true }));
 
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
@@ -72,8 +73,15 @@ const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/onlineBookS
 const localMongoURI = process.env.MONGO_URI_LOCAL || "mongodb://127.0.0.1:27017/onlineBookStore";
 
 async function connectMongo() {
+  const mongoOptions = {
+    maxPoolSize: 10,               // Allow up to 10 concurrent DB connections
+    serverSelectionTimeoutMS: 5000, // Fail fast if Atlas is unreachable (default is 30s)
+    socketTimeoutMS: 45000,        // Close idle sockets after 45s to prevent resource leaks
+    family: 4,                     // Force IPv4 — avoids slow IPv6 DNS on Render/Atlas
+  };
+
   try {
-    await mongoose.connect(mongoURI);
+    await mongoose.connect(mongoURI, mongoOptions);
     console.log("MongoDB connected");
   } catch (err) {
     const isSrvDnsError = err && err.code === "ECONNREFUSED" && String(err.hostname || "").startsWith("_mongodb._tcp.");
@@ -81,7 +89,7 @@ async function connectMongo() {
     if (isSrvDnsError) {
       console.error("MongoDB SRV DNS lookup failed. Trying local MongoDB fallback...");
       try {
-        await mongoose.connect(localMongoURI);
+        await mongoose.connect(localMongoURI, mongoOptions);
         console.log("MongoDB connected (local fallback)");
         return;
       } catch (fallbackErr) {
@@ -104,7 +112,8 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/oauth", oauthRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use(process.env.NODE_ENV === 'test' ? '/api/cart' : '/api/cart', cartRoutes);
-app.use("/api/partner", partnerRoutes);
+// Partner uploads Base64 images (Aadhaar/PAN) — needs a higher body limit than others
+app.use("/api/partner", express.json({ limit: "50mb" }), express.urlencoded({ limit: "50mb", extended: true }), partnerRoutes);
 
 // Debug test POST route (should be after all middleware/routes)
 app.post("/api/test", (req, res) => {
