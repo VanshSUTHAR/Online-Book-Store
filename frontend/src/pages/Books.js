@@ -359,7 +359,7 @@ export default function Books() {
       rating: 5
     },
     {
-      name: "Priya Patel",
+      name:"Vishwa Patel",
       role: "College Student",
       image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120",
       content: "As a computer science student, finding textbooks is always hard and expensive. Here I got all my programming reference books at massive discounts!",
