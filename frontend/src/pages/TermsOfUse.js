@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { 
   Scale, 
   BookOpen, 
@@ -14,16 +13,6 @@ import {
 } from "lucide-react";
 
 export default function TermsOfUse() {
-  const navigate = useNavigate();
-
-  const handleContactRedirect = () => {
-    navigate("/");
-    setTimeout(() => {
-      const el = document.getElementById("contact-section");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
-    }, 300);
-  };
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] py-8 px-4 sm:py-16 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Graphic Blurs */}
@@ -174,16 +163,24 @@ export default function TermsOfUse() {
           {/* Bottom Highlights Section */}
           <div className="border-t border-slate-200 bg-slate-50/70 px-5 py-8 sm:px-10 sm:py-10">
             <div className="grid gap-5 sm:grid-cols-3">
-              <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-300 space-y-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600 border border-violet-100">
-                  <LifeBuoy className="h-4.5 w-4.5" />
+              <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-300 space-y-3 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600 border border-violet-100">
+                    <LifeBuoy className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900">Helpful Support</h4>
+                    <p className="mt-1 text-[11px] sm:text-xs leading-relaxed text-slate-500">
+                      Reach support directly via home contact sections or support tickets.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">Helpful Support</h4>
-                  <p className="mt-1 text-[11px] sm:text-xs leading-relaxed text-slate-500">
-                    Reach support directly via home contact sections or support tickets.
-                  </p>
-                </div>
+                <button
+                  onClick={handleContactRedirect}
+                  className="w-full mt-2 text-xs font-bold text-violet-600 hover:text-violet-700 text-left hover:underline flex items-center gap-1 focus:outline-none"
+                >
+                  Contact Support &rarr;
+                </button>
               </div>
               
               <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-300 space-y-3">
