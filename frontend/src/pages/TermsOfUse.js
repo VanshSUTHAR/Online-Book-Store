@@ -1,104 +1,220 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  Scale, 
+  BookOpen, 
+  UserCheck, 
+  CreditCard, 
+  ShieldAlert, 
+  CheckCircle2, 
+  FileText, 
+  LifeBuoy, 
+  Lock, 
+  RefreshCw 
+} from "lucide-react";
 
 export default function TermsOfUse() {
+  const navigate = useNavigate();
+
+  const handleContactRedirect = () => {
+    navigate("/");
+    setTimeout(() => {
+      const el = document.getElementById("contact-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 py-16 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="overflow-hidden rounded-[2rem] bg-white shadow-xl ring-1 ring-slate-200">
-          <div className="bg-slate-900 px-8 py-12 sm:px-12 sm:py-14">
-            <div className="max-w-3xl">
-              <span className="inline-flex rounded-full bg-fuchsia-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-fuchsia-700">
+    <div className="min-h-screen bg-[#F8FAFC] py-8 px-4 sm:py-16 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Graphic Blurs */}
+      <div className="absolute top-0 right-1/4 h-[400px] w-[400px] rounded-full bg-violet-400/5 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-10 left-10 h-[300px] w-[300px] rounded-full bg-indigo-400/5 blur-[80px] pointer-events-none" />
+
+      <div className="mx-auto max-w-6xl relative z-10">
+        <div className="overflow-hidden rounded-2xl sm:rounded-[2rem] bg-white border border-slate-200 shadow-xl shadow-slate-100/50">
+          
+          {/* Header Banner */}
+          <div className="bg-slate-900 px-5 py-10 sm:px-12 sm:py-14 relative overflow-hidden border-b border-slate-800">
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-indigo-600/10 pointer-events-none" />
+            <div className="relative max-w-3xl space-y-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-violet-400 border border-violet-500/25">
+                <Scale className="h-3.5 w-3.5" />
                 Terms of Use
               </span>
-              <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-                Rules for using Online Book Store.
+              <h1 className="font-playfair text-3xl font-black text-white sm:text-5xl tracking-tight leading-tight">
+                Rules of Our <span className="bg-gradient-to-r from-violet-400 via-indigo-300 to-blue-400 bg-clip-text text-transparent">Book Store</span>.
               </h1>
-              <p className="mt-4 text-base leading-7 text-slate-300 sm:text-lg">
-                These terms explain your rights and responsibilities when browsing, buying, partnering, or managing orders on our platform.
+              <p className="text-sm sm:text-base leading-relaxed text-slate-300 max-w-2xl">
+                By accessing Online Books, you agree to these guidelines. They define your rights as a reader, partner seller, or store operator, ensuring a safe experience for everyone.
               </p>
             </div>
           </div>
-          <div className="grid gap-6 p-8 sm:grid-cols-[1.1fr_0.9fr] sm:p-10">
+
+          {/* Main Grid Content */}
+          <div className="grid gap-8 p-5 sm:p-10 lg:grid-cols-[1.25fr_0.75fr]">
+            
+            {/* Left Column: Core Sections */}
             <div className="space-y-6">
-              <section className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-fuchsia-600 text-white">01</div>
-                  <h2 className="text-2xl font-semibold text-slate-900">Acceptable Use</h2>
+              
+              <section className="rounded-xl sm:rounded-2xl border border-slate-150 bg-slate-50/50 p-5 sm:p-6 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+                <div className="flex gap-4">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600 shrink-0 shadow-sm border border-violet-100">
+                    <UserCheck className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-lg sm:text-xl font-bold font-playfair text-slate-900 leading-snug">
+                      1. Acceptable Account Conduct
+                    </h2>
+                    <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
+                      Use our bookstore for legitimate shopping, reviews, and seller onboarding. Cyberattacks, automated catalog scraping, spamming reviews, or posting fraudulent partner forms is strictly banned.
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-4 text-sm leading-7 text-slate-600">
-                  Use Online Book Store for lawful shopping and legitimate seller onboarding. Do not attempt to disrupt the service or use it for fraudulent activities.
-                </p>
               </section>
-              <section className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-fuchsia-600 text-white">02</div>
-                  <h2 className="text-2xl font-semibold text-slate-900">Account Responsibility</h2>
+
+              <section className="rounded-xl sm:rounded-2xl border border-slate-150 bg-slate-50/50 p-5 sm:p-6 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+                <div className="flex gap-4">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600 shrink-0 shadow-sm border border-violet-100">
+                    <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-lg sm:text-xl font-bold font-playfair text-slate-900 leading-snug">
+                      2. Purchase & Checkout Terms
+                    </h2>
+                    <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
+                      Orders depend on stock availability. Product descriptions and shipping quotes are finalized upon Stripe payment confirmations. We reserve the right to cancel orders in case of catalog pricing errors.
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-4 text-sm leading-7 text-slate-600">
-                  Keep your account credentials private and immediately report suspected unauthorized activity.
-                  You are responsible for actions taken under your account.
-                </p>
               </section>
-              <section className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-fuchsia-600 text-white">03</div>
-                  <h2 className="text-2xl font-semibold text-slate-900">Order Conditions</h2>
+
+              <section className="rounded-xl sm:rounded-2xl border border-slate-150 bg-slate-50/50 p-5 sm:p-6 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+                <div className="flex gap-4">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600 shrink-0 shadow-sm border border-violet-100">
+                    <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-lg sm:text-xl font-bold font-playfair text-slate-900 leading-snug">
+                      3. Bookstore Partner Roles
+                    </h2>
+                    <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
+                      Independent bookstore partners applying to display books must offer authentic, undamaged copies. Partners must accurately fulfill shipments and respect platform pricing guidelines.
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-4 text-sm leading-7 text-slate-600">
-                  Orders depend on product availability, pricing, and shipping fees shown at checkout. We aim for accuracy, but confirmations are final once payment is processed.
-                </p>
               </section>
+
+              <section className="rounded-xl sm:rounded-2xl border border-slate-150 bg-slate-50/50 p-5 sm:p-6 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+                <div className="flex gap-4">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600 shrink-0 shadow-sm border border-violet-100">
+                    <ShieldAlert className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-lg sm:text-xl font-bold font-playfair text-slate-900 leading-snug">
+                      4. Operations & Disclaimers
+                    </h2>
+                    <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
+                      While we guarantee a highly available web catalog, we are not responsible for hosting connection outages, external API server delays, or minor courier delays beyond our jurisdiction.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
             </div>
-            <aside className="space-y-6">
-              <div className="rounded-[1.5rem] bg-slate-950 p-6 text-white shadow-2xl">
-                <h3 className="text-xl font-semibold text-white">Partner & Seller Terms</h3>
-                <ul className="mt-6 space-y-4 text-sm leading-7 text-slate-300">
-                  <li className="flex gap-3">
-                    <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-fuchsia-400/20 text-fuchsia-300">✓</span>
-                    Partners must provide accurate business documents during application.
+
+            {/* Right Column: Sidebar */}
+            <div className="space-y-6">
+              
+              {/* Partner Terms Card */}
+              <div className="rounded-xl sm:rounded-2xl bg-slate-900 p-5 sm:p-6 text-white shadow-lg relative overflow-hidden border border-slate-800">
+                <div className="absolute top-0 right-0 h-16 w-16 bg-violet-500/10 rounded-bl-full pointer-events-none" />
+                <h3 className="text-base sm:text-lg font-bold font-playfair text-white flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-violet-400 shrink-0" />
+                  Partner & Seller Rules
+                </h3>
+                <p className="mt-3 text-xs sm:text-sm leading-relaxed text-slate-300">
+                  Sellers uploading listings must satisfy these requirements:
+                </p>
+                <ul className="mt-4 space-y-3 text-xs sm:text-sm text-slate-300">
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-violet-400 shrink-0 mt-0.5" />
+                    <span>Upload valid business credentials and store names.</span>
                   </li>
-                  <li className="flex gap-3">
-                    <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-fuchsia-400/20 text-fuchsia-300">✓</span>
-                    Admin approval is required and may be revoked for policy violations.
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-violet-400 shrink-0 mt-0.5" />
+                    <span>Provide exact summaries and pictures for books.</span>
                   </li>
-                  <li className="flex gap-3">
-                    <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-fuchsia-400/20 text-fuchsia-300">✓</span>
-                    Partners agree to follow the process for book uploads and order fulfillment.
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-violet-400 shrink-0 mt-0.5" />
+                    <span>Fulfill orders within the delivery promise window.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-violet-400 shrink-0 mt-0.5" />
+                    <span>Admin approvals are mandatory for live listing publishing.</span>
                   </li>
                 </ul>
               </div>
-              <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Intellectual Property</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Site content is protected by copyright and may not be reused or reproduced without permission.
+
+              {/* Intellectual Property Card */}
+              <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm hover:border-slate-300 transition-all duration-300 space-y-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600 border border-violet-100">
+                  <FileText className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  Intellectual Property
+                </h3>
+                <p className="text-xs leading-relaxed text-slate-500">
+                  All logos, text collections, graphic assets, database records, and site layouts are protected properties of Online Books. Redistribution or code cloning is forbidden without authorization.
                 </p>
               </div>
-            </aside>
+
+            </div>
           </div>
-          <div className="border-t border-slate-200 bg-slate-50 px-8 py-8 sm:px-10 sm:py-10">
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
-                <h4 className="text-base font-semibold text-slate-900">Support Access</h4>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  Reach out to support if you have questions about your order, account, or seller application.
-                </p>
+
+          {/* Bottom Highlights Section */}
+          <div className="border-t border-slate-200 bg-slate-50/70 px-5 py-8 sm:px-10 sm:py-10">
+            <div className="grid gap-5 sm:grid-cols-3">
+              <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-300 space-y-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600 border border-violet-100">
+                  <LifeBuoy className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">Helpful Support</h4>
+                  <p className="mt-1 text-[11px] sm:text-xs leading-relaxed text-slate-500">
+                    Reach support directly via home contact sections or support tickets.
+                  </p>
+                </div>
               </div>
-              <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
-                <h4 className="text-base font-semibold text-slate-900">Payment Details</h4>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  Checkout totals are shown clearly before payment and include any applicable taxes and shipping fees.
-                </p>
+              
+              <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-300 space-y-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  <Lock className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">Secure Payments</h4>
+                  <p className="mt-1 text-[11px] sm:text-xs leading-relaxed text-slate-500">
+                    Cart totals are detailed, protected, and routed off-site by Stripe security.
+                  </p>
+                </div>
               </div>
-              <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
-                <h4 className="text-base font-semibold text-slate-900">Policy Updates</h4>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  We may update terms from time to time. Continued use of the site means you accept the latest version.
-                </p>
+
+              <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-300 space-y-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
+                  <RefreshCw className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">Policy Evolutions</h4>
+                  <p className="mt-1 text-[11px] sm:text-xs leading-relaxed text-slate-500">
+                    Terms may change; continued checkout operations imply agreement.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
+
