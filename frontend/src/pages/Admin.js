@@ -40,7 +40,8 @@ import {
   ShieldAlert,
   Clock,
   Copy,
-  Check
+  Check,
+  Menu
 } from "lucide-react";
 
 export default function Admin() {
@@ -62,6 +63,7 @@ export default function Admin() {
   const [showMessages, setShowMessages] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
   const [showPartnerApps, setShowPartnerApps] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Core Lists States
   const [trendingBooks, setTrendingBooks] = useState([]);
@@ -455,6 +457,7 @@ export default function Admin() {
     setShowMessages(tabName === "messages");
     setShowOrders(tabName === "orders");
     setShowPartnerApps(tabName === "partnerApps");
+    setSidebarOpen(false); // close sidebar on mobile after selecting tab
     if (tabName === "messages") {
       fetchMessages();
     }
@@ -469,8 +472,47 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row font-sans">
 
-      {/* Sidebar / Top Navigation Header */}
-      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-b md:border-b-0 md:border-r border-slate-800 sticky top-0 z-40 md:relative">
+      {/* Mobile Top Bar */}
+      <div className="md:hidden bg-slate-900 text-white flex items-center justify-between px-4 py-3 sticky top-0 z-40 border-b border-slate-800">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 shadow-md">
+            <BookOpen className="h-4 w-4 text-white" />
+          </div>
+          <span className="font-playfair text-base font-bold text-white">Admin Console</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCloseAdminPanel}
+            className="text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Exit
+          </button>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar / Navigation Drawer */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-r border-slate-800
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:static md:w-64 md:z-auto
+      `}>
         <div>
           {/* Logo brand */}
           <div className="p-4 md:p-6 border-b border-slate-800 flex items-center justify-between">
@@ -483,19 +525,19 @@ export default function Admin() {
               </span>
             </div>
             <button
-              onClick={handleCloseAdminPanel}
-              className="text-xs text-slate-300 hover:text-white md:hidden bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold transition-colors"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              aria-label="Close menu"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Exit
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Navigation link pills (Horizontal scroll on mobile, Vertical stack on desktop) */}
-          <nav className="p-3 md:p-4 flex md:flex-col overflow-x-auto md:overflow-x-visible gap-2 md:space-y-1 scrollbar-none">
+          {/* Navigation link pills */}
+          <nav className="p-3 md:p-4 flex flex-col gap-1.5 md:space-y-1">
             <button
               onClick={() => triggerTab("addAdmin")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showAddAdmin ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${showAddAdmin ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
                 }`}
             >
               <UserPlus className="h-4 w-4 shrink-0" />
@@ -503,7 +545,7 @@ export default function Admin() {
             </button>
             <button
               onClick={() => triggerTab("addBook")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showAddBook ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${showAddBook ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
                 }`}
             >
               <PlusCircle className="h-4 w-4 shrink-0" />
@@ -511,7 +553,7 @@ export default function Admin() {
             </button>
             <button
               onClick={() => triggerTab("trending")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showTrendingBooks ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${showTrendingBooks ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
                 }`}
             >
               <Flame className="h-4 w-4 shrink-0" />
@@ -519,7 +561,7 @@ export default function Admin() {
             </button>
             <button
               onClick={() => triggerTab("bookList")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showBookList ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${showBookList ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
                 }`}
             >
               <BookOpen className="h-4 w-4 shrink-0" />
@@ -527,7 +569,7 @@ export default function Admin() {
             </button>
             <button
               onClick={() => triggerTab("messages")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showMessages ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${showMessages ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
                 }`}
             >
               <MessageSquare className="h-4 w-4 shrink-0" />
@@ -535,7 +577,7 @@ export default function Admin() {
             </button>
             <button
               onClick={() => triggerTab("orders")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showOrders ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${showOrders ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
                 }`}
             >
               <ClipboardList className="h-4 w-4 shrink-0" />
@@ -543,7 +585,7 @@ export default function Admin() {
             </button>
             <button
               onClick={() => triggerTab("partnerApps")}
-              className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-4 py-2.5 md:py-3 text-xs font-bold rounded-xl transition-all duration-200 shrink-0 ${showPartnerApps ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "bg-slate-800/60 md:bg-transparent hover:bg-slate-800 text-slate-400"
+              className={`flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl transition-all duration-200 ${showPartnerApps ? "bg-blue-600 text-white shadow-md shadow-blue-500/10" : "hover:bg-slate-800 text-slate-400"
                 }`}
             >
               <Handshake className="h-4 w-4 shrink-0" />
@@ -553,7 +595,7 @@ export default function Admin() {
         </div>
 
         {/* Return to bookstore trigger */}
-        <div className="p-4 border-t border-slate-800 hidden md:block">
+        <div className="p-4 border-t border-slate-800">
           <button
             onClick={handleCloseAdminPanel}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white py-3 text-xs font-bold transition-all"
@@ -1289,21 +1331,21 @@ export default function Admin() {
           {/* TAB 6: ORDERS MANAGEMENT */}
           {showOrders && (
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                 <div>
-                  <h2 className="font-playfair text-2xl font-black text-slate-900">Order Management</h2>
+                  <h2 className="font-playfair text-xl sm:text-2xl font-black text-slate-900">Order Management</h2>
                   <p className="text-slate-500 text-xs mt-1">View customer orders, update order fulfillment status, and set estimated delivery times</p>
                 </div>
                 <button
                   onClick={fetchAdminOrders}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors self-start md:self-auto"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors self-start"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Refresh Orders
                 </button>
               </div>
 
               {/* Filters Strip */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60">
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60">
                 {/* Search Box */}
                 <div className="relative w-full sm:w-80">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -1336,8 +1378,89 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Orders Table */}
-              <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm bg-white">
+              {/* Mobile Orders Card View */}
+              <div className="block md:hidden space-y-3">
+                {adminOrders
+                  .filter((ord) => {
+                    const userObj = ord.userId && typeof ord.userId === "object" ? ord.userId : {};
+                    const userName = (userObj.name || ord.buyerName || "").toLowerCase();
+                    const orderIdStr = (ord._id || "").toLowerCase();
+                    const q = orderSearchTerm.toLowerCase();
+                    const matchesSearch = userName.includes(q) || orderIdStr.includes(q);
+                    const matchesStatus = orderStatusFilter === "All" || ord.orderStatus === orderStatusFilter;
+                    return matchesSearch && matchesStatus;
+                  })
+                  .map((ord) => {
+                    const userObj = ord.userId && typeof ord.userId === "object" ? ord.userId : {};
+                    const userName = userObj.name || ord.buyerName || "User";
+                    const orderIdFormatted = `#${(ord._id || "").slice(-6).toUpperCase()}`;
+                    const itemsList = (ord.products && ord.products.length > 0) ? ord.products : (ord.books || []);
+                    return (
+                      <div key={ord._id} className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-slate-900 text-sm">{orderIdFormatted}</span>
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                            ord.orderStatus === 'Delivered' ? 'bg-green-50 text-green-700 border-green-200'
+                            : ord.orderStatus === 'Cancelled' ? 'bg-red-50 text-red-700 border-red-200'
+                            : ord.orderStatus === 'Shipped' ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}>{ord.orderStatus || 'Pending'}</span>
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-bold text-slate-900">{userName}</span>
+                          <span className="text-slate-400 ml-2">{new Date(ord.createdAt || Date.now()).toLocaleDateString()}</span>
+                        </div>
+                        {itemsList.slice(0, 2).map((it, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            <img src={it.image || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=100&q=80"} alt="" className="h-7 w-5 object-cover rounded shadow-sm bg-slate-100 shrink-0" />
+                            <span className="font-semibold text-slate-800 truncate flex-1">{it.title}</span>
+                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">x{it.quantity || 1}</span>
+                          </div>
+                        ))}
+                        {itemsList.length > 2 && <p className="text-[10px] text-slate-400">+{itemsList.length - 2} more item(s)</p>}
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                          <span className="font-extrabold text-slate-900 font-poppins">₹{ord.totalAmount}</span>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={ord.orderStatus || "Pending"}
+                              disabled={updatingOrderId === ord._id}
+                              onChange={(e) => handleUpdateOrderStatus(ord._id, e.target.value)}
+                              className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Confirmed">Confirmed</option>
+                              <option value="Processing">Processing</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Cancelled">Cancelled</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-500 font-semibold whitespace-nowrap">Est. Delivery:</span>
+                          <select
+                            value={ord.estimatedDelivery || "1 Day"}
+                            disabled={updatingOrderId === ord._id}
+                            onChange={(e) => handleUpdateEstimatedDelivery(ord._id, e.target.value)}
+                            className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm w-full"
+                          >
+                            <option value="30 Minutes">30 Minutes</option>
+                            <option value="1 Hour">1 Hour</option>
+                            <option value="3 Hours">3 Hours</option>
+                            <option value="1 Day">1 Day</option>
+                            <option value="2 Days">2 Days</option>
+                          </select>
+                        </div>
+                      </div>
+                    );
+                  })}
+                {adminOrders.length === 0 && (
+                  <div className="text-center py-12 text-slate-400 font-medium">No customer orders found.</div>
+                )}
+              </div>
+
+              {/* Desktop Orders Table */}
+              <div className="hidden md:block overflow-x-auto border border-slate-200 rounded-2xl shadow-sm bg-white">
                 <table className="min-w-full divide-y divide-slate-100 text-left">
                   <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     <tr>
@@ -1464,21 +1587,74 @@ export default function Admin() {
           {/* TAB 7: PARTNER APPLICATIONS */}
           {showPartnerApps && (
             <div className="space-y-6">
-              <div className="border-b border-slate-100 pb-4 flex justify-between items-center">
+              <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                  <h2 className="font-playfair text-2xl font-black text-slate-900">Partner Applications</h2>
+                  <h2 className="font-playfair text-xl sm:text-2xl font-black text-slate-900">Partner Applications</h2>
                   <p className="text-slate-500 text-xs mt-1">Review applicant identity records, payouts details, and activate store dashboard credentials</p>
                 </div>
                 <button
                   onClick={fetchPartnerApps}
-                  className="rounded-xl border border-slate-200 hover:bg-slate-50 p-2.5 text-xs text-slate-600 font-bold transition-all flex items-center gap-1.5"
+                  className="rounded-xl border border-slate-200 hover:bg-slate-50 p-2.5 text-xs text-slate-600 font-bold transition-all flex items-center gap-1.5 self-start"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                   Refresh
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              {/* Mobile Cards */}
+              <div className="block md:hidden space-y-3">
+                {partnerApps.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400 font-medium">No partner applications found.</div>
+                ) : partnerApps.map((app) => (
+                  <div key={app._id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">{app.fullName}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{app.emailAddress}</div>
+                      </div>
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border shrink-0 ${
+                        app.status === "Approved" ? "bg-green-50 text-green-700 border-green-200"
+                        : app.status === "Rejected" ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}>{app.status}</span>
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      <span className="font-semibold">{app.storeName || "N/A"}</span>
+                      <span className="text-slate-400 ml-2">{new Date(app.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        onClick={() => setSelectedPartnerApp(app)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-all"
+                      >
+                        <Eye className="h-3 w-3" />
+                        View
+                      </button>
+                      {app.status === "Pending" && (
+                        <>
+                          <button
+                            onClick={() => handleApprovePartner(app._id)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-all shadow-sm"
+                          >
+                            <CheckCircle className="h-3 w-3" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => { setAppToReject(app._id); setShowRejectModal(true); }}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold transition-all shadow-sm"
+                          >
+                            <XCircle className="h-3 w-3" />
+                            Reject
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -1613,20 +1789,20 @@ export default function Admin() {
             };
 
             return (
-              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                <div className="bg-white rounded-[32px] w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 overflow-y-auto">
+                <div className="bg-white rounded-t-[32px] sm:rounded-[32px] w-full max-w-5xl h-[90vh] sm:h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden relative animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
 
                   {/* Sticky Header */}
-                  <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white z-10">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Partner Application Details</h3>
+                  <div className="px-4 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex items-start sm:items-center justify-between shrink-0 bg-white z-10 gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Partner Application</h3>
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${statusInfo.bg}`}>
                           <StatusIcon className="h-3.5 w-3.5" />
                           {statusInfo.label}
                         </span>
                       </div>
-                      <p className="text-slate-400 text-xs mt-0.5">Submitted on {new Date(selectedPartnerApp.createdAt).toLocaleDateString()} at {new Date(selectedPartnerApp.createdAt).toLocaleTimeString()}</p>
+                      <p className="text-slate-400 text-xs mt-0.5 truncate">Submitted on {new Date(selectedPartnerApp.createdAt).toLocaleDateString()}</p>
                     </div>
 
                     <button
@@ -1638,7 +1814,7 @@ export default function Admin() {
                   </div>
 
                   {/* Scrollable Body */}
-                  <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/20">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 bg-slate-50/20">
 
                     {selectedPartnerApp.status === "Rejected" && (
                       <div className="bg-rose-50/80 border border-rose-100/80 rounded-2xl p-4 flex gap-3 text-xs text-rose-800 animate-in slide-in-from-top-2 duration-300">

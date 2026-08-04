@@ -12,6 +12,8 @@ import {
   Layers,
   LogOut,
   CheckCircle,
+  Menu,
+  X,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -21,6 +23,7 @@ export default function PartnerDashboard() {
   const [partnerStatus, setPartnerStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Form state to add new books
   const [formData, setFormData] = useState({
@@ -204,26 +207,68 @@ export default function PartnerDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row font-sans">
 
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden bg-slate-900 text-white flex items-center justify-between px-4 py-3 sticky top-0 z-40 border-b border-slate-800">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 shadow-md">
+            <Store className="h-4 w-4 text-white" />
+          </div>
+          <span className="font-playfair text-base font-bold text-white truncate max-w-[180px]">{appData.storeName || "Partner Store"}</span>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5 text-white" />
+        </button>
+      </div>
+
+      {/* Mobile Overlay Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar navigation */}
-      <aside className="w-full lg:w-64 bg-slate-900 text-white flex flex-col justify-between shrink-0 p-6 border-r border-slate-800">
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white flex flex-col justify-between shrink-0 p-6 border-r border-slate-800
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0 lg:static lg:w-64 lg:z-auto
+      `}>
         <div className="space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-md">
-              <Store className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-md">
+                <Store className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-playfair text-base font-black truncate max-w-[140px]">{appData.storeName || "Partner Store"}</h2>
+                <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Bookstore Partner</span>
+              </div>
             </div>
-            <div>
-              <h2 className="font-playfair text-base font-black truncate">{appData.storeName || "Partner Store"}</h2>
-              <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Bookstore Partner</span>
-            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
           <nav className="space-y-1">
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/10">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/10"
+            >
               <Layers className="h-4 w-4" />
               Store Manager
             </button>
             <button
-              onClick={() => navigate("/")}
+              onClick={() => { navigate("/"); setSidebarOpen(false); }}
               className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
               <BookOpen className="h-4 w-4" />
@@ -234,7 +279,7 @@ export default function PartnerDashboard() {
 
         <div className="pt-6 border-t border-slate-800 space-y-4">
           <div className="flex items-center gap-3 bg-slate-800/40 p-3 rounded-2xl border border-slate-800/60">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center font-bold text-xs text-white">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center font-bold text-xs text-white shrink-0">
               {user.name ? user.name[0].toUpperCase() : "P"}
             </div>
             <div className="min-w-0">
@@ -256,17 +301,17 @@ export default function PartnerDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto space-y-8">
+      <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto space-y-6 sm:space-y-8">
 
         {/* Header Title Grid */}
-        <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <section className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="font-playfair text-3xl font-black text-slate-900">Partner Dashboard</h1>
+            <h1 className="font-playfair text-2xl sm:text-3xl font-black text-slate-900">Partner Dashboard</h1>
             <p className="text-slate-500 text-xs mt-1">Manage listings, verify store statistics and register physical book items</p>
           </div>
-          <div className="flex items-center gap-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-2xl text-xs font-bold shadow-sm">
+          <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl text-xs font-bold shadow-sm shrink-0">
             <CheckCircle className="h-4 w-4 text-emerald-600" />
-            <span>Store Account Verified</span>
+            <span>Store Verified</span>
           </div>
         </section>
 
@@ -314,7 +359,7 @@ export default function PartnerDashboard() {
         </section>
 
         {/* Content splits: listings and add book */}
-        <section className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        <section className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 items-start">
 
           {/* List Books Panel */}
           <div className="xl:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
@@ -323,7 +368,39 @@ export default function PartnerDashboard() {
               <p className="text-slate-500 text-xs mt-0.5">Manage and review active books displayed in the bookstore</p>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile card view */}
+            <div className="block sm:hidden space-y-3">
+              {books.length === 0 ? (
+                <p className="text-center text-slate-400 py-8 text-sm">No books listed in store catalog yet.</p>
+              ) : books.map((bk) => (
+                <div key={bk._id} className="flex items-center gap-3 border border-slate-100 rounded-2xl p-3 bg-slate-50/50">
+                  <img src={bk.image} alt={bk.title} className="w-10 h-14 object-cover rounded-lg shadow-sm bg-slate-100 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-900 text-xs truncate">{bk.title}</p>
+                    <p className="text-[10px] text-slate-400">by {bk.author}</p>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">{bk.category || "Fiction"}</span>
+                      {bk.condition && (
+                        <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
+                          bk.condition === "Good" ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                          : bk.condition === "Fair" ? "bg-amber-50 border-amber-200 text-amber-700"
+                          : "bg-rose-50 border-rose-200 text-rose-700"
+                        }`}>{bk.condition}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-bold text-slate-900 text-sm">₹{bk.price}</div>
+                    {bk.originalPartnerPrice && bk.originalPartnerPrice !== bk.price && (
+                      <div className="text-[9px] text-slate-400 line-through">₹{bk.originalPartnerPrice}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
