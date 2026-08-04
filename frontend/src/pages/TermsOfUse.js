@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Scale, 
   BookOpen, 
@@ -13,6 +14,16 @@ import {
 } from "lucide-react";
 
 export default function TermsOfUse() {
+  const navigate = useNavigate();
+
+  const handleContactRedirect = () => {
+    navigate("/");
+    setTimeout(() => {
+      const el = document.getElementById("contact-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] py-8 px-4 sm:py-16 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Graphic Blurs */}
