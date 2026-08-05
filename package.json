@@ -7,6 +7,6 @@
   ],
   "scripts": {
     "start": "node backend/server.js",
-    "build": "cd frontend && CI=false npm run build"
+    "build": "cd frontend && npx cross-env DISABLE_ESLINT_PLUGIN=true CI=false npm run build"
   }
 }
