@@ -16,6 +16,9 @@ import BecomePartner from "./pages/Become-partner";
 import PartnerDashboard from "./pages/PartnerDashboard";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOtp from "./pages/VerifyOtp";
+import ResetPassword from "./pages/ResetPassword";
 import { UserProvider } from "./context/UserContext";
 
 function ScrollToTop() {
@@ -41,6 +44,9 @@ function AppRoutes() {
           <Route path="/all-books" element={<AllBooks />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/delivery" element={<Delivery />} />

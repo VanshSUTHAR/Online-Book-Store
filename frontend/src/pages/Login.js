@@ -22,6 +22,9 @@ export default function Login() {
   const { user, login } = useUser();
 
   useEffect(() => {
+    if (location.state?.toastMessage) {
+      showToastMsg(location.state.toastMessage);
+    }
     const loggedInUserId = user?._id || user?.id;
     if (loggedInUserId) {
       const fromPath = location.state?.from;
@@ -126,9 +129,17 @@ export default function Login() {
 
           {/* Password */}
           <div>
-            <label className="mb-2 block text-xs font-semibold text-slate-700">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-slate-700">
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs font-semibold text-blue-600 hover:text-indigo-600 hover:underline transition-colors"
+              >
+                Forgot Password?
+              </Link>
+            </div>
 
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
