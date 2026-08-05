@@ -21,7 +21,6 @@ const app = express();
 
 const defaultAllowedOrigins = [
   "https://online-book-store-three-tan.vercel.app",
-  "https://online-book-store-backend-psi.vercel.app",
 ].map((origin) => origin.trim().replace(/\/$/, ""));
 
 const configuredAllowedOrigins = [

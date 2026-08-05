@@ -24,8 +24,8 @@ async function requireAdmin(req, res, next) {
 
 // Mailer Helper
 async function sendMailHelper(to, subject, html) {
-  const emailUser = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
-  let emailPass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+  const emailUser = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+  let emailPass = (process.env.EMAIL_ADMIN_PASS || process.env.EMAIL_PASS || process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
   if (!emailPass || emailPass.length !== 16) {
     emailPass = "ahfgolvshbfxcbhp";
   }
@@ -200,7 +200,7 @@ router.post("/apply", authMiddleware, async (req, res) => {
         <p style="margin-top: 20px;">Please log in to the admin panel to review files and approve/reject.</p>
       </div>
     `;
-    const adminEmail = process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com";
+    const adminEmail = process.env.EMAIL_ADMIN || "sutharvansh022@gmail.com";
     await sendMailHelper(adminEmail, "New Partner Registration Alert", adminEmailHtml);
 
     res.status(201).json({ success: true, message: "Application submitted successfully." });
@@ -365,11 +365,11 @@ router.get("/my-status", authMiddleware, async (req, res) => {
       role: user.role,
       application: resolvedApplication
         ? {
-            status: resolvedApplication.status,
-            storeName: resolvedApplication.storeName,
-            rejectionReason: resolvedApplication.rejectionReason,
-            createdAt: resolvedApplication.createdAt
-          }
+          status: resolvedApplication.status,
+          storeName: resolvedApplication.storeName,
+          rejectionReason: resolvedApplication.rejectionReason,
+          createdAt: resolvedApplication.createdAt
+        }
         : null
     });
   } catch (err) {

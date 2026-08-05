@@ -77,8 +77,8 @@ router.post("/reply", async (req, res) => {
     contact.replies.push({ message: replyMessage, fromAdmin: true });
     await contact.save();
 
-    const emailUser = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
-    let emailPass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+    const emailUser = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+    let emailPass = (process.env.EMAIL_ADMIN_PASS || process.env.EMAIL_PASS || process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
     if (!emailPass || emailPass.length !== 16) {
       emailPass = "ahfgolvshbfxcbhp";
     }

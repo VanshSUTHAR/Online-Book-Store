@@ -20,8 +20,8 @@ router.post('/', async (req, res) => {
       replied: false
     });
 
-    const emailUser = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
-    let emailPass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+    const emailUser = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+    let emailPass = (process.env.EMAIL_ADMIN_PASS || process.env.EMAIL_PASS || process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
     if (!emailPass || emailPass.length !== 16) {
       emailPass = "ahfgolvshbfxcbhp";
     }
@@ -36,8 +36,8 @@ router.post('/', async (req, res) => {
 
     // 2️⃣ Send Email To Admin
     await transporter.sendMail({
-      from: 'Online Book Store <no-reply@onlinebookstore.com>',
-      to: process.env.ADMIN_EMAIL,
+      from: `Online Book Store <${emailUser}>`,
+      to: emailUser,
       subject: "New Contact Message - Online Book Store",
       html: `
         <h3>New Contact Message</h3>

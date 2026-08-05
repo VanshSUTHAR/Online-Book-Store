@@ -47,8 +47,8 @@ const otpRegisterStore = {};
 
 // Nodemailer setup for Gmail SMTP
 const getTransporter = () => {
-  const user = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
-  let pass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+  const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+  let pass = (process.env.EMAIL_ADMIN_PASS || process.env.EMAIL_PASS || process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
 
   // If ADMIN_EMAIL_PASS is a personal password (not a 16-letter App Password), fallback to working App Password
   if (!pass || pass.length !== 16) {
@@ -105,7 +105,7 @@ router.post("/send-otp", async (req, res) => {
     setImmediate(() => {
       try {
         const transporter = getTransporter();
-        const adminEmail = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+        const adminEmail = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
 
         if (transporter) {
           transporter
@@ -265,7 +265,7 @@ router.post("/send-register-otp", async (req, res) => {
     setImmediate(() => {
       try {
         const transporter = getTransporter();
-        const adminEmail = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+        const adminEmail = (process.env.EMAIL_ADMIN || "sutharvansh022@gmail.com").trim();
 
         if (transporter) {
           transporter
