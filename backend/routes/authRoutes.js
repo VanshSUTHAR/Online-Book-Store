@@ -47,12 +47,11 @@ const otpRegisterStore = {};
 
 // Nodemailer setup for Gmail SMTP
 const getTransporter = () => {
-  const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+  const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
   let pass = (process.env.EMAIL_ADMIN_PASS || process.env.EMAIL_PASS || process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
 
-  // If ADMIN_EMAIL_PASS is a personal password (not a 16-letter App Password), fallback to working App Password
-  if (!pass || pass.length !== 16) {
-    pass = "ahfgolvshbfxcbhp";
+  if (!user || !pass) {
+    throw new Error("Missing email SMTP credentials. Set EMAIL_ADMIN and EMAIL_ADMIN_PASS/EMAIL_PASS/ADMIN_EMAIL_PASS.");
   }
 
   return nodemailer.createTransport({
@@ -104,15 +103,15 @@ router.post("/send-otp", async (req, res) => {
 
     try {
       const transporter = getTransporter();
-      const adminEmail = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+      await transporter.verify();
+      const adminEmail = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
 
-      if (transporter) {
-        const info = await transporter.sendMail({
-          from: `Online Book Store <${adminEmail}>`,
-          to: email,
-          subject: "🔑 Your Login Verification Code - Online Book Store",
-          text: `Hello ${user.name || "Reader"},\n\nYour One-Time Password (OTP) for login to Online Book Store is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this code, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,
-          html: `
+      const info = await transporter.sendMail({
+        from: `Online Book Store <${adminEmail}>`,
+        to: email,
+        subject: "🔑 Your Login Verification Code - Online Book Store",
+        text: `Hello ${user.name || "Reader"},\n\nYour One-Time Password (OTP) for login to Online Book Store is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this code, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,
+        html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -209,11 +208,22 @@ router.post("/send-otp", async (req, res) => {
       mailErrorMsg = mailErr.message;
     }
 
+    if (!emailSent) {
+      delete otpStore[email];
+      if (isAutoCreatedUser) {
+        await User.deleteOne({ email });
+      }
+      return res.status(500).json({
+        success: false,
+        message: `Failed to send OTP email. ${mailErrorMsg || "Check your email configuration."}`,
+        mailError: mailErrorMsg,
+      });
+    }
+
     return res.json({
       success: true,
-      message: emailSent ? `Verification code sent to ${email}` : `OTP generated. (Email sending warning: ${mailErrorMsg})`,
+      message: `Verification code sent to ${email}`,
       emailSent,
-      mailError: mailErrorMsg,
     });
   } catch (error) {
     console.error("SEND OTP ERROR:", error);
@@ -260,15 +270,15 @@ router.post("/send-register-otp", async (req, res) => {
 
     try {
       const transporter = getTransporter();
-      const adminEmail = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+      await transporter.verify();
+      const adminEmail = (process.env.EMAIL_ADMIN || "").trim();
 
-      if (transporter) {
-        const info = await transporter.sendMail({
-          from: `Online Book Store <${adminEmail}>`,
-          to: email,
-          subject: "✅ Verify Your Email - Online Book Store",
-          text: `Hello ${name},\n\nYour One-Time Password (OTP) to verify your email and create your account is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not sign up, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,
-          html: `
+      const info = await transporter.sendMail({
+        from: `Online Book Store <${adminEmail}>`,
+        to: email,
+        subject: "✅ Verify Your Email - Online Book Store",
+        text: `Hello ${name},\n\nYour One-Time Password (OTP) to verify your email and create your account is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not sign up, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,
+        html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -355,11 +365,19 @@ router.post("/send-register-otp", async (req, res) => {
       mailErrorMsg = mailErr.message;
     }
 
+    if (!emailSent) {
+      delete otpRegisterStore[email];
+      return res.status(500).json({
+        success: false,
+        message: `Failed to send verification email. ${mailErrorMsg || "Check your email configuration."}`,
+        mailError: mailErrorMsg,
+      });
+    }
+
     return res.json({
       success: true,
-      message: emailSent ? `Verification code sent to ${email}` : `OTP generated. (Email sending warning: ${mailErrorMsg})`,
+      message: `Verification code sent to ${email}`,
       emailSent,
-      mailError: mailErrorMsg,
     });
   } catch (error) {
     console.error("SEND REGISTER OTP ERROR:", error);
