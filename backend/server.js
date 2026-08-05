@@ -20,7 +20,7 @@ const partnerRoutes = require("./routes/partnerRoutes");
 const app = express();
 
 const defaultAllowedOrigins = [
-  "https://online-book-store-backend-psi.vercel.app",
+  "https://online-book-store-three-tan.vercel.app/",
 ];
 
 const configuredAllowedOrigins = [
