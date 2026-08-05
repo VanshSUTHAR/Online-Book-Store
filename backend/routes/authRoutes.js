@@ -446,6 +446,7 @@ router.post("/forgot-password", async (req, res) => {
 
     let emailSent = false;
     let mailErrorMsg = null;
+    let mailErrorDetails = null;
 
     try {
       await sendStoreMail({
