@@ -150,8 +150,9 @@ if (require("fs").existsSync(buildPath)) {
   );
 
   app.use((req, res, next) => {
-    if (req.path.startsWith("/api/")) {
-      return next();
+    const url = req.originalUrl || req.url || "";
+    if (url.startsWith("/api/")) {
+      return res.status(404).json({ success: false, message: `API endpoint not found: ${req.method} ${url}` });
     }
     res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
     res.sendFile(path.join(buildPath, "index.html"));
