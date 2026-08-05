@@ -18,11 +18,17 @@ const getMailConfig = () => {
 
 const createTransporter = () => {
   const { user, pass } = getMailConfig();
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secure = process.env.SMTP_SECURE
+    ? process.env.SMTP_SECURE === "true"
+    : port === 465;
 
   return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
     auth: { user, pass },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
