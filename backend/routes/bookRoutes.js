@@ -10,8 +10,72 @@ const router = express.Router();
 // Get all books
 router.get("/", async (req, res) => {
   try {
-    // .lean() returns plain JS objects instead of full Mongoose documents (~3x faster for reads)
-    const books = await Book.find().lean();
+    let books = await Book.find().lean();
+
+    // Auto-seed sample books if database has no books yet
+    if (!books || books.length === 0) {
+      const sampleBooks = [
+        {
+          title: "Bhagavad Gita",
+          author: "Maharishi Ved Vyasa",
+          price: 1500,
+          originalPrice: 3000,
+          discount: 50,
+          rating: 5,
+          category: "religious",
+          description: "The Bhagavad Gita is one of the most sacred and influential spiritual texts of Indian philosophy.",
+          image: "https://cdn.harekrishnabooks.com/2019/05/Bhagavad-Gita-English_Front.png"
+        },
+        {
+          title: "Atomic Habits",
+          author: "James Clear",
+          price: 499,
+          originalPrice: 799,
+          discount: 38,
+          rating: 5,
+          category: "Self-Help",
+          description: "An Easy & Proven Way to Build Good Habits & Break Bad Ones.",
+          image: "https://images-na.ssl-images-amazon.com/images/I/81wgcld4wxL.jpg"
+        },
+        {
+          title: "Rich Dad Poor Dad",
+          author: "Robert T. Kiyosaki",
+          price: 399,
+          originalPrice: 599,
+          discount: 33,
+          rating: 5,
+          category: "Business",
+          description: "What the Rich Teach Their Kids About Money That the Poor and Middle Class Do Not!",
+          image: "https://images-na.ssl-images-amazon.com/images/I/81bsw6fnUiL.jpg"
+        },
+        {
+          title: "The Alchemist",
+          author: "Paulo Coelho",
+          price: 299,
+          originalPrice: 499,
+          discount: 40,
+          rating: 5,
+          category: "Fiction",
+          description: "A fable about following your dream.",
+          image: "https://images-na.ssl-images-amazon.com/images/I/71aFt4+OTOL.jpg"
+        },
+        {
+          title: "The Psychology of Money",
+          author: "Morgan Housel",
+          price: 350,
+          originalPrice: 550,
+          discount: 36,
+          rating: 5,
+          category: "Finance",
+          description: "Timeless lessons on wealth, greed, and happiness.",
+          image: "https://images-na.ssl-images-amazon.com/images/I/71g2ednj0JL.jpg"
+        }
+      ];
+
+      await Book.insertMany(sampleBooks);
+      books = await Book.find().lean();
+    }
+
     // Cache books for 60s; stale-while-revalidate lets CDN serve stale while refetching
     res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json(books);
