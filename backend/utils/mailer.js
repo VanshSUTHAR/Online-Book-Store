@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns").promises;
 
 const getMailConfig = () => {
   const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
@@ -16,20 +17,24 @@ const getMailConfig = () => {
   return { user, pass };
 };
 
-const createTransporter = () => {
+const createTransporter = async () => {
   const { user, pass } = getMailConfig();
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT || 587);
   const secure = process.env.SMTP_SECURE
     ? process.env.SMTP_SECURE === "true"
     : port === 465;
+  const [ipv4Host] = await dns.resolve4(host);
 
   return nodemailer.createTransport({
-    host,
+    host: ipv4Host || host,
     port,
     secure,
     requireTLS: !secure,
     auth: { user, pass },
+    tls: {
+      servername: host,
+    },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
@@ -42,7 +47,9 @@ const getFromAddress = () => {
 };
 
 async function sendStoreMail({ to, subject, text, html }) {
-  return createTransporter().sendMail({
+  const transporter = await createTransporter();
+
+  return transporter.sendMail({
     from: getFromAddress(),
     to,
     subject,

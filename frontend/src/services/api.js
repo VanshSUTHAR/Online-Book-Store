@@ -5,7 +5,7 @@ const getBaseUrl = () => {
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1";
     if (isLocalhost) {
-      return "http://localhost:5000/api";
+      return "https://online-books-0acj.onrender.com/api";
     }
   }
   const envUrl = (process.env.REACT_APP_API_URL || "").replace(/\/$/, "");
