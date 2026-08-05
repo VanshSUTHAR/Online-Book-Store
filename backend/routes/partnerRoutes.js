@@ -200,7 +200,7 @@ router.post("/apply", authMiddleware, async (req, res) => {
         <p style="margin-top: 20px;">Please log in to the admin panel to review files and approve/reject.</p>
       </div>
     `;
-    const adminEmail = process.env.ADMIN_EMAIL || "rudra2004@gmail.com";
+    const adminEmail = process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com";
     await sendMailHelper(adminEmail, "New Partner Registration Alert", adminEmailHtml);
 
     res.status(201).json({ success: true, message: "Application submitted successfully." });

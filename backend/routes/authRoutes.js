@@ -47,7 +47,7 @@ const otpRegisterStore = {};
 
 // Nodemailer setup for Gmail SMTP
 const getTransporter = () => {
-  const user = (process.env.ADMIN_EMAIL || "").trim();
+  const user = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
   const pass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
 
   if (!user || !pass) {
@@ -107,7 +107,7 @@ router.post("/send-otp", async (req, res) => {
     setImmediate(() => {
       try {
         const transporter = getTransporter();
-        const adminEmail = (process.env.ADMIN_EMAIL || "").trim();
+        const adminEmail = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
 
         if (transporter) {
           transporter
@@ -267,7 +267,7 @@ router.post("/send-register-otp", async (req, res) => {
     setImmediate(() => {
       try {
         const transporter = getTransporter();
-        const adminEmail = (process.env.ADMIN_EMAIL || "").trim();
+        const adminEmail = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
 
         if (transporter) {
           transporter
