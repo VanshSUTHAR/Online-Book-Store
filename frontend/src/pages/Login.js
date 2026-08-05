@@ -180,17 +180,7 @@ export default function Login() {
         setOtpError("");
         setResendCooldown(RESEND_COOLDOWN_SECONDS);
 
-        if (res.data.otp) {
-          setReceivedOtp(res.data.otp);
-          autofillOtp(res.data.otp);
-        }
-
-        showToastMsg(
-          res.data.emailSent
-            ? `Code sent to ${maskEmail(trimmedEmail)}`
-            : `OTP generated: ${res.data.otp}`
-        );
-
+        showToastMsg(`Code sent to ${maskEmail(trimmedEmail)}`);
         setTimeout(() => focusOtpBox(0), 50);
       } else {
         setOtpEmailError(res.data.message || "Failed to send OTP.");
@@ -494,21 +484,6 @@ export default function Login() {
             ) : (
               /* --- Step 2: otp --- */
               <div className="space-y-5">
-                {receivedOtp && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs font-semibold text-amber-800">
-                    <div>
-                      <span className="block text-[10px] text-amber-600 font-bold uppercase">Your Verification OTP</span>
-                      <span className="font-mono text-base font-black tracking-widest text-amber-900">{receivedOtp}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => autofillOtp(receivedOtp)}
-                      className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] rounded-lg shadow transition-all active:scale-95"
-                    >
-                      Auto Fill
-                    </button>
-                  </div>
-                )}
                 <div>
                   <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
                     {otpDigits.map((digit, idx) => (
