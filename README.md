@@ -6,7 +6,7 @@ A premium, full-featured web application for browsing, ordering, and managing bo
 
 - Browse and search books with category-based filtering and sorting
 - Add books to a cart and proceed through a checkout flow with Stripe integration
-- Register and log in with email/password or OTP-based authentication
+- Register and log in with email/password authentication
 - View personal order history and shipment-related updates
 - Become a partner by submitting a seller application through a guided multi-step onboarding form
 - Manage seller applications and store operations from an admin dashboard
@@ -51,8 +51,8 @@ The frontend application consists of 12 main views, each mapped to a specific pa
    * Displays selected books, quantities, and calculated item subtotals. Synchronizes the cart status with the backend database or falls back to local storage session caching.
 6. **💳 [Orders.js](file:///d:/online-books/frontend/src/pages/Orders.js) (Checkout Processing)**
    * Form-based delivery registration page prompting for customer contact details, shipping location, and payment choices. Launches Stripe billing inputs on checkout confirmation.
-7. **👤 [Login.js](file:///d:/online-books/frontend/src/pages/Login.js) (Authentication & OTP Verification)**
-   * Double-mode portal permitting logins via email-password credentials or dynamic 6-digit email OTP keys (automated nodemailer triggers) backed by resend timers and rate cooldowns.
+7. **👤 [Login.js](file:///d:/online-books/frontend/src/pages/Login.js) (Authentication)**
+   * Portal permitting logins via email and password credentials.
 8. **📝 [Register.js](file:///d:/online-books/frontend/src/pages/Register.js) (Account Registration)**
    * Simple user onboarding page with instant field checks for full name, email, password, and mobile number.
 9. **📦 [MyOrders.js](file:///d:/online-books/frontend/src/pages/MyOrders.js) (Customer Order History)**
@@ -122,7 +122,7 @@ The application defines 10 specialized MongoDB Mongoose database models:
 1. **🔐 [authRoutes.js](file:///d:/online-books/backend/routes/authRoutes.js)**
    * `POST /register` - Register a new account.
    * `POST /login` - Password verification and JWT delivery.
-   * `POST /send-otp` / `POST /verify-otp` - Dispatch and validation for email OTPs.
+   * `POST /send-register-otp` / `POST /verify-register-otp` - Dispatch and validation for email verification during sign-up.
 2. **🤝 [partnerRoutes.js](file:///d:/online-books/backend/routes/partnerRoutes.js)**
    * `POST /apply` - Submits a partner application payload.
    * `GET /my-status` - Checks application state.
