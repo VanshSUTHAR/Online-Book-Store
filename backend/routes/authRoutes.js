@@ -84,6 +84,7 @@ router.post("/send-otp", async (req, res) => {
 
     let emailSent = false;
     let mailErrorMsg = null;
+    let mailErrorDetails = null;
 
     try {
       const info = await sendStoreMail({
@@ -183,7 +184,11 @@ router.post("/send-otp", async (req, res) => {
         console.log(`[OTP] Email sent successfully to ${email}: ${info.response}`);
     } catch (mailErr) {
       console.error("[OTP] Email send failed:", mailErr.message);
+      if (mailErr.mailerDebugInfo) {
+        console.error("[OTP] Mailer debug:", mailErr.mailerDebugInfo);
+      }
       mailErrorMsg = mailErr.message;
+      mailErrorDetails = mailErr.mailerDebugInfo || null;
     }
 
     if (!emailSent) {
@@ -195,6 +200,7 @@ router.post("/send-otp", async (req, res) => {
         success: false,
         message: `Failed to send OTP email. ${mailErrorMsg || "Check your email configuration."}`,
         mailError: mailErrorMsg,
+        mailErrorDetails,
       });
     }
 
@@ -245,6 +251,7 @@ router.post("/send-register-otp", async (req, res) => {
 
     let emailSent = false;
     let mailErrorMsg = null;
+    let mailErrorDetails = null;
 
     try {
       const info = await sendStoreMail({
@@ -334,7 +341,11 @@ router.post("/send-register-otp", async (req, res) => {
         console.log(`[REG-OTP] Email sent successfully to ${email}: ${info.response}`);
     } catch (mailErr) {
       console.error("[REG-OTP] Email send failed:", mailErr.message);
+      if (mailErr.mailerDebugInfo) {
+        console.error("[REG-OTP] Mailer debug:", mailErr.mailerDebugInfo);
+      }
       mailErrorMsg = mailErr.message;
+      mailErrorDetails = mailErr.mailerDebugInfo || null;
     }
 
     if (!emailSent) {
@@ -343,6 +354,7 @@ router.post("/send-register-otp", async (req, res) => {
         success: false,
         message: `Failed to send verification email. ${mailErrorMsg || "Check your email configuration."}`,
         mailError: mailErrorMsg,
+        mailErrorDetails,
       });
     }
 

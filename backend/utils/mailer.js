@@ -17,17 +17,24 @@ const getMailConfig = () => {
   return { user, pass };
 };
 
-const createTransporter = async () => {
+const getTransportOptions = async () => {
   const { user, pass } = getMailConfig();
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT || 587);
   const secure = process.env.SMTP_SECURE
     ? process.env.SMTP_SECURE === "true"
     : port === 465;
-  const [ipv4Host] = await dns.resolve4(host);
+  let resolvedHost = host;
 
-  return nodemailer.createTransport({
-    host: ipv4Host || host,
+  try {
+    const [ipv4Host] = await dns.resolve4(host);
+    resolvedHost = ipv4Host || host;
+  } catch (err) {
+    console.warn(`[MAIL] IPv4 DNS lookup failed for ${host}:`, err.message);
+  }
+
+  return {
+    host: resolvedHost,
     port,
     secure,
     requireTLS: !secure,
@@ -38,7 +45,23 @@ const createTransporter = async () => {
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
-  });
+    debugInfo: {
+      configuredHost: host,
+      resolvedHost,
+      port,
+      secure,
+      requireTLS: !secure,
+    },
+  };
+};
+
+const createTransporter = async () => {
+  const options = await getTransportOptions();
+  const { debugInfo, ...transportOptions } = options;
+  const transporter = nodemailer.createTransport(transportOptions);
+
+  transporter.mailerDebugInfo = debugInfo;
+  return transporter;
 };
 
 const getFromAddress = () => {
@@ -49,18 +72,32 @@ const getFromAddress = () => {
 async function sendStoreMail({ to, subject, text, html }) {
   const transporter = await createTransporter();
 
-  return transporter.sendMail({
-    from: getFromAddress(),
-    to,
-    subject,
-    text,
-    html,
-  });
+  try {
+    return await transporter.sendMail({
+      from: getFromAddress(),
+      to,
+      subject,
+      text,
+      html,
+    });
+  } catch (err) {
+    err.mailerDebugInfo = {
+      ...transporter.mailerDebugInfo,
+      code: err.code,
+      command: err.command,
+      errno: err.errno,
+      syscall: err.syscall,
+      address: err.address,
+      port: err.port,
+    };
+    throw err;
+  }
 }
 
 module.exports = {
   createTransporter,
   getFromAddress,
   getMailConfig,
+  getTransportOptions,
   sendStoreMail,
 };
