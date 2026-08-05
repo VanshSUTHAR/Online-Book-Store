@@ -7,10 +7,6 @@ node_modules/
 .pnp.js
 
 # Environment files
-.env
-.env.*
-**/.env
-**/.env.*
 
 # Build outputs
 build/
@@ -34,7 +30,6 @@ lerna-debug.log*
 pnpm-debug.log*
 
 # IDE & Editor files
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -50,3 +45,4 @@ Desktop.ini
 .cache/
 .eslintcache
 .gemini/
+config.bat
