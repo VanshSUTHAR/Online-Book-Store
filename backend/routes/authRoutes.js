@@ -450,8 +450,16 @@ router.post("/forgot-password", async (req, res) => {
         html: `<p>Your password reset code is: <strong>${otp}</strong></p><p>It expires in 5 minutes.</p>`,
       });
     } catch (mailErr) {
-      console.error("[FORGOT-PW] Email send failed:", mailErr.message);
-      return res.status(500).json({ success: false, message: "Failed to send email" });
+      console.error("[FORGOT-PW] Email send failed:", mailErr && mailErr.message ? mailErr.message : mailErr);
+      // Log transporter debug info when available to help diagnose SMTP issues
+      if (mailErr && mailErr.mailerDebugInfo) console.error("[FORGOT-PW] mailerDebugInfo:", mailErr.mailerDebugInfo);
+      const safeResponse = { success: false, message: "Failed to send email" };
+      // In non-production reveal some debug info to help troubleshooting
+      if (process.env.NODE_ENV !== "production") {
+        safeResponse.mailError = mailErr?.message || null;
+        safeResponse.mailerDebugInfo = mailErr?.mailerDebugInfo || null;
+      }
+      return res.status(500).json(safeResponse);
     }
 
     return res.json({ success: true, message: `OTP sent to ${email}` });
