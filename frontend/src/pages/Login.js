@@ -270,8 +270,11 @@ export default function Login() {
         setOtpDigits(Array(OTP_LENGTH).fill(""));
         focusOtpBox(0);
       }
-    } catch {
-      setOtpError("Something went wrong. Please try again.");
+    } catch (error) {
+      setOtpError(
+        error.response?.data?.message ||
+        "Something went wrong. Please try again."
+      );
     } finally {
       setOtpVerifying(false);
     }

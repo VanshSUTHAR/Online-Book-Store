@@ -76,6 +76,7 @@ router.post("/send-otp", async (req, res) => {
     }
 
     let user = await User.findOne({ email });
+    let isAutoCreatedUser = false;
 
     // Auto-create user if requesting OTP for login and user doesn't exist yet
     if (!user) {
@@ -87,6 +88,7 @@ router.post("/send-otp", async (req, res) => {
         role: "user",
       });
       await user.save();
+      isAutoCreatedUser = true;
     }
 
     // Generate 6-digit OTP
@@ -444,28 +446,52 @@ router.post("/verify-register-otp", async (req, res) => {
 
 // ================= VERIFY OTP AND LOGIN =================
 router.post("/verify-otp", async (req, res) => {
-  const email = (req.body.email || "").toLowerCase().trim();
-  const otp = (req.body.otp || "").trim();
-  const record = otpStore[email];
-  if (!record || record.otp !== otp || Date.now() > record.expires) {
-    return res.json({ success: false, message: "Invalid or expired OTP" });
+  try {
+    const email = (req.body.email || "").toLowerCase().trim();
+    const otp = (req.body.otp || "").trim();
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email and OTP are required" });
+    }
+
+    const record = otpStore[email];
+    if (!record) {
+      return res.status(400).json({ success: false, message: "No OTP request found. Please request a new code." });
+    }
+
+    if (Date.now() > record.expires) {
+      delete otpStore[email];
+      return res.status(400).json({ success: false, message: "OTP has expired. Please request a new code." });
+    }
+
+    if (record.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP. Please try again." });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      delete otpStore[email];
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || "secret", { expiresIn: "7d" });
+    delete otpStore[email];
+
+    return res.json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role
+      },
+      token
+    });
+  } catch (error) {
+    console.error("VERIFY OTP ERROR:", error);
+    return res.status(500).json({ success: false, message: "Server error while verifying OTP" });
   }
-  const user = await User.findOne({ email });
-  if (!user) return res.json({ success: false, message: "User not found" });
-  // Generate JWT token (same as login)
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-  delete otpStore[email];
-  return res.json({
-    success: true,
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      mobile: user.mobile,
-      role: user.role
-    },
-    token
-  });
 });
 
 // ================= GET ALL ADMINS =================
