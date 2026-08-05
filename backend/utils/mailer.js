@@ -1,34 +1,58 @@
 const nodemailer = require("nodemailer");
 const dns = require("dns").promises;
 
+// ─────────────────────────────────────────────────────────────
+// Mail config — reads Brevo credentials first, falls back to
+// generic SMTP env vars (EMAIL_ADMIN / EMAIL_ADMIN_PASS).
+// Brevo SMTP works on Render free tier (port 587, whitelisted).
+// ─────────────────────────────────────────────────────────────
+
 const getMailConfig = () => {
+  // Brevo SMTP credentials (preferred)
+  const brevoUser = (process.env.BREVO_SMTP_USER || "").trim();
+  const brevoKey  = (process.env.BREVO_SMTP_KEY  || "").trim();
+
+  if (brevoUser && brevoKey) {
+    return {
+      host:   process.env.SMTP_HOST || "smtp-relay.brevo.com",
+      port:   Number(process.env.SMTP_PORT || 587),
+      secure: false,          // Brevo uses STARTTLS on 587
+      user:   brevoUser,
+      pass:   brevoKey,
+    };
+  }
+
+  // Generic Gmail / custom SMTP fallback
   const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
   const pass = (
     process.env.EMAIL_ADMIN_PASS ||
-    process.env.EMAIL_PASS ||
+    process.env.EMAIL_PASS       ||
     process.env.ADMIN_EMAIL_PASS ||
     ""
   ).replace(/\s+/g, "");
 
   if (!user || !pass) {
-    throw new Error("Missing email SMTP credentials. Set EMAIL_ADMIN and EMAIL_ADMIN_PASS in Render.");
+    throw new Error(
+      "Missing SMTP credentials. Set BREVO_SMTP_USER + BREVO_SMTP_KEY (or EMAIL_ADMIN + EMAIL_ADMIN_PASS) in your environment."
+    );
   }
 
-  return { user, pass };
+  return {
+    host:   process.env.SMTP_HOST || "smtp.gmail.com",
+    port:   Number(process.env.SMTP_PORT || 587),
+    secure: false,
+    user,
+    pass,
+  };
 };
 
 const getTransportOptions = async () => {
-  const { user, pass } = getMailConfig();
-  const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT || 587);
-  const secure = process.env.SMTP_SECURE
-    ? process.env.SMTP_SECURE === "true"
-    : port === 465;
-  let resolvedHost = host;
+  const { host, port, secure, user, pass } = getMailConfig();
 
+  let resolvedHost = host;
   try {
-    const [ipv4Host] = await dns.resolve4(host);
-    resolvedHost = ipv4Host || host;
+    const addresses = await dns.resolve4(host);
+    if (addresses && addresses[0]) resolvedHost = addresses[0];
   } catch (err) {
     console.warn(`[MAIL] IPv4 DNS lookup failed for ${host}:`, err.message);
   }
@@ -40,18 +64,12 @@ const getTransportOptions = async () => {
     requireTLS: !secure,
     auth: { user, pass },
     tls: {
-      servername: host,
+      servername: host, // keep original hostname for TLS SNI
     },
     connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    debugInfo: {
-      configuredHost: host,
-      resolvedHost,
-      port,
-      secure,
-      requireTLS: !secure,
-    },
+    greetingTimeout:   10000,
+    socketTimeout:     15000,
+    debugInfo: { configuredHost: host, resolvedHost, port, secure },
   };
 };
 
@@ -59,12 +77,16 @@ const createTransporter = async () => {
   const options = await getTransportOptions();
   const { debugInfo, ...transportOptions } = options;
   const transporter = nodemailer.createTransport(transportOptions);
-
   transporter.mailerDebugInfo = debugInfo;
   return transporter;
 };
 
 const getFromAddress = () => {
+  // Brevo requires the "from" address to be your verified sender address
+  const from = (process.env.MAIL_FROM_ADDRESS || "").trim();
+  if (from) return from;
+
+  // Fallback: use the SMTP login address
   const { user } = getMailConfig();
   return `Online Book Store <${user}>`;
 };
@@ -73,22 +95,24 @@ async function sendStoreMail({ to, subject, text, html }) {
   const transporter = await createTransporter();
 
   try {
-    return await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: getFromAddress(),
       to,
       subject,
       text,
       html,
     });
+    console.log("[MAIL] Sent successfully via", transporter.mailerDebugInfo?.configuredHost);
+    return info;
   } catch (err) {
     err.mailerDebugInfo = {
       ...transporter.mailerDebugInfo,
-      code: err.code,
+      code:    err.code,
       command: err.command,
-      errno: err.errno,
+      errno:   err.errno,
       syscall: err.syscall,
       address: err.address,
-      port: err.port,
+      port:    err.port,
     };
     throw err;
   }
