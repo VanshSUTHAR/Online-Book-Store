@@ -6,7 +6,7 @@
     "backend"
   ],
   "scripts": {
-    "start": "npm --workspace frontend start",
-    "build": "npm --workspace frontend run build"
+    "start": "node backend/server.js",
+    "build": "cd frontend && npm install && npm run build"
   }
 }
