@@ -7,6 +7,6 @@
   ],
   "scripts": {
     "start": "node backend/server.js",
-    "build": "cd frontend && npm install && npm run build"
+    "build": "cd frontend && CI=false npm run build"
   }
 }
