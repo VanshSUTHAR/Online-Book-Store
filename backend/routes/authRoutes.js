@@ -39,8 +39,11 @@ router.post("/change-password", async (req, res) => {
   return res.json({ success: true, message: "Password changed successfully" });
 });
 
-// In-memory OTP store (for demo; use Redis or DB in production)
+// In-memory OTP store for login/forgot-password (for demo; use Redis or DB in production)
 const otpStore = {};
+
+// In-memory OTP store for registration — holds pending user data + OTP
+const otpRegisterStore = {};
 
 // Nodemailer setup for Gmail SMTP
 const getTransporter = () => {
@@ -222,6 +225,207 @@ router.post("/send-otp", async (req, res) => {
         message: error.message,
       });
     }
+  }
+});
+
+// ================= SEND OTP FOR REGISTRATION (EMAIL VERIFICATION) =================
+router.post("/send-register-otp", async (req, res) => {
+  try {
+    const email = (req.body.email || "").toLowerCase().trim();
+    const name = (req.body.name || "").trim();
+    const mobile = (req.body.mobile || "").trim();
+    const password = (req.body.password || "").trim();
+
+    if (!email || !name || !password) {
+      return res.status(400).json({ success: false, message: "Name, email and password are required" });
+    }
+
+    // Check if user already exists
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ success: false, message: "An account with this email already exists" });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store pending registration data + OTP for 10 minutes
+    otpRegisterStore[email] = {
+      otp,
+      expires: Date.now() + 10 * 60 * 1000,
+      userData: { name, email, mobile, password },
+    };
+
+    // Respond immediately
+    res.json({
+      success: true,
+      message: `Verification code sent to ${email}`,
+      otp, // returned for dev convenience; remove in production
+    });
+
+    // Send email in background
+    setImmediate(() => {
+      try {
+        const transporter = getTransporter();
+        const adminEmail = (process.env.ADMIN_EMAIL || "").trim();
+
+        if (transporter) {
+          transporter
+            .sendMail({
+              from: `Online Book Store <${adminEmail}>`,
+              to: email,
+              subject: "✅ Verify Your Email - Online Book Store",
+              text: `Hello ${name},\n\nYour One-Time Password (OTP) to verify your email and create your account is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not sign up, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,
+              html: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Verify Your Email - Online Book Store</title>
+              </head>
+              <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f1f5f9; padding: 40px 10px;">
+                  <tr>
+                    <td align="center">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+
+                        <!-- Header -->
+                        <tr>
+                          <td style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); padding: 36px 30px; text-align: center;">
+                            <div style="font-size: 42px; margin-bottom: 8px;">📚</div>
+                            <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0;">Online Book Store</h1>
+                            <p style="color: #c7d2fe; font-size: 13px; font-weight: 500; margin: 6px 0 0 0;">Verify Your Email Address</p>
+                          </td>
+                        </tr>
+
+                        <!-- Body -->
+                        <tr>
+                          <td style="padding: 40px 36px 30px 36px;">
+                            <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 12px;">
+                              Welcome, ${name}! 👋
+                            </h2>
+                            <p style="font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 24px 0;">
+                              Thanks for signing up! Use the verification code below to confirm your email and activate your account:
+                            </p>
+
+                            <!-- OTP Box -->
+                            <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 28px 20px; text-align: center; margin-bottom: 24px;">
+                              <span style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 10px;">
+                                Email Verification Code
+                              </span>
+                              <div style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 900; letter-spacing: 10px; color: #4338ca; margin: 5px 0;">
+                                ${otp}
+                              </div>
+                              <div style="display: inline-block; background-color: #fef3c7; color: #92400e; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 12px;">
+                                ⏱️ Valid for 10 minutes
+                              </div>
+                            </div>
+
+                            <!-- Security Notice -->
+                            <div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 24px;">
+                              <p style="font-size: 12px; line-height: 1.5; color: #166534; margin: 0;">
+                                <strong>🔐 Security Note:</strong> Never share this code with anyone. If you did not create an account, please ignore this email.
+                              </p>
+                            </div>
+
+                            <p style="font-size: 13px; color: #94a3b8; line-height: 1.5; margin: 0;">
+                              Once verified, you'll be logged in automatically and ready to start browsing books!
+                            </p>
+                          </td>
+                        </tr>
+
+                        <!-- Divider -->
+                        <tr><td style="padding: 0 36px;"><div style="border-top: 1px solid #f1f5f9;"></div></td></tr>
+
+                        <!-- Footer -->
+                        <tr>
+                          <td style="padding: 24px 36px 36px 36px; text-align: center;">
+                            <p style="font-size: 13px; font-weight: 600; color: #475569; margin: 0 0 6px 0;">Happy Reading! 📖</p>
+                            <p style="font-size: 12px; color: #94a3b8; margin: 0 0 12px 0;">Online Book Store Team</p>
+                            <p style="font-size: 11px; color: #cbd5e1; margin: 0;">© ${new Date().getFullYear()} Online Book Store. All rights reserved.</p>
+                          </td>
+                        </tr>
+
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+              </html>
+              `,
+            })
+            .then((info) => {
+              console.log(`[REG-OTP] Email sent to ${email}: ${info.response}`);
+            })
+            .catch((mailErr) => {
+              console.error("[REG-OTP] Background email send failed:", mailErr.message);
+            });
+        }
+      } catch (bgError) {
+        console.error("[REG-OTP] Background task error:", bgError.message);
+      }
+    });
+  } catch (error) {
+    console.error("SEND REGISTER OTP ERROR:", error);
+    if (!res.headersSent) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+});
+
+// ================= VERIFY REGISTER OTP AND CREATE ACCOUNT =================
+router.post("/verify-register-otp", async (req, res) => {
+  try {
+    const email = (req.body.email || "").toLowerCase().trim();
+    const otp = (req.body.otp || "").trim();
+
+    const record = otpRegisterStore[email];
+
+    if (!record) {
+      return res.status(400).json({ success: false, message: "No pending registration found. Please start again." });
+    }
+    if (record.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid verification code." });
+    }
+    if (Date.now() > record.expires) {
+      delete otpRegisterStore[email];
+      return res.status(400).json({ success: false, message: "Verification code has expired. Please start again." });
+    }
+
+    // Double-check the email wasn't registered in the meantime
+    const existing = await User.findOne({ email });
+    if (existing) {
+      delete otpRegisterStore[email];
+      return res.status(400).json({ success: false, message: "An account with this email already exists." });
+    }
+
+    // Create the user
+    const { name, mobile, password } = record.userData;
+    const user = new User({ email, name, mobile, password, role: "user" });
+    await user.save();
+
+    // Clean up store
+    delete otpRegisterStore[email];
+
+    // Issue JWT
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || "secret", { expiresIn: "7d" });
+
+    return res.json({
+      success: true,
+      message: "Account created successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("VERIFY REGISTER OTP ERROR:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

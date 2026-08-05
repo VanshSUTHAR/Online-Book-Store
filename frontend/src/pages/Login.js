@@ -378,7 +378,7 @@ export default function Login() {
               onClick={() => setShowOtpLogin(true)}
               className="font-bold text-blue-600 hover:text-blue-700 transition-colors"
             >
-              Sign in with OTP
+              Forgot Password? Sign in with OTP
             </button>
             <span className="text-slate-400 font-semibold">
               New here?{" "}

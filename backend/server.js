@@ -120,6 +120,36 @@ app.post("/api/test", (req, res) => {
   res.json({ ok: true });
 });
 
+// Serve frontend static build files with optimized Cache-Control headers
+const buildPath = path.join(__dirname, "../frontend/build");
+if (require("fs").existsSync(buildPath)) {
+  app.use(
+    express.static(buildPath, {
+      maxAge: "1y",
+      immutable: true,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".html")) {
+          // Keep HTML uncached so new deployments reflect immediately
+          res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+        } else if (filePath.endsWith("manifest.json")) {
+          res.setHeader("Cache-Control", "public, max-age=86400");
+        } else {
+          // Hashed static assets (JS, CSS, images, media)
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    })
+  );
+
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+    res.sendFile(path.join(buildPath, "index.html"));
+  });
+}
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
