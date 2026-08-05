@@ -204,7 +204,6 @@ router.post("/send-otp", async (req, res) => {
         });
         emailSent = true;
         console.log(`[OTP] Email sent successfully to ${email}: ${info.response}`);
-      }
     } catch (mailErr) {
       console.error("[OTP] Email send failed:", mailErr.message);
       mailErrorMsg = mailErr.message;
@@ -361,7 +360,6 @@ router.post("/send-register-otp", async (req, res) => {
         });
         emailSent = true;
         console.log(`[REG-OTP] Email sent successfully to ${email}: ${info.response}`);
-      }
     } catch (mailErr) {
       console.error("[REG-OTP] Email send failed:", mailErr.message);
       mailErrorMsg = mailErr.message;
