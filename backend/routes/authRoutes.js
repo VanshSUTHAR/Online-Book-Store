@@ -515,12 +515,15 @@ router.post("/forgot-password", async (req, res) => {
     } catch (mailErr) {
       console.error("[FORGOT-PASSWORD-OTP] Mail send failed:", mailErr.message);
       mailErrorMsg = mailErr.message;
+      mailErrorDetails = mailErr.mailerDebugInfo || null;
     }
 
     if (!emailSent) {
       return res.status(500).json({
         success: false,
         message: `Failed to send OTP email. ${mailErrorMsg || "Please check email configuration."}`,
+        mailError: mailErrorMsg,
+        mailErrorDetails,
       });
     }
 
