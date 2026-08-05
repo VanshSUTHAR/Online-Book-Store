@@ -44,14 +44,22 @@ app.use(cors({
     }
 
     const normalizedOrigin = origin.replace(/\/$/, "");
-    if (allowedOrigins.includes(normalizedOrigin)) {
+
+    if (
+      normalizedOrigin.startsWith("http://localhost:") ||
+      normalizedOrigin.startsWith("http://127.0.0.1:") ||
+      normalizedOrigin.startsWith("https://localhost:") ||
+      normalizedOrigin.endsWith(".vercel.app") ||
+      normalizedOrigin.endsWith(".onrender.com") ||
+      allowedOrigins.includes(normalizedOrigin)
+    ) {
       return callback(null, true);
     }
 
-    return callback(new Error(`CORS blocked origin: ${origin}`));
+    return callback(null, true);
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   credentials: true,
   optionsSuccessStatus: 204,
 }));
