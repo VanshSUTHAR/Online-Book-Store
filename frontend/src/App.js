@@ -5,6 +5,9 @@ import Footer from "./components/Footer";
 import "./App.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOtp from "./pages/VerifyOtp";
+import ResetPassword from "./pages/ResetPassword";
 import Books from "./pages/Books";
 import Cart from "./pages/Cart";
 import AllBooks from "./pages/AllBooks";
@@ -42,6 +45,9 @@ function AppRoutes() {
           <Route path="/all-books" element={<AllBooks />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/cart" element={<Cart />} />
           <Route path="/admin" element={<Admin />} />

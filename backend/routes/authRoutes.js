@@ -423,3 +423,100 @@ router.delete("/admins/:id", async (req, res) => {
 });
 
 module.exports = router;
+// ================= FORGOT PASSWORD FLOW =================
+// POST /forgot-password -> send OTP
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const email = (req.body.email || "").toLowerCase().trim();
+    if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await Otp.findOneAndUpdate(
+      { email },
+      { email, otp, isVerified: false, expiresAt },
+      { upsert: true, new: true }
+    );
+
+    try {
+      await sendStoreMail({
+        to: email,
+        subject: "Reset your password - Online Book Store",
+        text: `Your password reset code is: ${otp}. It expires in 5 minutes.`,
+        html: `<p>Your password reset code is: <strong>${otp}</strong></p><p>It expires in 5 minutes.</p>`,
+      });
+    } catch (mailErr) {
+      console.error("[FORGOT-PW] Email send failed:", mailErr.message);
+      return res.status(500).json({ success: false, message: "Failed to send email" });
+    }
+
+    return res.json({ success: true, message: `OTP sent to ${email}` });
+  } catch (err) {
+    console.error("/forgot-password error", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// POST /verify-otp -> verify OTP
+router.post("/verify-otp", async (req, res) => {
+  try {
+    const email = (req.body.email || "").toLowerCase().trim();
+    const otp = (req.body.otp || "").trim();
+    if (!email || !otp) return res.status(400).json({ success: false, message: "Email and OTP are required" });
+
+    const record = await Otp.findOne({ email });
+    if (!record) return res.status(400).json({ success: false, message: "No OTP request found" });
+    if (new Date() > new Date(record.expiresAt)) return res.status(400).json({ success: false, message: "OTP has expired" });
+    if (record.otp !== otp) return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+    record.isVerified = true;
+    await record.save();
+
+    return res.json({ success: true, message: "OTP verified" });
+  } catch (err) {
+    console.error("/verify-otp error", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// POST /reset-password -> set new password after OTP verified
+router.post("/reset-password", async (req, res) => {
+  try {
+    const email = (req.body.email || "").toLowerCase().trim();
+    const newPassword = (req.body.newPassword || "").trim();
+    const confirmPassword = (req.body.confirmPassword || "").trim();
+
+    if (!email || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: "Passwords do not match" });
+    }
+
+    const record = await Otp.findOne({ email });
+    if (!record) return res.status(400).json({ success: false, message: "No OTP request found" });
+    if (new Date() > new Date(record.expiresAt)) return res.status(400).json({ success: false, message: "OTP has expired" });
+    if (!record.isVerified) return res.status(400).json({ success: false, message: "OTP not verified" });
+
+    // Hash the password
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    user.password = hashed;
+    await user.save();
+
+    // Cleanup OTP record
+    await Otp.deleteOne({ email });
+
+    return res.json({ success: true, message: "Password reset successfully" });
+  } catch (err) {
+    console.error("/reset-password error", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
