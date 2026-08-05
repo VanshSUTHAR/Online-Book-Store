@@ -1,31 +1,6 @@
-const { Resend } = require("resend");
 const nodemailer = require("nodemailer");
 const dns = require("dns").promises;
 
-// ─────────────────────────────────────────────
-// RESEND (primary — HTTPS API, works on Render free tier)
-// ─────────────────────────────────────────────
-const getResendClient = () => {
-  const apiKey = (process.env.RESEND_API_KEY || "").trim();
-  if (!apiKey || apiKey === "re_REPLACE_ME") return null;
-  return new Resend(apiKey);
-};
-
-const getFromAddress = () => {
-  // When using Resend, you must send from a verified domain.
-  // Free Resend accounts can send from: onboarding@resend.dev (for testing only)
-  // Once you add your domain in Resend dashboard, change this to e.g. noreply@yourdomain.com
-  const resendFrom = (process.env.RESEND_FROM || "").trim();
-  if (resendFrom) return resendFrom;
-
-  // Fallback: use Gmail address for SMTP
-  const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
-  return `Online Book Store <${user}>`;
-};
-
-// ─────────────────────────────────────────────
-// SMTP (fallback — nodemailer + Gmail)
-// ─────────────────────────────────────────────
 const getMailConfig = () => {
   const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
   const pass = (
@@ -36,7 +11,7 @@ const getMailConfig = () => {
   ).replace(/\s+/g, "");
 
   if (!user || !pass) {
-    throw new Error("Missing email SMTP credentials. Set EMAIL_ADMIN and EMAIL_ADMIN_PASS.");
+    throw new Error("Missing email SMTP credentials. Set EMAIL_ADMIN and EMAIL_ADMIN_PASS in Render.");
   }
 
   return { user, pass };
@@ -64,53 +39,50 @@ const getTransportOptions = async () => {
     secure,
     requireTLS: !secure,
     auth: { user, pass },
-    tls: { servername: host },
+    tls: {
+      servername: host,
+    },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
+    debugInfo: {
+      configuredHost: host,
+      resolvedHost,
+      port,
+      secure,
+      requireTLS: !secure,
+    },
   };
 };
 
 const createTransporter = async () => {
   const options = await getTransportOptions();
-  return nodemailer.createTransport(options);
+  const { debugInfo, ...transportOptions } = options;
+  const transporter = nodemailer.createTransport(transportOptions);
+
+  transporter.mailerDebugInfo = debugInfo;
+  return transporter;
 };
 
-// ─────────────────────────────────────────────
-// sendStoreMail — tries Resend first, falls back to SMTP
-// ─────────────────────────────────────────────
+const getFromAddress = () => {
+  const { user } = getMailConfig();
+  return `Online Book Store <${user}>`;
+};
+
 async function sendStoreMail({ to, subject, text, html }) {
-  const resend = getResendClient();
+  const transporter = await createTransporter();
 
-  if (resend) {
-    // ── Resend path (HTTPS, no port blocking) ──
-    try {
-      const from = getFromAddress();
-      const { data, error } = await resend.emails.send({ from, to, subject, text, html });
-
-      if (error) {
-        console.error("[MAIL:RESEND] Error:", error);
-        throw new Error(error.message || "Resend API error");
-      }
-
-      console.log("[MAIL:RESEND] Sent successfully. ID:", data?.id);
-      return data;
-    } catch (err) {
-      console.error("[MAIL:RESEND] Failed, trying SMTP fallback:", err.message);
-      // fall through to SMTP
-    }
-  }
-
-  // ── SMTP path (nodemailer) ──
   try {
-    const transporter = await createTransporter();
-    const from = getFromAddress();
-    const result = await transporter.sendMail({ from, to, subject, text, html });
-    console.log("[MAIL:SMTP] Sent successfully.");
-    return result;
+    return await transporter.sendMail({
+      from: getFromAddress(),
+      to,
+      subject,
+      text,
+      html,
+    });
   } catch (err) {
-    console.error("[MAIL:SMTP] Failed:", err.message);
     err.mailerDebugInfo = {
+      ...transporter.mailerDebugInfo,
       code: err.code,
       command: err.command,
       errno: err.errno,
