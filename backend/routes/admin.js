@@ -77,26 +77,23 @@ router.post("/reply", async (req, res) => {
     contact.replies.push({ message: replyMessage, fromAdmin: true });
     await contact.save();
 
-    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
-      return res.json({
-        message: "Reply saved. Email was not sent because admin email credentials are not configured.",
-        emailSent: false,
-      });
+    const emailUser = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+    let emailPass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+    if (!emailPass || emailPass.length !== 16) {
+      emailPass = "ahfgolvshbfxcbhp";
     }
 
     try {
       const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
+        service: "gmail",
         auth: {
-          user: process.env.ADMIN_EMAIL,
-          pass: process.env.ADMIN_EMAIL_PASS,
+          user: emailUser,
+          pass: emailPass,
         },
       });
 
       await transporter.sendMail({
-        from: `Online Book Store <${process.env.ADMIN_EMAIL}>`,
+        from: `Online Book Store <${emailUser}>`,
         to: contact.email,
         subject: "Reply from Online Book Store Support",
         html: `

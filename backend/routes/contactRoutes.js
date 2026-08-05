@@ -20,13 +20,17 @@ router.post('/', async (req, res) => {
       replied: false
     });
 
+    const emailUser = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
+    let emailPass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+    if (!emailPass || emailPass.length !== 16) {
+      emailPass = "ahfgolvshbfxcbhp";
+    }
+
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
+      service: "gmail",
       auth: {
-        user: process.env.ADMIN_EMAIL,
-        pass: process.env.ADMIN_EMAIL_PASS,
+        user: emailUser,
+        pass: emailPass,
       },
     });
 

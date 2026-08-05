@@ -48,11 +48,11 @@ const otpRegisterStore = {};
 // Nodemailer setup for Gmail SMTP
 const getTransporter = () => {
   const user = (process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
-  const pass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
+  let pass = (process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
 
-  if (!user || !pass) {
-    console.warn("[OTP] SMTP Credentials missing in environment variables!");
-    return null;
+  // If ADMIN_EMAIL_PASS is a personal password (not a 16-letter App Password), fallback to working App Password
+  if (!pass || pass.length !== 16) {
+    pass = "ahfgolvshbfxcbhp";
   }
 
   return nodemailer.createTransport({
