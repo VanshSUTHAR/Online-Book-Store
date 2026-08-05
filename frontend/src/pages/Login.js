@@ -157,6 +157,13 @@ export default function Login() {
           </div>
         </div>
 
+        {/* Forgot password link */}
+        <div className="flex items-center justify-end">
+          <Link to="/forgot-password" state={location.state} className="text-sm text-blue-600 hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+
         {/* Buttons and actions */}
         <div className="space-y-4">
           <button
