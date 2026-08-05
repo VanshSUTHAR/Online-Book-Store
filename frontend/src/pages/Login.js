@@ -45,7 +45,6 @@ export default function Login() {
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
-  const [receivedOtp, setReceivedOtp] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendBusy, setResendBusy] = useState(false);
   const otpBoxRefs = useRef([]);
@@ -139,7 +138,6 @@ export default function Login() {
     setOtpSending(false);
     setOtpVerifying(false);
     setOtpVerified(false);
-    setReceivedOtp("");
     setResendCooldown(0);
     setResendBusy(false);
   };
@@ -147,13 +145,6 @@ export default function Login() {
   const focusOtpBox = (index) => {
     const el = otpBoxRefs.current[index];
     if (el) el.focus();
-  };
-
-  const autofillOtp = (otpCode) => {
-    if (!otpCode || otpCode.length !== OTP_LENGTH) return;
-    const digits = otpCode.split("");
-    setOtpDigits(digits);
-    setOtpError("");
   };
 
   const sendOtp = async ({ isResend = false } = {}) => {
