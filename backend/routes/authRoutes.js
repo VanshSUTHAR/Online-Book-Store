@@ -7,6 +7,7 @@ const User = require("../models/User");
 const LoginLog = require("../models/LoginLog");
 const Otp = require("../models/Otp");
 const { sendStoreMail } = require("../utils/mailer");
+const { createTransporter } = require("../utils/mailer");
 
 function requireDatabase(req, res, next) {
   if (mongoose.connection.readyState !== 1) {
@@ -466,6 +467,35 @@ router.post("/forgot-password", async (req, res) => {
   } catch (err) {
     console.error("/forgot-password error", err);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ================= MAIL TRANSPORTER TEST (secure) =================
+// Call this endpoint with header 'x-mail-test-token' equal to MAIL_TEST_TOKEN env var
+// It will attempt transporter.verify() and return debug info. Keep MAIL_TEST_TOKEN secret.
+router.get("/mail-test", async (req, res) => {
+  try {
+    const token = req.headers["x-mail-test-token"] || req.query.token;
+    const expected = process.env.MAIL_TEST_TOKEN;
+    if (!expected) {
+      return res.status(400).json({ success: false, message: "MAIL_TEST_TOKEN not configured on server" });
+    }
+    if (!token || token !== expected) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const transporter = await createTransporter();
+    // transporter.mailerDebugInfo contains resolved host/port info
+    try {
+      await transporter.verify();
+      return res.json({ success: true, message: "SMTP connection verified", debug: transporter.mailerDebugInfo });
+    } catch (verifyErr) {
+      const info = transporter.mailerDebugInfo || {};
+      return res.status(500).json({ success: false, message: "SMTP verify failed", error: verifyErr.message || verifyErr, debug: info });
+    }
+  } catch (err) {
+    console.error("/mail-test error", err);
+    return res.status(500).json({ success: false, message: "Server error", error: err.message || err });
   }
 });
 
