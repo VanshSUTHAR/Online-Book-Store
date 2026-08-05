@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const User = require("../models/User");
 const LoginLog = require("../models/LoginLog");
+const { sendStoreMail } = require("../utils/mailer");
 
 function requireDatabase(req, res, next) {
   if (mongoose.connection.readyState !== 1) {
@@ -44,24 +44,6 @@ const otpStore = {};
 
 // In-memory OTP store for registration — holds pending user data + OTP
 const otpRegisterStore = {};
-
-// Nodemailer setup for Gmail SMTP
-const getTransporter = () => {
-  const user = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
-  let pass = (process.env.EMAIL_ADMIN_PASS || process.env.EMAIL_PASS || process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
-
-  if (!user || !pass) {
-    throw new Error("Missing email SMTP credentials. Set EMAIL_ADMIN and EMAIL_ADMIN_PASS/EMAIL_PASS/ADMIN_EMAIL_PASS.");
-  }
-
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: { user, pass },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
-};
 
 // ================= SEND OTP FOR PASSWORD RESET =================
 router.post("/send-otp", async (req, res) => {
@@ -104,12 +86,7 @@ router.post("/send-otp", async (req, res) => {
     let mailErrorMsg = null;
 
     try {
-      const transporter = getTransporter();
-      await transporter.verify();
-      const adminEmail = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "").trim();
-
-      const info = await transporter.sendMail({
-        from: `Online Book Store <${adminEmail}>`,
+      const info = await sendStoreMail({
         to: email,
         subject: "🔑 Your Login Verification Code - Online Book Store",
         text: `Hello ${user.name || "Reader"},\n\nYour One-Time Password (OTP) for login to Online Book Store is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this code, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,
@@ -270,12 +247,7 @@ router.post("/send-register-otp", async (req, res) => {
     let mailErrorMsg = null;
 
     try {
-      const transporter = getTransporter();
-      await transporter.verify();
-      const adminEmail = (process.env.EMAIL_ADMIN || "").trim();
-
-      const info = await transporter.sendMail({
-        from: `Online Book Store <${adminEmail}>`,
+      const info = await sendStoreMail({
         to: email,
         subject: "✅ Verify Your Email - Online Book Store",
         text: `Hello ${name},\n\nYour One-Time Password (OTP) to verify your email and create your account is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not sign up, please ignore this email.\n\nHappy Reading!\nOnline Book Store Team`,

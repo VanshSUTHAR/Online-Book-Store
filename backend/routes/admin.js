@@ -1,6 +1,6 @@
 const express = require("express");
-const nodemailer = require("nodemailer");
 const Contact = require("../models/Contact");
+const { sendStoreMail } = require("../utils/mailer");
 
 const router = express.Router();
 
@@ -77,23 +77,8 @@ router.post("/reply", async (req, res) => {
     contact.replies.push({ message: replyMessage, fromAdmin: true });
     await contact.save();
 
-    const emailUser = (process.env.EMAIL_ADMIN || process.env.ADMIN_EMAIL || "sutharvansh022@gmail.com").trim();
-    let emailPass = (process.env.EMAIL_ADMIN_PASS || process.env.EMAIL_PASS || process.env.ADMIN_EMAIL_PASS || "").replace(/\s+/g, "");
-    if (!emailPass || emailPass.length !== 16) {
-      emailPass = "ahfgolvshbfxcbhp";
-    }
-
     try {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: emailUser,
-          pass: emailPass,
-        },
-      });
-
-      await transporter.sendMail({
-        from: `Online Book Store <${emailUser}>`,
+      await sendStoreMail({
         to: contact.email,
         subject: "Reply from Online Book Store Support",
         html: `
